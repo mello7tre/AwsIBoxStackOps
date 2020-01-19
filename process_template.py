@@ -338,7 +338,7 @@ def get_stack_outputs():
     outputs_current['StackStatus'] = istack.stack.stack_status
     outputs_current['StackName'] = fargs.stack
     if last_updated_time:
-        outputs['LastUpdatedTime'] = last_updated_time.strftime('%Y-%m-%d %X %Z')
+        outputs_current['LastUpdatedTime'] = last_updated_time.strftime('%Y-%m-%d %X %Z')
 
     return outputs_current
 
