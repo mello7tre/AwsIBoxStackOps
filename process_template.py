@@ -326,7 +326,9 @@ def set_action_parameters(params_default, params_changed, params_added, params_f
 # get stack outputs as dict
 def get_stack_outputs():
     stack_outputs = istack.stack.outputs
+    last_updated_time = istack.stack.last_updated_time
     outputs_current = {}
+
     if stack_outputs:
         for output in stack_outputs:
             key = output['OutputKey']
@@ -335,17 +337,15 @@ def get_stack_outputs():
 
     outputs_current['StackStatus'] = istack.stack.stack_status
     outputs_current['StackName'] = fargs.stack
+    if last_updated_time:
+        outputs['LastUpdatedTime'] = last_updated_time.strftime('%Y-%m-%d %X %Z')
 
     return outputs_current
 
 
 # show stack current outputs as dict
 def show_stack_outputs(when):
-    last_updated_time = istack.stack.last_updated_time
     outputs = getattr(istack, when)['outputs']
-
-    if last_updated_time:
-        outputs['LastUpdatedTime'] = last_updated_time.strftime('%Y-%m-%d %X %Z')
 
     print('\n')
     mylog(
