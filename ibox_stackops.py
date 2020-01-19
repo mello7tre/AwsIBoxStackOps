@@ -7,6 +7,7 @@ import argparse
 import time
 import os
 import sys
+from collections import OrderedDict, Mapping
 from pprint import pprint, pformat
 from datetime import datetime, timedelta, tzinfo
 from calendar import timegm
@@ -24,6 +25,7 @@ try:
 except ImportError:
     slack_client = None
 
+logging.basicConfig()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -51,7 +53,7 @@ map_resources_on_dashboard = {
     'LoadBalancerApplicationExternal': 'LoadBalancerExternal',
     'LoadBalancerApplicationInternal': 'LoadBalancerInternal',
     'Cluster': 'ClusterName',
-    'ListenerHttpExternalRules1': 'LoadBalancerExternal',
+    'ListenerHttpsExternalRules1': 'LoadBalancerExternal',
     'ListenerHttpInternalRules1': 'LoadBalancerInternal',
     'AlarmCPUHigh': None,
     'AlarmCPULow': None,
@@ -62,6 +64,11 @@ map_resources_on_dashboard.update(ScalingPolicyTrackingsNames)
 
 # full args
 class full_args(object):
+    pass
+
+
+# ibox stack
+class ibox_stack(object):
     pass
 
 
@@ -101,6 +108,7 @@ def get_args():
     template_version_group_update = parser_update.add_mutually_exclusive_group()
     template_version_group_update.add_argument('-t', '--template', help='Template Location', type=str)
     template_version_group_update.add_argument('-v', '--version', help='Stack Env Version', type=str)
+    template_version_group_update.add_argument('--debug', help='Show parsed/resolved template and exit', action='store_true')
 
     parser_update.add_argument(
         '-n', '--nochangeset', help='Do Not Use Stack Changeset (no confirmation)',
@@ -162,7 +170,7 @@ def get_args():
 
 
 # parse stack arguments, the args[1] from get_args() and update fargs
-def do_stack_args(stack_parameters, stack_args):
+def add_stack_params_as_args():
     parser = argparse.ArgumentParser(
         description='',
         add_help=False,
@@ -170,9 +178,11 @@ def do_stack_args(stack_parameters, stack_args):
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    for parameter in sorted(stack_parameters, key=lambda x: x['ParameterKey']):
-        allowed_values = get_allowed_values(parameter['ParameterConstraints'])
-        kwargs = {'type': str, 'metavar': '\t%s' % parameter['Description']}
+#    for parameter in sorted(stack_parameters, key=lambda x: x['ParameterKey']):
+    for p in sorted(istack.parameters):
+        v = istack.parameters[p]
+        allowed_values = v['AllowedValues'] if 'AllowedValues' in v else []
+        kwargs = {'type': str, 'metavar': '\t%s' % v['Description']}
 
         if len(allowed_values) > 0:
             kwargs['choices'] = allowed_values
@@ -181,7 +191,7 @@ def do_stack_args(stack_parameters, stack_args):
             kwargs['help'] = '\n'
 
         parser.add_argument(
-            '--%s' % parameter['ParameterKey'],
+            '--%s' % p,
             **kwargs
         )
 
@@ -189,78 +199,37 @@ def do_stack_args(stack_parameters, stack_args):
         parser.print_help()
         exit(0)
     else:
-        args = parser.parse_args(stack_args)
+        args = parser.parse_args(istack.args)
+        do_fargs(args)
 
-    return do_fargs(args)
 
-
-# get allowed stack parameters from supplied template or current one
-def do_stack_parameters(client):
-    kwargs = {}
+def get_parameters_current():
+    params = {}
     try:
-        # using a new template
-        if fargs.template:
-            template = str(fargs.template)
-            if template.startswith('http'):
-                kwargs['TemplateURL'] = template
-            elif template.startswith('file'):
-                f = open(fargs.template[7:], 'r')
-                template_content = f.read()
-                kwargs['TemplateBody'] = template_content
-        # using the same template
-        else:
-            kwargs['StackName'] = fargs.stack
-        template_body = client.get_template_summary(**kwargs)
+        for p in istack.stack.parameters:
+            key = p['ParameterKey']
+            value = p['ParameterValue'] if 'ParameterValue' in p else None
+            params[key] = value
+    except:
+        pass
 
-        return template_body['Parameters']
-    except Exception, e:
-        print('Error retrieving version/template: %s' % e)
-        exit(1)
-
-
-# get stack parameters (key/value) as dict
-def do_stack_param_to_dict(stack_params):
-    stack_param_current = {}
-
-    for param in stack_params:
-        key = param['ParameterKey']
-        value = param['ParameterValue'] if 'ParameterValue' in param else None
-        stack_param_current[key] = value
-
-    return stack_param_current
-
-
-# get stack exports (key/value) as dict
-def do_stack_export_to_dict(stack_exports):
-    stack_export_current = {}
-    for export in stack_exports:
-        key = export['Name']
-        value = export['Value'] if 'Value' in export else None
-        stack_export_current[key] = value
-    return stack_export_current
+    return params
 
 
 # if template in s3, force version to the one in his url part if from file force fixed value 1
 # Ex for version=master-2ed25d5:
 # https://eu-west-1-ibox-app-repository.s3.amazonaws.com/ibox/master-2ed25d5/templates/cache-portal.json
 def do_envstackversion_from_s3_template():
-    global fargs
-
     template = fargs.template
-    fargs.version = template.split("/")[4] if str(template).startswith('http') else '1'
+    fargs.version = template.split("/")[4] if str(template).startswith('https') else '1'
     fargs.EnvStackVersion = fargs.version
 
 
-# build list for AllowedValues if params specify them
-def get_allowed_values(param_constraints):
-    if 'AllowedValues' in param_constraints:
-        return param_constraints['AllowedValues']
-    else:
-        return []
+# force EnvShort param value based on Env one
+def force_envshort():
+    # use arg if exist or use current value
+    env = fargs.Env if fargs.Env else istack.c_parameters['Env']
 
-
-# get EnvShort param value based on Env one
-def get_envshort(env):
     env_envshort_dict = {
         'dev': 'dev',
         'stg': 'stg',
@@ -268,7 +237,7 @@ def get_envshort(env):
         'prod': 'prd',
     }
 
-    return env_envshort_dict[env]
+    fargs.EnvShort = env_envshort_dict[env]
 
 
 # change list in a string new line separated element
@@ -281,53 +250,16 @@ def list_to_string_list(mylist):
     return mystring
 
 
-# build params for update
-def do_stack_params(stack, stack_parameters):
-    # parameters in template currently used before update as dictionary - empty for create
-    stack_param_current = {} if do_create else do_stack_param_to_dict(stack.parameters)
+# set final parameters values to use for exectuing actions - istack.action_parameters and istack.r_parameters
+def set_action_parameters(params_default, params_changed, params_added, params_forced_default):
+    for key in sorted(istack.parameters):
+        v = istack.parameters[key]
 
-    # Env - differ if updating or creating
-    if do_create:
-        env = fargs.Env
-    else:
-        try:
-            env = stack_param_current['Env']
-        except:
-            env = ''
-
-    # parameters in template used for update as dictionary
-    stack_param_template_dict = do_stack_param_to_dict(stack_parameters)
-
-    # unchanged stack params
-    params_default = {}
-
-    # changed stack params
-    params_changed = {}
-
-    # new stack params - default value
-    params_added = {}
-
-    # forced to default stack params - current value not in allowed ones
-    params_forced_default = {}
-    final_params = []
-
-    # if using template option force version
-    if fargs.template:
-        do_envstackversion_from_s3_template()
-
-    # if template used for update include EnvShort params force its value based on the Env one
-    if 'EnvShort' in stack_param_template_dict:
-        fargs.EnvShort = get_envshort(env)
-
-    for param in stack_parameters:
-        key = param['ParameterKey']
-        default_value = param['DefaultValue']
-
-        if not do_create:
-            use_previous_value = False
+        default_value = v['Default']
+        use_previous_value = False
 
         # get list of AllowedValues
-        allowed_values = get_allowed_values(param['ParameterConstraints'])
+        allowed_values = v['AllowedValues'] if 'AllowedValues' in v else []
 
         # check if key exist as fargs param/attr too
         try:
@@ -337,8 +269,8 @@ def do_stack_params(stack, stack_parameters):
             in_fargs = None
 
         # update param is not new ...
-        if key in stack_param_current:
-            current_value = stack_param_current[key]
+        if key in istack.c_parameters:
+            current_value = istack.c_parameters[key]
 
             # current value its different from specified cmd arg
             if in_fargs and current_value != fargs_value:
@@ -356,10 +288,8 @@ def do_stack_params(stack, stack_parameters):
 
             # current value is unchanged and allowed
             else:
-                # keep current value
-                value = current_value if do_create else ''
-                if not do_create:
-                    use_previous_value = True
+                value = ''
+                use_previous_value = True
                 params_default[key] = current_value
 
         # update param is new ...
@@ -376,11 +306,11 @@ def do_stack_params(stack, stack_parameters):
                 params_added[key] = default_value
 
         # append dictionary element to list
-        final_params.append(
+        istack.action_parameters.append(
             {
                 u'ParameterKey': key,
                 u'ParameterValue': value,
-            } if do_create else
+            } if istack.create else
             {
                 u'ParameterKey': key,
                 u'ParameterValue': value,
@@ -388,75 +318,66 @@ def do_stack_params(stack, stack_parameters):
             }
         )
 
-    print('\n')
-    if do_create:
-        if len(params_default) > 0:
-            print('Default - Stack Parameters\n%s\n' % pformat(params_default, width=1000000))
-
-    if len(params_changed) > 0:
-        mylog('Changed - Stack Parameters\n%s' % pformat(params_changed, width=1000000))
-        print('\n')
-
-    if not do_create:
-        if len(params_added) > 0:
-            mylog('Added - Stack Parameters\n%s' % pformat(params_added, width=1000000))
-            print('\n')
-
-    if len(params_forced_default) > 0:
-        mylog('Forced to Default - Stack Parameters\n%s' % pformat(params_forced_default, width=1000000))
-        print('\n')
-    # return update list of dict params as ParameterKey ParameterValue keys
-    # Ex for EnvRole=cache:
-    # [{u'ParameterKey': 'EnvRole', u'ParameterValue': 'cache'}, {...}]
-
-    return final_params
-
-
-# get current stack EnvRole
-def get_stack_role(stack):
-    role = ''
-    for p in stack.parameters:
-        if p['ParameterKey'] == 'EnvRole':
-            role = p['ParameterValue']
-    return role
+        # update resolved parameter final value istack.r_parameters
+        istack.r_parameters[key] = current_value if use_previous_value else value
 
 
 # get stack outputs as dict
-def get_stack_outputs(stack):
-    stack_outputs = stack.outputs
+def get_stack_outputs():
+    stack_outputs = istack.stack.outputs
+    last_updated_time = istack.stack.last_updated_time
     outputs_current = {}
+
     if stack_outputs:
         for output in stack_outputs:
             key = output['OutputKey']
             value = output['OutputValue'] if 'OutputValue' in output else None
             outputs_current[key] = value
 
-    outputs_current['StackStatus'] = stack.stack_status
+    outputs_current['StackStatus'] = istack.stack.stack_status
+    outputs_current['StackName'] = fargs.stack
+    if last_updated_time:
+        outputs_current['LastUpdatedTime'] = last_updated_time.strftime('%Y-%m-%d %X %Z')
 
     return outputs_current
 
 
 # show stack current outputs as dict
-def show_stack_outputs(stack_outputs, last_updated_time):
-    outputs_current = stack_outputs
-    outputs_current['StackName'] = fargs.stack
-    if last_updated_time:
-        outputs_current['LastUpdatedTime'] = last_updated_time.strftime('%Y-%m-%d %X %Z')
+def show_stack_outputs(when):
+    outputs = getattr(istack, when)['outputs']
+
     print('\n')
     mylog(
-        'Current - Stack Outputs\n%s' %
-        pformat(
-            outputs_current,
+        '%s - Stack Outputs\n%s' % (when.capitalize(), pformat(
+            outputs,
             width=80 if (fargs.action == 'info' and not fargs.compact) else 1000000
-        )
+        ))
     )
     print('\n')
 
 
+# store stack info - ouputs, resources
+def store_stack_info(when):
+    value = {}
+    setattr(istack, when, value)
+
+    value['outputs'] = get_stack_outputs()
+    value['resources'] = get_resources()
+
+
+def store_stack_info_changed():
+    istack.stack.reload()
+    store_stack_info('after')
+
+    istack.changed = {}
+    istack.changed['resources'] = get_resources_changed()
+    istack.changed['outputs'] = get_outputs_changed()
+
+
 # show stack parameters override
-def show_stack_params_override(stack, stack_parameters):
+def show_stack_params_override(stack_parameters):
     params = {}
-    for p in stack.parameters:
+    for p in istack.stack.parameters:
         name = p['ParameterKey']
         value = p['ParameterValue']
         if (
@@ -481,13 +402,13 @@ def show_stack_params_override(stack, stack_parameters):
 
 
 # build tags for update
-def do_stack_tags(stack):
+def do_action_tags():
     stack_tags = [
         {u'Key': 'Env', u'Value': fargs.Env},
         {u'Key': 'EnvRole', u'Value': fargs.EnvRole},
         {u'Key': 'EnvStackVersion', u'Value': fargs.version},
         {u'Key': 'EnvApp1Version', u'Value': fargs.EnvApp1Version},
-    ] if do_create else stack.tags
+    ] if istack.create else istack.stack.tags
 
     # unchanged tags
     tags_default = {}
@@ -549,53 +470,56 @@ def do_stack_tags(stack):
     if len(tags_changed) > 0:
         mylog('Changed - Stack Tags\n%s' % pformat(tags_changed, width=1000000))
         print('\n')
-    return final_tags
+
+    istack.action_tags = final_tags
 
 
 # do stack update
-def update_stack(stack, us_args):
-    response = stack.update(**us_args)
+def update_stack(us_args):
+    response = istack.stack.update(**us_args)
     return response
 
 
-def create_stack(client, us_args):
+def create_stack(us_args):
     response = client.create_stack(**us_args)
     return response
 
 
-def cancel_update_stack(stack):
-    response = stack.cancel_update()
+def cancel_update_stack():
+    response = istack.stack.cancel_update()
     return response
 
 
-def delete_stack(stack):
-    response = stack.delete()
+def delete_stack():
+    response = istack.stack.delete()
     return response
 
 
-def continue_update_stack(client, stack):
+def continue_update_stack():
     response = client.continue_update_rollback(
-        StackName=stack_name,
+        StackName=istack.name,
         ResourcesToSkip=fargs.ResourcesToSkip,
     )
     return response
 
 
 # get timestamp from last event available
-def get_last_event_timestamp(stack):
-    last_event = list(stack.events.all().limit(1))[0]
+def get_last_event_timestamp():
+    last_event = list(istack.stack.events.all().limit(1))[0]
+
     return last_event.timestamp
 
 
-def show_service_update(stack, service_logical_resource_id):
+# show old and new service tasks during an update 
+def show_service_update(service_logical_resource_id):
     service = task = cluster = deps_before = None
     deployment_task = ''
     deployments_len = pendingCount = 0
     client = boto3.client('ecs')
 
     try:
-        cluster = stack.Resource('ScalableTarget').physical_resource_id.split('/')[1]
-        service = stack.Resource(service_logical_resource_id).physical_resource_id
+        cluster = istack.stack.Resource('ScalableTarget').physical_resource_id.split('/')[1]
+        service = istack.stack.Resource(service_logical_resource_id).physical_resource_id
     except:
         return
 
@@ -604,8 +528,8 @@ def show_service_update(stack, service_logical_resource_id):
         'ACTIVE': {},
     }
     while task != deployment_task or deployments_len > 1 or pendingCount != 0:
-        stack.reload()
-        task = stack.Resource('TaskDefinition').physical_resource_id
+        istack.stack.reload()
+        task = istack.stack.Resource('TaskDefinition').physical_resource_id
         response = client.describe_services(
             cluster=cluster,
             services=[service],
@@ -644,8 +568,8 @@ def show_service_update(stack, service_logical_resource_id):
 
 
 # show all events after specific timestamp and return last event timestamp
-def show_update_events(stack, timestamp):
-    event_iterator = stack.events.all()
+def show_update_events(timestamp):
+    event_iterator = istack.stack.events.all()
     event_list = []
     for event in event_iterator:
         if event.timestamp > timestamp:
@@ -661,7 +585,7 @@ def show_update_events(stack, timestamp):
             " " + str(event.resource_status_reason)
         )
         if event.logical_resource_id == 'Service' and event.resource_status == 'UPDATE_IN_PROGRESS' and event.resource_status_reason is None:
-            show_service_update(stack, event.logical_resource_id)
+            show_service_update(event.logical_resource_id)
 
     if len(event_list) > 0:
         return(event_list.pop().timestamp)
@@ -670,10 +594,10 @@ def show_update_events(stack, timestamp):
 
 
 # wait update until complete showing events status
-def update_waiter(stack, timestamp):
+def update_waiter(timestamp):
     last_timestamp = timestamp
-    stack.reload()
-    while stack.stack_status not in [
+    istack.stack.reload()
+    while istack.stack.stack_status not in [
         'UPDATE_COMPLETE',
         'CREATE_COMPLETE',
         'ROLLBACK_COMPLETE',
@@ -682,37 +606,26 @@ def update_waiter(stack, timestamp):
         'DELETE_COMPLETE',
         'DELETE_FAILED',
     ]:
-        stack.reload()
-        last_timestamp = show_update_events(stack, last_timestamp)
+        istack.stack.reload()
+        last_timestamp = show_update_events(last_timestamp)
         time.sleep(5)
 
 
 # build/update full_args from argparse arg objects
 def do_fargs(args):
-    global fargs
-
     for property, value in vars(args).iteritems():
         # fix to avoid overwriting Env and EnvRole with None value
         if not hasattr(fargs, property):
             setattr(fargs, property, value)
 
 
-# build dict(key: value) from argparse arg objects
-def do_args(args):
-    myargs = {}
-    for property, value in vars(args).iteritems():
-        if value is not None:
-            myargs[property] = value
-    return myargs
-
-
-# build all args for update stack function
-def do_updatestack_args(stack_params, stack_tags):
+# build all args for action
+def do_action_args():
     us_args = {}
-    if do_create:
-        us_args['StackName'] = fargs.stack
-    us_args['Parameters'] = stack_params
-    us_args['Tags'] = stack_tags
+    if istack.create:
+        us_args['StackName'] = istack.name
+    us_args['Parameters'] = istack.action_parameters
+    us_args['Tags'] = istack.action_tags
     us_args['Capabilities'] = ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM']
 
     # Handle policy during update
@@ -721,27 +634,23 @@ def do_updatestack_args(stack_params, stack_tags):
         action = '[%s]' % ','.join(action)
         us_args['StackPolicyDuringUpdateBody'] = '{"Statement" : [{"Effect" : "Allow","Action" :%s,"Principal": "*","Resource" : "*"}]}' % action
 
-    if not fargs.template:
+    if istack.template_from == 'Current':
         us_args['UsePreviousTemplate'] = True
-    else:
-        template = str(fargs.template)
-        if template.startswith('http'):
-            us_args['TemplateURL'] = fargs.template
-        if template.startswith('file'):
-            f = open(fargs.template[7:], 'r')
-            template_content = f.read()
-            us_args['TemplateBody'] = template_content
+    if istack.template_from == 'S3':
+        us_args['TemplateURL'] = fargs.template
+    if istack.template_from == 'File':
+        us_args['TemplateBody'] = json.dumps(istack.template)
 
     return us_args
 
 
 # create changeset
-def do_changeset(client, stack, us_args):
+def do_changeset(us_args):
     if not fargs.showtags:
         # keep existing stack.tags so that they are excluded from changeset (not the new prepared ones)
-        us_args['Tags'] = stack.tags
+        us_args['Tags'] = istack.stack.tags
 
-    us_args['StackName'] = stack.stack_name
+    us_args['StackName'] = istack.name
     us_args['ChangeSetName'] = (
         'CS-%s' % time.strftime('%Y-%m-%dT%H-%M-%S')
     )
@@ -752,24 +661,24 @@ def do_changeset(client, stack, us_args):
     return response['Id']
 
 
-def get_changeset(client, stack_name, changeset_id):
+def get_changeset(changeset_id):
     changeset = client.describe_change_set(
         ChangeSetName=changeset_id,
-        StackName=stack_name
+        StackName=istack.name
     )
     return changeset
 
 
 # wait until changeset is created
-def changeset_waiter(client, stack_name, changeset_id):
-    changeset = get_changeset(client, stack_name, changeset_id)
+def changeset_waiter(changeset_id):
+    changeset = get_changeset(changeset_id)
     while changeset['Status'] not in [
             'CREATE_COMPLETE',
             'UPDATE_ROLLBACK_FAILED',
             'FAILED'
     ]:
         time.sleep(3)
-        changeset = get_changeset(client, stack_name, changeset_id)
+        changeset = get_changeset(changeset_id)
 
 
 # parse changeset changes
@@ -819,19 +728,19 @@ def show_changeset_changes(changes):
     print(table.get_string(fields=fields))
 
 
-def delete_changeset(client, stack_name, changeset_id):
+def delete_changeset(changeset_id):
     response = client.delete_change_set(
         ChangeSetName=changeset_id,
-        StackName=stack_name
+        StackName=istack.name
     )
 
     return response
 
 
-def execute_changeset(client, stack_name, changeset_id):
+def execute_changeset(changeset_id):
     response = client.execute_change_set(
         ChangeSetName=changeset_id,
-        StackName=stack_name
+        StackName=istack.name
     )
 
     return response
@@ -846,70 +755,81 @@ def show_confirm():
         return True
 
 
-def show_log(stack, last_event_timestamp, time_delta):
-    time_event = last_event_timestamp - timedelta(days=time_delta)
+def show_log(time_delta):
+    time_event = istack.last_event_timestamp - timedelta(days=time_delta)
+
     if time_delta == 0:
-        update_waiter(stack, time_event)
+        update_waiter(time_event)
     else:
-        show_update_events(stack, time_event)
+        show_update_events(time_event)
 
 
-def check_EnvAppVersion(client, cloudformation, stack_output, resources_by_type, appindex):
-    appversion = 'EnvApp%sVersion' % appindex
-    apprepo = 'Apps%sRepoName' % appindex
+def find_s3_files(name, sub_string):
+    if ('AWS::AutoScaling::LaunchConfiguration' in istack.t_resources and
+            istack.t_resources['AWS::AutoScaling::LaunchConfiguration'] == name):
+        data = sub_string[8:].partition('/')
+        host = data[0]
+        if not host.endswith('amazonaws.com'):
+            return
+        key = data[2]
+        s_bucket = host.rsplit('.', 3)
+        if s_bucket[1].startswith('s3-'):
+            bucket = s_bucket[0]
+        else:
+            bucket = host[:host.rfind('.s3.')]
 
-    # ECS/TSK Stack
-    if 'AWS::ECS::TaskDefinition' in resources_by_type:
-        ecs = boto3.client('ecs')
-        ecr = boto3.client('ecr')
+        if host == bucket:
+            return
+
+        istack.s3_files.add((bucket, key))
+
+
+def check_s3_files():
+    s3 = boto3.client('s3')
+    for f in istack.s3_files:
+        bucket = f[0]
+        key = f[1]
         try:
-            task_id = resources_by_type['AWS::ECS::TaskDefinition']
-            task_def = ecs.describe_task_definition(taskDefinition=task_id)['taskDefinition']
-            image = task_def['containerDefinitions'][int(appindex) - 1]['image'].encode('ascii')
-            out = ecr.describe_images(
-                registryId=image[0:image.find('.')],
-                repositoryName=image[image.find('/')+1:image.find(':')],
-                imageIds=[
-                    {
-                        'imageTag': getattr(fargs, appversion)
-                    }
-                ]
-            )
+            s3.head_object(Bucket=bucket, Key=key)
         except botocore.exceptions.ClientError as e:
+            print('%s/%s' % (bucket, key))
             pprint(e)
             exit(0)
 
-    # EC2 Stack
-    if stack_type == 'ec2':
-        # launch_conf_id = cloudformation.StackResource(fargs.stack, 'LaunchConfiguration').physical_resource_id
-        try:
-            # bucket = do_stack_export_to_dict(client.list_exports()['Exports'])['BucketAppRepository']
-            bucket = get_cloudformation_exports(client)['BucketAppRepository']
-            reponame = stack_output[apprepo]
-            s3 = boto3.client('s3')
-            out = s3.get_object(
-                Bucket=bucket,
-                Key='%s/%s-%s.tar.gz' % (
-                    reponame,
-                    reponame,
-                    getattr(fargs, appversion),
+
+def check_ecr_images():
+    name = istack.t_resources['AWS::ECS::TaskDefinition']
+    images = []
+    ecr = boto3.client('ecr')
+
+    for c in istack.r_resources[name]['Properties']['ContainerDefinitions']:
+        image = c['Image']
+        registry_id = image[0:image.find('.')]
+        repository_name = image[image.find('/')+1:image.find(':')]
+        image_id = image[image.find(':') + 1:]
+        if image not in images:
+            try:
+                ecr.describe_images(
+                    registryId=registry_id,
+                    repositoryName=repository_name,
+                    imageIds=[{
+                        'imageTag': image_id,
+                    }],
                 )
-            )
-        except botocore.exceptions.ClientError as e:
-            pprint(e)
-            exit(0)
-
-    return True
+                images.append(image)
+            except botocore.exceptions.ClientError as e:
+                print(image)
+                pprint(e)
+                exit(0)
 
 
 # method should be identically to the one found in bin/ibox_add_to_dash.py, but dash param default to None
-def get_resources(client, stack, dash=None):
+def get_resources(dash=None):
     resources = {}
-    resources_by_type = {}
     res_list = map_resources_on_dashboard.keys()
 
     paginator = client.get_paginator('list_stack_resources')
-    response_iterator = paginator.paginate(StackName=stack.stack_name)
+    response_iterator = paginator.paginate(StackName=istack.name)
 
     for r in response_iterator:
         for res in r['StackResourceSummaries']:
@@ -919,7 +839,7 @@ def get_resources(client, stack, dash=None):
                 res_pid = res['PhysicalResourceId']
                 if res_pid.startswith('arn'):
                     res_pid = res_pid.split(':', 5)[5]
-                if res_lid in ['ListenerHttpExternalRules1', 'ListenerHttpInternalRules1']:
+                if res_lid in ['ListenerHttpsExternalRules1', 'ListenerHttpInternalRules1']:
                     res_pid = '/'.join(res_pid.split('/')[1:4])
                 if res_lid == 'ScalableTarget':
                     res_pid = res_pid.split('/')[1]
@@ -937,18 +857,29 @@ def get_resources(client, stack, dash=None):
 
                 resources[res_lid] = res_pid
 
-            resources_by_type[res_type] = res['PhysicalResourceId']
-
-    return resources, resources_by_type
+    return resources
 
 
-def get_resources_changed(resources_before, resources_after):
+def get_resources_changed():
+    before = istack.before['resources']
+    after = istack.after['resources']
+
     changed = {}
-    for r, v in resources_before.iteritems():
-        if r in resources_after:
-            v_after = resources_after[r]
-            if v != v_after:
-                changed[r] = v_after
+    for r, v in before.iteritems():
+        if r in after and v != after[r]:
+            changed[r] = after[r]
+
+    return changed
+
+
+def get_outputs_changed():
+    before = istack.before['outputs']
+    after = istack.after['outputs']
+
+    changed = {}
+    for o, v in after.iteritems():
+        if o in before and v != before[o]:
+            changed[o] = before[o] + ' => ' + v
 
     return changed
 
@@ -962,8 +893,8 @@ def get_cloudformation_exports(client):
             name = export['Name']
             value = export['Value']
             exports[name] = value
-        if all(key in exports for key in ['BucketAppRepository']):
-            return exports
+        #if all(key in exports for key in ['BucketAppRepository']):
+        #    return exports
 
     return exports
 
@@ -972,7 +903,7 @@ def do_update_dashboard(cw, resources_changed, mode, dashboard_name):
     dashboard_body = cw.get_dashboard(DashboardName=dashboard_name)['DashboardBody']
     dashboard_body_dict = json.loads(dashboard_body)
 
-    stackname_arr = stack_name.split('-')
+    stackname_arr = istack.name.split('-')
     if len(stackname_arr) > 1:
         stack_prefix = stackname_arr[0] + '-' + stackname_arr[1] + '-'
     else:
@@ -1023,26 +954,26 @@ def do_update_dashboard(cw, resources_changed, mode, dashboard_name):
     return True
 
 
-def update_dashboards(resources_changed, resources_after, outputs_changed):
+def update_dashboards():
     cw_client = boto3.client('cloudwatch')
 
     response_dash = cw_client.list_dashboards(DashboardNamePrefix='_')
 
     if fargs.dashboard == 'OnChange':
-        resources = resources_changed
+        resources = istack.changed['resources']
         mode = ''
     elif fargs.dashboard in ['Always', 'Generic']:
-        resources = resources_after
+        resources = istack.after['resources']
         mode = fargs.dashboard
     else:
         return
 
-    if not resources and 'ScalingPolicyTrackings' not in outputs_changed:
+    if not resources and 'ScalingPolicyTrackings' not in istack.changed['outputs']:
         return
 
     # Update dynamic one
     for dash in response_dash['DashboardEntries']:
-        if stack_name in dash['DashboardName']:
+        if istack.name in dash['DashboardName']:
             # If imported ibox_add_to_dash.py, execute it as external module in silent mode, rebuilding the dash from scratch ..
             if add_to_dashboard:
                 dashboard_param_stacks = dash['DashboardName'].split('_')[1:]
@@ -1060,23 +991,8 @@ def update_dashboards(resources_changed, resources_after, outputs_changed):
             do_update_dashboard(cw_client, resources, mode, dash)
 
 
-def compare_outputs(outputs_before, outputs_after):
-    outputs_changed = {}
-    for o, v in outputs_after.iteritems():
-        if o in outputs_before and v != outputs_before[o]:
-            outputs_changed[o] = outputs_before[o] + ' => ' + v
-
-    if len(outputs_changed) > 0:
-        print('\n')
-        mylog('Changed - Stack Outputs' + '\n' +
-              pformat(outputs_changed, width=1000000))
-        print('\n')
-
-    return outputs_changed
-
-
 def mylog(string):
-    message = stack_name + ' # ' + string
+    message = istack.name + ' # ' + string
     print(message)
 
     if (
@@ -1096,10 +1012,14 @@ def mylog(string):
         )
 
 
-def update_template_param(client, stack):
-    role = fargs.EnvRole if do_create else get_stack_role(stack)
+def update_template_param():
+    # try to get role from fargs or use current stack parameter value
+    try:
+        role = fargs.EnvRole
+    except:
+        role = istack.c_parameters['EnvRole']
 
-    app_repository = get_cloudformation_exports(client)['BucketAppRepository']
+    app_repository = istack.exports['BucketAppRepository']
     s3_prefix = 'ibox/%s/templates/%s.' % (fargs.version, role)
     s3 = boto3.client('s3')
 
@@ -1112,9 +1032,9 @@ def update_template_param(client, stack):
         exit(1)
 
 
-def do_changeset_actions(client, stack, us_args):
+def do_changeset_actions(us_args):
     # -create changeset
-    changeset_id = do_changeset(client, stack, us_args.copy())
+    changeset_id = do_changeset(us_args.copy())
     print('\n')
     mylog('ChangeSetId: %s' % changeset_id)
     print('\n')
@@ -1122,10 +1042,10 @@ def do_changeset_actions(client, stack, us_args):
     mylog('Waiting ChangeSet Creation..')
 
     # -wait changeset creation
-    changeset_waiter(client, stack.stack_name, changeset_id)
+    changeset_waiter(changeset_id)
 
     # -get changeset
-    changeset = get_changeset(client, stack.stack_name, changeset_id)
+    changeset = get_changeset(changeset_id)
     # pprint(changeset)
 
     # -parse changeset changes
@@ -1135,236 +1055,496 @@ def do_changeset_actions(client, stack, us_args):
     show_changeset_changes(changeset_changes)
 
     # -delete changeset
-    delete_changeset(client, stack.stack_name, changeset_id)
+    delete_changeset(changeset_id)
 
     if not fargs.dryrun and show_confirm():
         pass
-        # execute_changeset(client, stack.stack_name, changeset_id)
+        # execute_changeset(changeset_id)
     else:
-        # delete_changeset(client, stack.stack_name, changeset_id)
+        # delete_changeset(changeset_id)
         exit(0)
 
 
-def get_stack(cloudformation):
+def get_stack():
     try:
         stack = cloudformation.Stack(fargs.stack)
+        stack.stack_status
     except:
-        logging.error('Stack %s do not exist!')
+        logging.error('Stack %s do not exist!' % istack.name)
         exit(1)
 
     return stack
 
 
-def do_action_update(cloudformation, client, stack_args):
-    global stack_type
-    global do_create
+# Get template and set istack.template_from (S3|File|Current)
+def get_template():
+    try:
+        # New template
+        if fargs.template:
+            template = str(fargs.template)
+            # From s3
+            if template.startswith('https'):
+                url = template[template.find('//') + 2:]
+                s3 = boto3.client('s3')
+                bucket = url[:url.find('.')]
+                key = url[url.find('/') + 1:]
 
-    do_create = None
+                response = s3.get_object(Bucket=bucket, Key=key)
+                body = response['Body'].read()
+                istack.template_from = 'S3'
+            # From file
+            else:
+                f = open(fargs.template[7:], 'r')
+                body = f.read()
+                istack.template_from = 'File'
+        # Current template
+        else:
+            response = client.get_template(StackName=istack.name)
+            body = json.dumps(response['TemplateBody'])
+            istack.template_from = 'Current'
 
-    # get stack
-    stack = get_stack(cloudformation)
+    except Exception, e:
+        print('Error retrieving template: %s' % e)
+        exit(1)
+    else:
+        template = json.loads(body)
+
+    return template
+
+
+def resolve_sub(name, value):
+    if isinstance(value, list):
+        sub_string = value[0]
+        sub_data = value[1]
+    else:
+        sub_string = value
+        sub_data = ''
+
+    while True:
+        found  = sub_string.find('${')
+        if found == -1:
+            break
+        find_start = found + 2
+        find_end = sub_string[find_start:].find('}') + find_start
+        key = sub_string[find_start:find_end]
+        replace_from = '${' + key + '}'
+
+        if key in sub_data:
+            r_value = recursive_resolve(key, sub_data[key])
+            replace_to = r_value
+        elif key in istack.r_parameters:
+            replace_to = istack.r_parameters[key]
+        elif key == 'AWS::Region':
+            replace_to = boto3.region_name
+        else:
+            replace_to = key
+
+        sub_string = sub_string.replace(replace_from, str(replace_to))
+
+    if sub_string.startswith('https://'):
+        find_s3_files(name, sub_string)
+
+    return sub_string
+
+
+def resolve_if(name, v):
+    value = v[1] if istack.r_conditions[v[0]] else v[2]
+
+    return recursive_resolve(name, value)
+
+
+def resolve_ref(name, v):
+    if v == 'AWS::Region':
+        value = boto3.region_name
+    else:
+        value = istack.r_parameters[v] if v in istack.r_parameters else v
+
+    return value
+
+
+def resolve_import(name, v):
+    value = recursive_resolve(name, v)
+
+    return istack.exports[value]
+
+
+def resolve_findinmap(name, v):
+    mapname = recursive_resolve(name, v[0])
+    key = recursive_resolve(name, v[1])
+    key_value = recursive_resolve(name, v[2])
+
+    return str(istack.mappings[mapname][key][key_value])
+
+
+def resolve_join(name, v):
+    j_list = []
+    for n in v[1]:
+        j_list.append(recursive_resolve(name, n))
+
+    return v[0].join(j_list)
+
+
+def resolve_select(name, v):
+    index = v[0]
+    s_list = recursive_resolve(name, v[1])
+
+    return s_list[index] if isinstance(s_list, list) else s_list
+
+
+def resolve_split(name, v):
+    delimeter = v[0]
+    s_string = recursive_resolve(name, v[1])
+
+    return s_string.split(delimeter)
+
+
+def resolve_or(name, v):
+    o_list = []
+    for n in v:
+        o_list.append(recursive_resolve(name, n))
+
+    return any(o_list)
+
+
+def resolve_and(name, v):
+    o_list = []
+    for n in v:
+        o_list.append(recursive_resolve(name, n))
+
+    return all(o_list)
+
+
+def resolve_equals(name, v):
+    first_value = str(recursive_resolve(name, v[0]))
+    second_value = str(recursive_resolve(name, v[1]))
+
+    return True if first_value == second_value else False
+
+
+def resolve_not(name, v):
+    value = True if recursive_resolve(name, v[0]) == False else False
+
+    return value
+
+
+def resolve_condition(name, v):
+    istack.r_conditions[v] = recursive_resolve(name, istack.conditions[v])
+
+    return istack.r_conditions[v]
+
+
+def awsnovalue(value):
+    if value == 'AWS::NoValue':
+        return True
+
+    return False
+
+
+def recursive_resolve(name, value):
+    if isinstance(value, (dict, OrderedDict)):
+        r_root = {}
+        for r, v in value.iteritems():
+            if r == 'Fn::If':
+                return resolve_if(name, v)
+            elif r == 'Ref':
+                return resolve_ref(name, v)
+            elif r == 'Fn::GetAtt':
+                return  '%s.%s' % (v[0], v[1])
+            elif r == 'Fn::ImportValue':
+                return resolve_import(name, v)
+            elif r == 'Fn::Sub':
+                return  resolve_sub(name, v)
+            elif r == 'Fn::FindInMap':
+                return  resolve_findinmap(name, v)
+            elif r == 'Fn::Join':
+                return  resolve_join(name, v)
+            elif r == 'Fn::Select':
+                return resolve_select(name, v)
+            elif r == 'Fn::Split':
+                return resolve_split(name, v)
+            elif r == 'Fn::Or':
+                return resolve_or(name, v)
+            elif r == 'Fn::And':
+                return resolve_and(name, v)
+            elif r == 'Fn::Equals':
+                return resolve_equals(name, v)
+            elif r == 'Fn::Not':
+                return resolve_not(name, v)
+            elif r == 'Condition':
+                return resolve_condition(name, v)
+            else:
+                r_value = recursive_resolve(name, v)
+
+                if not awsnovalue(r_value):
+                    r_root[r] = r_value
+
+        return r_root
+
+    elif isinstance(value, list):
+        r_root = []
+        for n, l in enumerate(value):
+            r_value = recursive_resolve(n, l)
+
+            if not awsnovalue(r_value):
+                r_root.append(r_value)
+
+        return r_root
+
+    elif isinstance(value, (int, str, unicode)):
+
+        return value
+
+
+def process_resources():
+    istack.r_resources = {}
+    istack.t_resources = {}
+    istack.s3_files = set()
+
+    for r in sorted(istack.resources):
+        v = istack.resources[r]
+        if not ('Condition' in v and not istack.r_conditions[v['Condition']]):
+            try:
+                del v['Condition']
+            except:
+                pass
+            istack.t_resources[v['Type']] = r
+            istack.r_resources[r] = recursive_resolve(r, v)
+
+    if fargs.debug:
+        pprint(istack.r_resources)
+        pprint(istack.t_resources)
+        exit(0)
+
+    if istack.s3_files:
+        check_s3_files()
+
+    if 'AWS::ECS::TaskDefinition' in istack.t_resources:
+        check_ecr_images()
+
+
+def process_conditions():
+    istack.r_conditions = {}
+    for c in sorted(istack.conditions):
+        v = istack.conditions[c]
+        if c not in istack.r_conditions:
+            istack.r_conditions[c] = recursive_resolve(c, v)
+
+
+def process_parameters():
+    # add stack parameters as argparse args and update fargs
+    add_stack_params_as_args()
+
+    # if template include EnvShort params force its value based on the Env one
+    if 'EnvShort' in istack.parameters:
+        force_envshort()
+
+    # if using template option set/force EnvStackVersion
+    if fargs.template:
+        do_envstackversion_from_s3_template()
+
+    # unchanged stack params
+    params_default = {}
+
+    # changed stack params
+    params_changed = {}
+
+    # new stack params - default value
+    params_added = {}
+
+    # forced to default stack params - current value not in allowed ones
+    params_forced_default = {}
+
+    # list of final parameters args to use for executing action
+    # as dict with ParameterKey ParameterValue keys
+    # Ex for EnvRole=cache:
+    # [{u'ParameterKey': 'EnvRole', u'ParameterValue': 'cache'}, {...}]
+    istack.action_parameters = []
+
+    # final resolved value stack parameters - {name: value} dictionary
+    istack.r_parameters = {}
+
+    # set final parameters values to use for exectuing action - istack.action_parameters and istack.r_parameters
+    set_action_parameters(params_default, params_changed, params_added, params_forced_default)
+
+    # show changes to output
+    print('\n')
+    if istack.create and params_default:
+        print('Default - Stack Parameters\n%s\n' % pformat(params_default, width=1000000))
+
+    if params_changed:
+        mylog('Changed - Stack Parameters\n%s' % pformat(params_changed, width=1000000))
+        print('\n')
+
+    if not istack.create and params_added:
+        mylog('Added - Stack Parameters\n%s' % pformat(params_added, width=1000000))
+        print('\n')
+
+    if params_forced_default:
+        mylog('Forced to Default - Stack Parameters\n%s' % pformat(params_forced_default, width=1000000))
+        print('\n')
+
+
+def do_action_params():
+    istack.parameters = istack.template['Parameters']
+    istack.conditions = istack.template['Conditions']
+    istack.mappings = istack.template['Mappings']
+    istack.resources = istack.template['Resources']
+
+    # process parameters: update fargs, istack.r_parameters and istack.action_parameters and show changes
+    logger.info('Processing Parameters')
+    process_parameters()
+
+    try:
+        # resolve conditions
+        logger.debug('Processing Conditions')
+        process_conditions()
+
+        # resolve resources
+        logger.debug('Processing Resources')
+        process_resources()
+    except Exception as e:
+        pprint(e)
+        logger.WARNING('Error resolving template, cannot validate s3 files and ecr images.')
+
+
+def get_args_for_action():
+    # get cloudformation exports
+    logger.info('Getting CloudFormation Exports')
+    istack.exports = get_cloudformation_exports(client)
+
+    # get current version parameters value - if creating return empty dict
+    logger.info('Getting Parameters current values')
+    istack.c_parameters = get_parameters_current()
 
     # update template param if using version one
     if fargs.version:
-        update_template_param(client, stack)
+        update_template_param(istack.stack)
 
-    # -get allowed stack parameters from supplied template or current one
-    stack_parameters = do_stack_parameters(client)
+    # get template body supplied or current one
+    logger.info('Getting Template Body')
+    istack.template = get_template()
 
-    # -get stack args as argparse objects (unparsed args[1] object) and update fargs
-    do_stack_args(stack_parameters, stack_args)
+    # set istack.action_parameters - parameters args for action
+    do_action_params()
 
-    # get stack outputs before update
-    stack_outputs_before = get_stack_outputs(stack)
+    # -build tags
+    do_action_tags()
 
-    # set stack_type
-    stack_type = stack_outputs_before['StackType'] if 'StackType' in stack_outputs_before else None
-
-    # show current stack outputs
-    show_stack_outputs(stack_outputs_before, stack.last_updated_time)
-
-    # get stack resources before update (and resources by type needed by check_EnvAppVersion)
-    resources_before, resources_by_type = get_resources(client, stack)
-
-    # check if supplied EnvAppNVersion does exist
-    for n, v in vars(fargs).iteritems():
-        if n.startswith('EnvApp') and n.endswith('Version'):
-            appindex = n.replace('EnvApp', '').replace('Version', '')
-            if v:
-                check_EnvAppVersion(client, cloudformation, stack_outputs_before, resources_by_type, appindex)
-
-    # -build params for update
-    stack_params = do_stack_params(stack, stack_parameters)
-
-    # -build tags for update
-    stack_tags = do_stack_tags(stack)
-
-    # -build all args for update stack function
-    us_args = do_updatestack_args(stack_params, stack_tags)
+    # -build all args for action
+    us_args = do_action_args()
     # pprint(us_args)
 
-    # -get timestamp from last event
-    last_event_timestamp = get_last_event_timestamp(stack)
+    return us_args
+
+
+def do_action_update():
+    # get final args for update/create
+    us_args = get_args_for_action()
+
+    # store stack info - ouputs, resources, last update time
+    store_stack_info('before')
+
+    # show stack outputs
+    show_stack_outputs('before')
 
     # -if using changeset ...
     if not fargs.nochangeset:
-        do_changeset_actions(client, stack, us_args)
+        do_changeset_actions(us_args)
 
     # -do update
-    update_response = update_stack(stack, us_args)
+    update_response = update_stack(us_args)
     mylog(json.dumps(update_response))
     time.sleep(1)
 
     # -show update status until complete
-    update_waiter(stack, last_event_timestamp)
+    update_waiter(istack.last_event_timestamp)
 
-    # get stack resources after update
-    resources_after, resources_by_type = get_resources(client, stack)
+    # store stack info changed
+    store_stack_info_changed()
 
-    # get stack resources changed
-    resources_changed = get_resources_changed(resources_before, resources_after)
-
-    # get stack outputs after update
-    stack.reload()
-    stack_outputs_after = get_stack_outputs(stack)
-
-    # compare outputs
-    outputs_changed = compare_outputs(stack_outputs_before, stack_outputs_after)
+    # show changed stack outputs
+    show_stack_outputs('changed')
 
     # update dashboards
-    update_dashboards(resources_changed, resources_after, outputs_changed)
+    update_dashboards()
 
 
-def do_action_create(cloudformation, client, stack_args):
-    global do_create
-
-    do_create = True
-    stack = None
-
-    # update template param if using version one
-    if fargs.version:
-        update_template_param(client, stack)
-
-    # -get allowed stack parameters from supplied template or current one
-    stack_parameters = do_stack_parameters(client)
-
-    # -get stack args as argparse objects (unparsed args[1] object) and update fargs
-    do_stack_args(stack_parameters, stack_args)
-
-    # -build params for create
-    stack_params = do_stack_params(stack, stack_parameters)
-
-    # -build tags for create
-    stack_tags = do_stack_tags(stack)
-
-    # -build all args for create stack function
-    us_args = do_updatestack_args(stack_params, stack_tags)
-    # pprint(us_args)
+def do_action_create():
+    # get final args for update/create
+    us_args = get_args_for_action()
 
     if show_confirm():
-        create_response = create_stack(client, us_args)
+        create_response = create_stack(us_args)
         print(create_response)
         time.sleep(1)
 
         stack = cloudformation.Stack(fargs.stack)
-        last_event_timestamp = get_last_event_timestamp(stack)
+        istack.last_event_timestamp = get_last_event_timestamp()
 
         # -show update status until complete
-        update_waiter(stack, last_event_timestamp)
+        update_waiter(istack.last_event_timestamp)
 
 
-def do_action_info(cloudformation, client, stack_args):
-    # get stack
-    stack = get_stack(cloudformation)
-
+def do_action_info():
     # -get stack parameters from current stack
     stack_parameters = client.get_template_summary(StackName=fargs.stack)['Parameters']
+
+    # store stack info - ouputs, resources, last update time
+    store_stack_info('current')
 
     # show stack output
-    stack_outputs_before = get_stack_outputs(stack)
-    show_stack_outputs(stack_outputs_before, stack.last_updated_time)
-    show_stack_params_override(stack, stack_parameters)
+    show_stack_outputs('current')
+    show_stack_params_override(stack_parameters)
 
 
-def do_action_log(cloudformation, client, stack_args):
-    # get stack
-    stack = get_stack(cloudformation)
-
-    # -get stack parameters from current stack
-    stack_parameters = client.get_template_summary(StackName=fargs.stack)['Parameters']
-
-    # -get timestamp from last event
-    last_event_timestamp = get_last_event_timestamp(stack)
-    show_log(stack, last_event_timestamp, int(fargs.day))
+def do_action_log():
+    show_log(int(fargs.day))
 
 
-def do_action_cancel(cloudformation, client, stack_args):
-    # get stack
-    stack = get_stack(cloudformation)
-
-    # -get stack parameters from current stack
-    stack_parameters = client.get_template_summary(StackName=fargs.stack)['Parameters']
-
-    # -get timestamp from last event
-    last_event_timestamp = get_last_event_timestamp(stack)
-
-    # -do cancel_update
-    cancel_response = cancel_update_stack(stack)
+def do_action_cancel():
+    cancel_response = cancel_update_stack()
     mylog(json.dumps(cancel_response))
     time.sleep(1)
 
     # -show update status until complete
-    update_waiter(stack, last_event_timestamp)
+    update_waiter(istack.last_event_timestamp)
 
 
-def do_action_delete(cloudformation, client, stack_args):
-    # get stack
-    stack = get_stack(cloudformation)
-
-    # -get stack parameters from current stack
-    stack_parameters = client.get_template_summary(StackName=fargs.stack)['Parameters']
-
-    print('WARNING - DELETING STACK %s  - WARNING' % stack_name)
+def do_action_delete():
+    print('WARNING - DELETING STACK %s  - WARNING' % istack.name)
     if show_confirm():
-        # -get timestamp from last event
-        last_event_timestamp = get_last_event_timestamp(stack)
-
         # -do delete
-        delete_response = delete_stack(stack)
+        delete_response = delete_stack()
         mylog(json.dumps(delete_response))
         time.sleep(1)
 
         # -show update status until complete
-        update_waiter(stack, last_event_timestamp)
+        update_waiter(istack.last_event_timestamp)
 
 
-def do_action_continue(cloudformation, client, stack_args):
-    # get stack
-    stack = get_stack(cloudformation)
-
-    # -get stack parameters from current stack
-    stack_parameters = client.get_template_summary(StackName=fargs.stack)['Parameters']
-
-    # -get timestamp from last event
-    last_event_timestamp = get_last_event_timestamp(stack)
-
+def do_action_continue():
     # -do continue_update
-    continue_response = continue_update_stack(client, stack)
+    continue_response = continue_update_stack()
     mylog(json.dumps(continue_response))
     time.sleep(1)
 
     # -show update status until complete
-    update_waiter(stack, last_event_timestamp)
+    update_waiter(istack.last_event_timestamp)
 
 
 # main program function
 def run():
-    global stack_name
+    global istack
     global boto3
     global fargs
+    global client
+    global cloudformation
 
     # init class for full args program args + stack args
     fargs = full_args()
+
+    # init istack class
+    istack = ibox_stack()
 
     # -get cmd args as argparse objects
     args = get_args()
@@ -1381,29 +1561,38 @@ def run():
     cloudformation = boto3.resource('cloudformation')
     client = boto3.client('cloudformation')
 
-    # -set global var stack_name used for logging with stack name prepended
-    stack_name = fargs.stack
+    # -set stack name used for logging with stack name prepended
+    istack.name = fargs.stack
+    istack.args = args[1]
+
+    # get stack resource if creating return None
+    istack.stack = get_stack()
+
+    istack.create = None
 
     if fargs.action == 'create':
-        do_action_create(cloudformation, client, args[1])
+        istack.create = True
+        istack.stack = None
+        do_action_create()
+    else:
+        # get stack resource
+        istack.stack = get_stack()
 
-    if fargs.action == 'update':
-        do_action_update(cloudformation, client, args[1])
+        # get last_event_time
+        istack.last_event_timestamp = get_last_event_timestamp()
 
-    if fargs.action == 'info':
-        do_action_info(cloudformation, client, args[1])
-
-    if fargs.action == 'log':
-        do_action_log(cloudformation, client, args[1])
-
-    if fargs.action == 'cancel':
-        do_action_cancel(cloudformation, client, args[1])
-
-    if fargs.action == 'delete':
-        do_action_delete(cloudformation, client, args[1])
-
-    if fargs.action == 'continue':
-        do_action_continue(cloudformation, client, args[1])
+        if fargs.action == 'update':
+            do_action_update()
+        if fargs.action == 'info':
+            do_action_info()
+        if fargs.action == 'log':
+            do_action_log()
+        if fargs.action == 'cancel':
+            do_action_cancel()
+        if fargs.action == 'delete':
+            do_action_delete()
+        if fargs.action == 'continue':
+            do_action_continue()
 
     exit(0)
 
