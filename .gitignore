@@ -58,6 +58,5 @@ target/
 
 dist/
 *.swp
-tools/autospotting/build/*
 ibox_create-stack.py
 ibox_update-stack.py
