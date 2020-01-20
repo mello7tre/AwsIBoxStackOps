@@ -1003,8 +1003,8 @@ def mylog(string):
         'BUILDKITE_SLACK_TOKEN' in os.environ and
         'BUILDKITE_SLACK_USER' in os.environ
     ):
-        slack_client = slack.WebClient(token=os.environ['BUILDKITE_SLACK_TOKEN'])
-        ac = slack_client.chat_postMessage(
+        slack_web = slack.WebClient(token=os.environ['BUILDKITE_SLACK_TOKEN'])
+        ac = slack_web.chat_postMessage(
             channel='#%s' % fargs.slack_channel,
             text=message,
             username=os.environ['BUILDKITE_SLACK_USER'],
