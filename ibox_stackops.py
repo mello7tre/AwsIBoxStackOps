@@ -1387,7 +1387,7 @@ def process_parameters():
 def do_action_params():
     istack.parameters = istack.template['Parameters']
     istack.conditions = istack.template['Conditions']
-    istack.mappings = istack.template['Mappings']
+    istack.mappings = istack.template['Mappings'] if 'Mappings' in istack.template else None
     istack.resources = istack.template['Resources']
 
     # process parameters: update fargs, istack.r_parameters and istack.action_parameters and show changes
@@ -1418,7 +1418,7 @@ def get_args_for_action():
 
     # update template param if using version one
     if fargs.version:
-        update_template_param(istack.stack)
+        update_template_param()
 
     # get template body supplied or current one
     logger.info('Getting Template Body')
