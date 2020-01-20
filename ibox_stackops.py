@@ -1413,7 +1413,7 @@ def do_action_params():
         process_resources()
     except Exception as e:
         pprint(e)
-        logger.WARNING('Error resolving template, cannot validate s3 files and ecr images.')
+        logger.warning('Error resolving template, cannot validate s3 files and ecr images.')
 
 
 def get_args_for_action():
