@@ -1384,10 +1384,19 @@ def process_parameters():
         print('\n')
 
 
+def try_template_section(name):
+    try:
+        section = istack.template[name]
+    except:
+        section = None
+
+    return section
+
+
 def do_action_params():
-    istack.parameters = istack.template['Parameters']
-    istack.conditions = istack.template['Conditions']
-    istack.mappings = istack.template['Mappings'] if 'Mappings' in istack.template else None
+    istack.parameters = try_template_section('Parameters')
+    istack.conditions = try_template_section('Conditions')
+    istack.mappings = try_template_section('Mappings')
     istack.resources = istack.template['Resources']
 
     # process parameters: update fargs, istack.r_parameters and istack.action_parameters and show changes
