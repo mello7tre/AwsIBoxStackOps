@@ -1004,8 +1004,7 @@ def mylog(string):
         'BUILDKITE_SLACK_USER' in os.environ
     ):
         slack_client = slack.WebClient(token=os.environ['BUILDKITE_SLACK_TOKEN'])
-        ac = slack_client.api_call(
-            "chat.postMessage",
+        ac = slack_client.chat_postMessage(
             channel='#%s' % fargs.slack_channel,
             text=message,
             username=os.environ['BUILDKITE_SLACK_USER'],
