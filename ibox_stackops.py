@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
 import json
 import logging
 import boto3
@@ -7,7 +7,8 @@ import argparse
 import time
 import os
 import sys
-from collections import OrderedDict, Mapping
+from collections.abc import Mapping
+from collections import OrderedDict
 from pprint import pprint, pformat
 from datetime import datetime, timedelta, tzinfo
 from calendar import timegm
@@ -20,13 +21,13 @@ except ImportError:
     add_to_dashboard = None
 
 try:
-    from slackclient import SlackClient
+    import slack
     slack_client = True
 except ImportError:
     slack_client = None
 
 logging.basicConfig()
-logger = logging.getLogger()
+logger = logging.getLogger('ibox')
 logger.setLevel(logging.INFO)
 
 DashBoards = []
@@ -308,13 +309,13 @@ def set_action_parameters(params_default, params_changed, params_added, params_f
         # append dictionary element to list
         istack.action_parameters.append(
             {
-                u'ParameterKey': key,
-                u'ParameterValue': value,
+                'ParameterKey': key,
+                'ParameterValue': value,
             } if istack.create else
             {
-                u'ParameterKey': key,
-                u'ParameterValue': value,
-                u'UsePreviousValue': use_previous_value,
+                'ParameterKey': key,
+                'ParameterValue': value,
+                'UsePreviousValue': use_previous_value,
             }
         )
 
@@ -404,10 +405,10 @@ def show_stack_params_override(stack_parameters):
 # build tags for update
 def do_action_tags():
     stack_tags = [
-        {u'Key': 'Env', u'Value': fargs.Env},
-        {u'Key': 'EnvRole', u'Value': fargs.EnvRole},
-        {u'Key': 'EnvStackVersion', u'Value': fargs.version},
-        {u'Key': 'EnvApp1Version', u'Value': fargs.EnvApp1Version},
+        {'Key': 'Env', 'Value': fargs.Env},
+        {'Key': 'EnvRole', 'Value': fargs.EnvRole},
+        {'Key': 'EnvStackVersion', 'Value': fargs.version},
+        {'Key': 'EnvApp1Version', 'Value': fargs.EnvApp1Version},
     ] if istack.create else istack.stack.tags
 
     # unchanged tags
@@ -453,14 +454,14 @@ def do_action_tags():
             tags_default[key] = value
 
         final_tags.append({
-            u'Key': key,
-            u'Value': value
+            'Key': key,
+            'Value': value
         })
 
     # Add LastUpdate Tag with current time
     final_tags.append({
-        u'Key': 'LastUpdate',
-        u'Value': str(datetime.now())
+        'Key': 'LastUpdate',
+        'Value': str(datetime.now())
     })
 
     print('\n')
@@ -613,7 +614,7 @@ def update_waiter(timestamp):
 
 # build/update full_args from argparse arg objects
 def do_fargs(args):
-    for property, value in vars(args).iteritems():
+    for property, value in vars(args).items():
         # fix to avoid overwriting Env and EnvRole with None value
         if not hasattr(fargs, property):
             setattr(fargs, property, value)
@@ -748,7 +749,7 @@ def execute_changeset(changeset_id):
 
 def show_confirm():
     print("")
-    answer = raw_input('Digit [y] to continue or any other key to exit: ')
+    answer = input('Digit [y] to continue or any other key to exit: ')
     if not answer or answer[0].lower() != 'y':
         return False
     else:
@@ -826,7 +827,7 @@ def check_ecr_images():
 # method should be identically to the one found in bin/ibox_add_to_dash.py, but dash param default to None
 def get_resources(dash=None):
     resources = {}
-    res_list = map_resources_on_dashboard.keys()
+    res_list = list(map_resources_on_dashboard.keys())
 
     paginator = client.get_paginator('list_stack_resources')
     response_iterator = paginator.paginate(StackName=istack.name)
@@ -865,7 +866,7 @@ def get_resources_changed():
     after = istack.after['resources']
 
     changed = {}
-    for r, v in before.iteritems():
+    for r, v in before.items():
         if r in after and v != after[r]:
             changed[r] = after[r]
 
@@ -877,7 +878,7 @@ def get_outputs_changed():
     after = istack.after['outputs']
 
     changed = {}
-    for o, v in after.iteritems():
+    for o, v in after.items():
         if o in before and v != before[o]:
             changed[o] = before[o] + ' => ' + v
 
@@ -926,7 +927,7 @@ def do_update_dashboard(cw, resources_changed, mode, dashboard_name):
                     offset += len(v) - 1
                 else:
                     my_metric.append(v)
-            for r, u in resources_changed.iteritems():
+            for r, u in resources_changed.items():
                 for l in set([2, len(my_metric) - 2]):
                     m_name = my_metric[l]
                     if map_resources_on_dashboard[r] == m_name:
@@ -1002,7 +1003,7 @@ def mylog(string):
         'BUILDKITE_SLACK_TOKEN' in os.environ and
         'BUILDKITE_SLACK_USER' in os.environ
     ):
-        slack = SlackClient(os.environ['BUILDKITE_SLACK_TOKEN'])
+        slack = slack.WebClient(token=os.environ['BUILDKITE_SLACK_TOKEN'])
         ac = slack.api_call(
             "chat.postMessage",
             channel='#%s' % fargs.slack_channel,
@@ -1103,7 +1104,7 @@ def get_template():
             body = json.dumps(response['TemplateBody'])
             istack.template_from = 'Current'
 
-    except Exception, e:
+    except Exception as e:
         print('Error retrieving template: %s' % e)
         exit(1)
     else:
@@ -1243,7 +1244,7 @@ def awsnovalue(value):
 def recursive_resolve(name, value):
     if isinstance(value, (dict, OrderedDict)):
         r_root = {}
-        for r, v in value.iteritems():
+        for r, v in value.items():
             if r == 'Fn::If':
                 return resolve_if(name, v)
             elif r == 'Ref':
@@ -1290,7 +1291,7 @@ def recursive_resolve(name, value):
 
         return r_root
 
-    elif isinstance(value, (int, str, unicode)):
+    elif isinstance(value, (int, str)):
 
         return value
 

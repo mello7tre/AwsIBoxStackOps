@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
 import json
 import logging
 import boto3
@@ -123,7 +123,7 @@ def get_stack_outputs(stack):
 # build dict(key: value) from argparse arg objects
 def do_args(args):
     myargs = {}
-    for property, value in vars(args).iteritems():
+    for property, value in vars(args).items():
         if value is not None:
             myargs[property] = value
     return myargs
@@ -155,7 +155,7 @@ def get_policy_ecs(res):
     resname = '/'.join(res['ScalingPolicyTrackings1'].split('/')[2:5]).split(':')[0]
     client = boto3.client('application-autoscaling')
     response = client.describe_scaling_policies(
-        PolicyNames=ScalingPolicyTrackingsNames.keys(),
+        PolicyNames=list(ScalingPolicyTrackingsNames.keys()),
         ResourceId= resname,
         ServiceNamespace='ecs',
     )
@@ -221,7 +221,7 @@ def set_widget_annotations(res):
 
 def get_resources(client, stack, dash=True):
     resources = {}
-    res_list = map_resources_on_dashboard.keys()
+    res_list = list(map_resources_on_dashboard.keys())
     stack_resources = client.describe_stack_resources(StackName=stack.stack_name)['StackResources']
     for res in stack_resources:
         res_lid = res['LogicalResourceId']
@@ -255,10 +255,10 @@ def get_resources(client, stack, dash=True):
 
 def do_label_exist(w_label, w_metrics):
     for index, metric in enumerate(w_metrics):
-        if isinstance(metric, dict) and w_label in metric.values():
+        if isinstance(metric, dict) and w_label in list(metric.values()):
             return True
         for m in metric:
-            if isinstance(m, dict) and w_label in m.values():
+            if isinstance(m, dict) and w_label in list(m.values()):
                 return index
 
     return None
