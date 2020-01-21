@@ -1574,9 +1574,6 @@ def run():
     istack.name = fargs.stack
     istack.args = args[1]
 
-    # get stack resource if creating return None
-    istack.stack = get_stack()
-
     istack.create = None
 
     if fargs.action == 'create':
