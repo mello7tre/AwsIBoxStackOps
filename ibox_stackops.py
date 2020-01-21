@@ -1487,7 +1487,7 @@ def do_action_create():
         print(create_response)
         time.sleep(1)
 
-        stack = cloudformation.Stack(fargs.stack)
+        istack.stack = cloudformation.Stack(fargs.stack)
         istack.last_event_timestamp = get_last_event_timestamp()
 
         # -show update status until complete
