@@ -91,6 +91,7 @@ def get_args():
     # parent parser args
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('-p', '--params', help='Show Available Stack Parameters', action='store_true')
+    parent_parser.add_argument('--debug', help='Show parsed/resolved template and exit', action='store_true')
 
     # create parser
     parser_create = subparsers.add_parser('create', parents=[parent_parser], help='Create Stack')
@@ -109,7 +110,6 @@ def get_args():
     template_version_group_update = parser_update.add_mutually_exclusive_group()
     template_version_group_update.add_argument('-t', '--template', help='Template Location', type=str)
     template_version_group_update.add_argument('-v', '--version', help='Stack Env Version', type=str)
-    template_version_group_update.add_argument('--debug', help='Show parsed/resolved template and exit', action='store_true')
 
     parser_update.add_argument(
         '-n', '--nochangeset', help='Do Not Use Stack Changeset (no confirmation)',
