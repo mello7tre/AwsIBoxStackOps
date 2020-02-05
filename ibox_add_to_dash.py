@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 
 AlarmCPUHighThreshold = 60
 AlarmCPULowThreshold = 30
-ScalingPolicyTrackingsCpuBaseLabel = 'ScalingPolicyTrackingsCpu' 
+ScalingPolicyTrackingsCpuBaseLabel = 'ScalingPolicyTrackingsCpu'
 ScalingPolicyTrackingsCpuValue = 80
 
 ScalingPolicyTrackingsNames = {
@@ -73,7 +73,9 @@ widget_label = {}
 # parse main argumets
 def get_parser():
     parser = argparse.ArgumentParser(description='ADD STACK TO DASHBOARD')
-    parser.add_argument('--stack', nargs='+', help='Stack Names space separated', required=True, type=str)
+    parser.add_argument('--stack', nargs='+',
+                        help='Stack Names space separated',
+                        required=True, type=str)
     parser.add_argument(
         '--statistic',
         help='Statistic to use for metrics',
@@ -83,14 +85,17 @@ def get_parser():
     parser.add_argument(
         '--statisticresponse',
         help='Statistic to use for response time metrics',
-        choices=['Average', 'p99', 'p95', 'p90', 'p50', 'p10', 'Maximum', 'Minimum'],
-        default='p95'
+        choices=[
+            'Average', 'p99', 'p95', 'p90',
+            'p50', 'p10', 'Maximum', 'Minimum'],
+        default='p95',
     )
     parser.add_argument('--debug', help='Show json Dash', action='store_true')
     parser.add_argument('--silent', help='Silent mode', action='store_true')
     parser.add_argument(
         '--vertical',
-        help='Add vertical annotation at creation time, and optionally specify fill mode',
+        help='Add vertical annotation at creation time, '
+             'and optionally specify fill mode',
         nargs='?',
         choices=['before', 'after'],
         const=True,
@@ -141,7 +146,9 @@ def get_alarm(res):
 
 def get_policy_ec2(res):
     polname = res['ScalingPolicyTrackings1'].split('/')[2]
-    AutoScalingGroupName = 'AutoScalingGroupSpotName' if 'AutoScalingGroupSpotName' in res else 'AutoScalingGroupName'
+    AutoScalingGroupName = ('AutoScalingGroupSpotName' if
+                            'AutoScalingGroupSpotName' in res else
+                            'AutoScalingGroupName')
     client = boto3.client('autoscaling')
     response = client.describe_policies(
         AutoScalingGroupName=res[AutoScalingGroupName],
@@ -152,15 +159,17 @@ def get_policy_ec2(res):
 
 
 def get_policy_ecs(res):
-    resname = '/'.join(res['ScalingPolicyTrackings1'].split('/')[2:5]).split(':')[0]
+    resname = '/'.join(
+        res['ScalingPolicyTrackings1'].split('/')[2:5]).split(':')[0]
     client = boto3.client('application-autoscaling')
     response = client.describe_scaling_policies(
         PolicyNames=list(ScalingPolicyTrackingsNames.keys()),
-        ResourceId= resname,
+        ResourceId=resname,
         ServiceNamespace='ecs',
     )
 
-    return response['ScalingPolicies'][0]['TargetTrackingScalingPolicyConfiguration']
+    return response['ScalingPolicies'][0][
+        'TargetTrackingScalingPolicyConfiguration']
 
 
 def get_policy(res):
@@ -171,47 +180,48 @@ def get_policy(res):
 
     stat = 'Average'
     value = conf['TargetValue']
-    if 'CustomizedMetricSpecification' in conf and 'Statistic' in conf['CustomizedMetricSpecification']:
-        stat = conf['CustomizedMetricSpecification']['Statistic'] 
+    if ('CustomizedMetricSpecification' in conf and
+            'Statistic' in conf['CustomizedMetricSpecification']):
+        stat = conf['CustomizedMetricSpecification']['Statistic']
 
-    return value, ScalingPolicyTrackingsCpuBaseLabel + stat
+    return value, f'{ScalingPolicyTrackingsCpuBaseLabel}{stat}'
 
 
 def set_widget_annotations(res):
     global AlarmCPUHighThreshold
     global AlarmCPULowThreshold
-    #global ScalingPolicyTrackingsCpuLabel
+    # global ScalingPolicyTrackingsCpuLabel
     global ScalingPolicyTrackingsCpuValue
     global widget_annotations
     global widget_annotations_type
 
     ScalingPolicyTrackingsCpuLabel = ScalingPolicyTrackingsCpuBaseLabel
-    
 
     if 'AlarmCPUHigh' and 'AlarmCPULow' in res:
         AlarmCPUHighThreshold, AlarmCPULowThreshold = get_alarm(res)
         widget_annotations_type = 'step'
     if any(k in res for k in ScalingPolicyTrackingsNames):
-        ScalingPolicyTrackingsCpuValue, ScalingPolicyTrackingsCpuLabel = get_policy(res)
+        ScalingPolicyTrackingsCpuValue, ScalingPolicyTrackingsCpuLabel = (
+            get_policy(res))
         widget_annotations_type = 'tracking'
 
     widget_annotations = {
         'tracking': [
             {
-                'value': 100 
+                'value': 100
             },
-            {   
+            {
                 'label': ScalingPolicyTrackingsCpuLabel,
                 'value': ScalingPolicyTrackingsCpuValue,
                 'color': '#1f77b4',
             }
         ],
         'step': [
-            {   
+            {
                 'label': 'AlarmCPUHighThreshold',
                 'value': AlarmCPUHighThreshold,
             },
-            {   
+            {
                 'label': 'AlarmCPULowThreshold',
                 'value': AlarmCPULowThreshold,
                 'color': '#2ca02c',
@@ -219,16 +229,18 @@ def set_widget_annotations(res):
         ]
     }
 
+
 def get_resources(client, stack, dash=True):
     resources = {}
     res_list = list(map_resources_on_dashboard.keys())
-    stack_resources = client.describe_stack_resources(StackName=stack.stack_name)['StackResources']
+    stack_resources = client.describe_stack_resources(
+        StackName=stack.stack_name)['StackResources']
     for res in stack_resources:
         res_lid = res['LogicalResourceId']
         if res_lid in res_list:
             res_pid = res['PhysicalResourceId']
             if res_pid.startswith('arn'):
-                res_pid = res_pid.split(':',5)[5]
+                res_pid = res_pid.split(':', 5)[5]
             if res_lid in [
                 'ListenerHttpsExternalRules1',
                 'ListenerHttpsExternalRules2',
@@ -243,7 +255,9 @@ def get_resources(client, stack, dash=True):
                     res_pid = res_pid_arr[2]
                 else:
                     res_pid = res_pid_arr[1]
-            if res_lid in ['LoadBalancerApplicationExternal', 'LoadBalancerApplicationInternal']:
+            if res_lid in [
+                    'LoadBalancerApplicationExternal',
+                    'LoadBalancerApplicationInternal']:
                 res_pid = '/'.join(res_pid.split('/')[1:4])
 
             if dash and map_resources_on_dashboard[res_lid]:
@@ -275,20 +289,20 @@ def do_insert_metrics(label, metric, widget, msg):
             widget_metrics[label_index] = metric
             out_msg = 'Updated'
         if not args_dict['silent']:
-            print('\tMetrics: ' + msg + ' ' + out_msg)
+            print(f'\tMetrics: {msg} {out_msg}')
 
 
 def get_widget_map_position(wtype, index):
     if wtype == 'stack':
         # even index (left side)
         if (index & 1) == 0:
-            return (0,widget_height['stack'] * index)
+            return (0, widget_height['stack'] * index)
         # odd index (right side)
         else:
-            return (widget_width['stack'],widget_height['stack'] * index)
+            return (widget_width['stack'], widget_height['stack'] * index)
     # global type
     else:
-        return (0,widget_height['global'] * index)
+        return (0, widget_height['global'] * index)
 
 
 def add_annotations(w, atype):
@@ -309,17 +323,20 @@ def add_annotations(w, atype):
         # vertical annotation not present
         if 'vertical' not in annotations:
             annotations['vertical'] = []
-        # append only if empty or there is not annotations with value in the same minute
-        if not annotations['vertical'] or all(value_now[0:16] not in a['value'] for a in annotations['vertical']):
+        # append only if empty or there is not annotations
+        # with value in the same minute
+        if (not annotations['vertical'] or
+                all(value_now[0:16] not in a['value']
+                    for a in annotations['vertical'])):
             annotations['vertical'].append(w_ann_vertical)
 
     # Horizontal annotations
     annotations['horizontal'] = widget_annotations[widget_annotations_type]
 
     # Horizontal (ec2-ecs)
-    #if atype == 'ecs':
+    # if atype == 'ecs':
     #    annotations['horizontal'] = widget_annotations['ecs']
-    #if atype == 'ec2':
+    # if atype == 'ec2':
     #    annotations['horizontal'] = widget_annotations['ec2']
 
 
@@ -346,7 +363,8 @@ def get_widget_base(wtype, wlist, windex, title, w):
         widget['properties']['metrics'] = w[windex]['properties']['metrics']
         # and if exists, annotations too..
         if 'annotations' in w[windex]['properties']:
-            widget['properties']['annotations'] = w[windex]['properties']['annotations']
+            widget['properties']['annotations'] = w[windex][
+                'properties']['annotations']
         del w[windex]
         out_msg = 'Updated'
     else:
@@ -357,7 +375,7 @@ def get_widget_base(wtype, wlist, windex, title, w):
 
     w.insert(windex, widget)
     if not args_dict['silent']:
-        print('Widget: ' + title + ' ' + out_msg)
+        print(f'Widget:{title} {out_msg}')
 
     return widget
 
@@ -370,8 +388,10 @@ def update_widget_stack_properties(widget, res):
         do_insert_metrics('Cpu - Maximum', m, widget, 'Cpu - Maximum')
     for m in metrics['response']:
         do_insert_metrics(widget_label['response'], m, widget, 'Response')
-        do_insert_metrics(widget_label['response_external'], m, widget, 'Response External')
-        do_insert_metrics(widget_label['response_internal'], m, widget, 'Response Internal')
+        do_insert_metrics(
+            widget_label['response_external'], m, widget, 'Response External')
+        do_insert_metrics(
+            widget_label['response_internal'], m, widget, 'Response Internal')
 
     add_annotations(widget, stack_type)
 
@@ -379,20 +399,26 @@ def update_widget_stack_properties(widget, res):
 def update_widget_5xx_properties(widget, res):
     for m in metrics['5xx']:
         do_insert_metrics(widget_label['5xx'], m, widget, '5xx')
-        do_insert_metrics(widget_label['5xx_external'], m, widget, '5xx External')
-        do_insert_metrics(widget_label['5xx_internal'], m, widget, '5xx Internal')
+        do_insert_metrics(
+            widget_label['5xx_external'], m, widget, '5xx External')
+        do_insert_metrics(
+            widget_label['5xx_internal'], m, widget, '5xx Internal')
 
     for m in metrics['4xx']:
         do_insert_metrics(widget_label['4xx'], m, widget, '4xx')
-        do_insert_metrics(widget_label['4xx_external'], m, widget, '4xx External')
-        do_insert_metrics(widget_label['4xx_internal'], m, widget, '4xx Internal')
+        do_insert_metrics(
+            widget_label['4xx_external'], m, widget, '4xx External')
+        do_insert_metrics(
+            widget_label['4xx_internal'], m, widget, '4xx Internal')
 
 
 def update_widget_req_properties(widget, res):
     for m in metrics['requests']:
         do_insert_metrics(widget_label['req'], m, widget, 'Requests')
-        do_insert_metrics(widget_label['req_external'], m, widget, 'Requests External')
-        do_insert_metrics(widget_label['req_internal'], m, widget, 'Requests Internal')
+        do_insert_metrics(
+            widget_label['req_external'], m, widget, 'Requests External')
+        do_insert_metrics(
+            widget_label['req_internal'], m, widget, 'Requests Internal')
 
     for m in metrics['healthy']:
         do_insert_metrics(widget_label['healthy'], m, widget, 'Healthy')
@@ -413,22 +439,26 @@ def update_dashboard(stack, res, dashboard_name):
         print(dashboard_name)
 
     try:
-        dashboard_body = cw.get_dashboard(DashboardName=dashboard_name)['DashboardBody']
+        dashboard_body = cw.get_dashboard(
+            DashboardName=dashboard_name)['DashboardBody']
         dash = json.loads(dashboard_body)
     except:
         print('DashBoard do not exist, creating one..\n')
-        dash = { 'widgets': [] }
+        dash = {'widgets': []}
 
     w = dash['widgets']
 
     # BEGIN cpu
-    # Find the current number of widget stacks, so that the next one is added at the end
+    # Find the current number of widget stacks,
+    # so that the next one is added at the end
     len_stacks = len([n for n in w if n['width'] == widget_width['stack']])
-    
-    list_role = [n for n, v in enumerate(w) if v['properties']['title'] == widget_title['role']]
+
+    list_role = [n for n, v in enumerate(w)
+                 if v['properties']['title'] == widget_title['role']]
     index_role = list_role[0] if len(list_role) > 0 else len_stacks
 
-    widget = get_widget_base('stack', list_role, index_role, widget_title['role'], w)
+    widget = get_widget_base(
+        'stack', list_role, index_role, widget_title['role'], w)
     update_widget_stack_properties(widget, res)
 
     # If metrics are empty delete widget (Ex ecs-alb)
@@ -436,25 +466,31 @@ def update_dashboard(stack, res, dashboard_name):
         del w[index_role]
 
     # BEGIN requests
-    list_req = [n for n, v in enumerate(w) if v['properties']['title'] == widget_title['req']]
+    list_req = [n for n, v in enumerate(w)
+                if v['properties']['title'] == widget_title['req']]
     index_req = list_req[0] if len(list_req) > 0 else len(w)
 
-    widget = get_widget_base('global', list_req, index_req, widget_title['req'], w)
+    widget = get_widget_base(
+        'global', list_req, index_req, widget_title['req'], w)
     update_widget_req_properties(widget, res)
 
     # BEGIN 5xx
-    list_5xx = [n for n, v in enumerate(w) if v['properties']['title'] == widget_title['5xx']]
+    list_5xx = [n for n, v in enumerate(w)
+                if v['properties']['title'] == widget_title['5xx']]
     index_5xx = list_5xx[0] if len(list_5xx) > 0 else len(w)
 
-    widget = get_widget_base('global', list_5xx, index_5xx, widget_title['5xx'], w)
+    widget = get_widget_base(
+        'global', list_5xx, index_5xx, widget_title['5xx'], w)
     update_widget_5xx_properties(widget, res)
 
     # BEGIN network
-    list_net = [n for n, v in enumerate(w) if v['properties']['title'] == widget_title['net']]
+    list_net = [n for n, v in enumerate(w)
+                if v['properties']['title'] == widget_title['net']]
     index_net = list_net[0] if len(list_net) > 0 else len(w)
 
     if stack_type == 'ec2' or len(list_net) > 0:
-        widget = get_widget_base('global', list_net, index_net, widget_title['net'], w)
+        widget = get_widget_base(
+            'global', list_net, index_net, widget_title['net'], w)
         update_widget_network_properties(widget, res)
 
     # END Widgets
@@ -466,7 +502,7 @@ def update_dashboard(stack, res, dashboard_name):
     # Put DashBoard
     out = cw.put_dashboard(
         DashboardName=dashboard_name,
-        DashboardBody=json.dumps(dash, separators=(',',':'))
+        DashboardBody=json.dumps(dash, separators=(',', ':'))
     )
 
     if len(out['DashboardValidationMessages']) > 0:
@@ -495,27 +531,31 @@ def set_vars_for_metrics(res):
     global metrics
 
     # update widget_title and widget_label
-    widget_title['role'] = role + '.' + stack_name
+    widget_title['role'] = f'{role}.{stack_name}'
+    title_role = widget_title['role']
 
-    widget_label['cpu'] = 'Cpu - ' + args_dict['statistic']
-    widget_label['response'] = 'Response - ' + args_dict['statisticresponse']
-    widget_label['response_external'] = 'Response External - ' + args_dict['statisticresponse']
-    widget_label['response_internal'] = 'Response Internal - ' + args_dict['statisticresponse']
-    widget_label['5xx'] = widget_title['role'] + ' 5xx'
-    widget_label['4xx'] = widget_title['role'] + ' 4xx'
-    widget_label['5xx_external'] = widget_title['role'] + ' External - 5xx'
-    widget_label['4xx_external'] = widget_title['role'] + ' External - 4xx'
-    widget_label['5xx_internal'] = widget_title['role'] + ' Internal - 5xx'
-    widget_label['4xx_internal'] = widget_title['role'] + ' Internal - 4xx'
-    widget_label['req'] = widget_title['role'] + ' - Requests'
-    widget_label['healthy'] = widget_title['role'] + ' - Healthy'
-    widget_label['req_external'] = widget_title['role'] + ' External - Requests'
-    widget_label['req_internal'] = widget_title['role'] + ' Internal - Requests'
-    widget_label['netin'] = widget_title['role'] + ' - NetworkIN'
-    widget_label['netout'] = widget_title['role'] + ' - NetworkOUT'
+    widget_label['cpu'] = 'Cpu - %s' % args_dict['statistic']
+    widget_label['response'] = 'Response - %s' % args_dict['statisticresponse']
+    widget_label['response_external'] = 'Response External - %s' % (
+        args_dict['statisticresponse'])
+    widget_label['response_internal'] = 'Response Internal - %s' % (
+        args_dict['statisticresponse'])
+    widget_label['5xx'] = f'{title_role} 5xx'
+    widget_label['4xx'] = f'{title_role} 4xx'
+    widget_label['5xx_external'] = f'{title_role} External - 5xx'
+    widget_label['4xx_external'] = f'{title_role} External - 4xx'
+    widget_label['5xx_internal'] = f'{title_role} Internal - 5xx'
+    widget_label['4xx_internal'] = f'{title_role} Internal - 4xx'
+    widget_label['req'] = f'{title_role} - Requests'
+    widget_label['healthy'] = f'{title_role} - Healthy'
+    widget_label['req_external'] = f'{title_role} External - Requests'
+    widget_label['req_internal'] = f'{title_role} Internal - Requests'
+    widget_label['netin'] = f'{title_role} - NetworkIN'
+    widget_label['netout'] = f'{title_role} - NetworkOUT'
 
     # Set common variable for ELB Classic and Application used by EC2 stack
-    if any(n in res for n in ['LoadBalancerNameExternal', 'LoadBalancerNameInternal']):
+    if any(n in res
+           for n in ['LoadBalancerNameExternal', 'LoadBalancerNameInternal']):
         LoadBalancerName = 'LoadBalancerName'
         LoadBalancerNameExternal = 'LoadBalancerNameExternal'
         LoadBalancerNameInternal = 'LoadBalancerNameInternal'
@@ -523,7 +563,8 @@ def set_vars_for_metrics(res):
         Latency = 'Latency'
         HTTPCode_Backend_5XX = 'HTTPCode_Backend_5XX'
         HTTPCode_Backend_4XX = 'HTTPCode_Backend_4XX'
-    elif any(n in res for n in ['LoadBalancerExternal', 'LoadBalancerInternal']):
+    elif any(n in res
+             for n in ['LoadBalancerExternal', 'LoadBalancerInternal']):
         LoadBalancerName = 'LoadBalancer'
         LoadBalancerNameExternal = 'LoadBalancerExternal'
         LoadBalancerNameInternal = 'LoadBalancerInternal'
@@ -578,7 +619,8 @@ def set_vars_for_metrics(res):
             }
         ])
         # TargetGroupExternal
-        if all(n in res for n in ['TargetGroupExternal', 'LoadBalancerExternal']):
+        if all(n in res
+                for n in ['TargetGroupExternal', 'LoadBalancerExternal']):
             # Response Time
             metrics['response'].append([
                 'AWS/ApplicationELB',
@@ -621,7 +663,7 @@ def set_vars_for_metrics(res):
                     'stat': 'Sum'
                 }
             ])
-            # 5xx 
+            # 5xx
             metrics['5xx'].append([
                 'AWS/ApplicationELB',
                 'HTTPCode_Target_5XX_Count',
@@ -634,7 +676,7 @@ def set_vars_for_metrics(res):
                     'stat': 'Sum'
                 }
             ])
-            # 4xx 
+            # 4xx
             metrics['4xx'].append([
                 'AWS/ApplicationELB',
                 'HTTPCode_Target_4XX_Count',
@@ -649,7 +691,8 @@ def set_vars_for_metrics(res):
                 }
             ])
         # TargetGroupInternal
-        if all(n in res for n in ['TargetGroupInternal', 'LoadBalancerInternal']):
+        if all(n in res
+                for n in ['TargetGroupInternal', 'LoadBalancerInternal']):
             # Response Time
             metrics['response'].append([
                 'AWS/ApplicationELB',
@@ -692,7 +735,7 @@ def set_vars_for_metrics(res):
                     'stat': 'Sum'
                 }
             ])
-            # 5xx 
+            # 5xx
             metrics['5xx'].append([
                 'AWS/ApplicationELB',
                 'HTTPCode_Target_5XX_Count',
@@ -705,7 +748,7 @@ def set_vars_for_metrics(res):
                     'stat': 'Sum'
                 }
             ])
-            # 4xx 
+            # 4xx
             metrics['4xx'].append([
                 'AWS/ApplicationELB',
                 'HTTPCode_Target_4XX_Count',
@@ -773,7 +816,7 @@ def set_vars_for_metrics(res):
         ])
         # LoadBalancerExternal
         if LoadBalancerNameExternal in res:
-            # Response 
+            # Response
             metrics['response'].append([
                 AWS_ELB,
                 Latency,
@@ -822,7 +865,7 @@ def set_vars_for_metrics(res):
             ])
         # LoadBalancerInternal
         if LoadBalancerNameInternal in res:
-            # Response 
+            # Response
             metrics['response'].append([
                 AWS_ELB,
                 Latency,
@@ -915,7 +958,8 @@ def add_stack(cloudformation, client, dash_stack, dashboard):
         stack_type = 'ec2'
     # get stack resources before update
     resources = get_resources(client, stack)
-    # set widget annotations for alarms threshold or policy tracking target value
+    # set widget annotations for alarms threshold
+    # or policy tracking target value
     set_widget_annotations(resources)
     if not args_dict['silent']:
         pprint(resources)

@@ -81,89 +81,120 @@ def get_args():
     )
 
     # common args
-    parser.add_argument('-s', '--stack', help='Stack Name', required=True, type=str)
-    parser.add_argument('-r', '--region', help='Region', type=str)
-    parser.add_argument('-c', '--compact', help='Show always Output json in compact form', action='store_true')
+    parser.add_argument('-s', '--stack',
+                        help='Stack Name', required=True, type=str)
+    parser.add_argument('-r', '--region',
+                        help='Region', type=str)
+    parser.add_argument('-c', '--compact',
+                        help='Show always Output json in compact form',
+                        action='store_true')
 
     # subparser
     subparsers = parser.add_subparsers(help='Desired Action', dest='action')
 
     # parent parser args
     parent_parser = argparse.ArgumentParser(add_help=False)
-    parent_parser.add_argument('-p', '--params', help='Show Available Stack Parameters', action='store_true')
-    parent_parser.add_argument('--debug', help='Show parsed/resolved template and exit', action='store_true')
+
+    parent_parser.add_argument('-p', '--params',
+                               help='Show Available Stack Parameters',
+                               action='store_true')
+
+    parent_parser.add_argument('--debug',
+                               help='Show parsed/resolved template and exit',
+                               action='store_true')
 
     # create parser
-    parser_create = subparsers.add_parser('create', parents=[parent_parser], help='Create Stack')
+    parser_create = subparsers.add_parser('create', parents=[parent_parser],
+                                          help='Create Stack')
 
-    template_version_group_create = parser_create.add_mutually_exclusive_group(required=True)
-    template_version_group_create.add_argument('-t', '--template', help='Template Location', type=str)
-    template_version_group_create.add_argument('-v', '--version', help='Stack Env Version', type=str)
+    template_version_group_create = parser_create.add_mutually_exclusive_group(
+        required=True)
+    template_version_group_create.add_argument('-t', '--template',
+                                               help='Template Location',
+                                               type=str)
+    template_version_group_create.add_argument('-v', '--version',
+                                               help='Stack Env Version',
+                                               type=str)
 
-    parser_create.add_argument('--Env', help='Environment to use', type=str, required=True)
-    parser_create.add_argument('--EnvRole', help='Stack Role', type=str, required=True)
-    parser_create.add_argument('--EnvApp1Version', help='App Version', type=str, default='')
+    parser_create.add_argument('--Env',
+                               help='Environment to use',
+                               type=str, required=True)
+    parser_create.add_argument('--EnvRole',
+                               help='Stack Role',
+                               type=str, required=True)
+    parser_create.add_argument('--EnvApp1Version',
+                               help='App Version',
+                               type=str, default='')
 
     # update parser
-    parser_update = subparsers.add_parser('update', parents=[parent_parser], help='Update Stack')
+    parser_update = subparsers.add_parser('update', parents=[parent_parser],
+                                          help='Update Stack')
 
-    template_version_group_update = parser_update.add_mutually_exclusive_group()
-    template_version_group_update.add_argument('-t', '--template', help='Template Location', type=str)
-    template_version_group_update.add_argument('-v', '--version', help='Stack Env Version', type=str)
+    template_version_group_update = parser_update.add_mutually_exclusive_group(
+        )
+    template_version_group_update.add_argument('-t', '--template',
+                                               help='Template Location',
+                                               type=str)
+    template_version_group_update.add_argument('-v', '--version',
+                                               help='Stack Env Version',
+                                               type=str)
 
-    parser_update.add_argument(
-        '-n', '--nochangeset', help='Do Not Use Stack Changeset (no confirmation)',
-        required=False, action='store_true'
-    )
-    parser_update.add_argument(
-        '-P', '--policy', help='Policy during Stack Update', type=str,
-        choices=['*', 'Modify', 'Delete', 'Replace', 'Modify,Delete', 'Modify,Replace', 'Delete,Replace']
-    )
-    parser_update.add_argument(
-        '-N', '--dryrun',
-        help='Show changeset and exit',
-        action='store_true'
-    )
-    parser_update.add_argument(
-        '-T', '--showtags',
-        help='Show tags changes in changeset',
-        action='store_true'
-    )
-    parser_update.add_argument(
-        '-D', '--dashboard',
-        help='Update CloudWatch DashBoard',
-        choices=['Always', 'OnChange', 'Generic', 'None'],
-        default='OnChange'
-    )
-    parser_update.add_argument(
-        '-d', '--showdetails',
-        help='Show extra details in changeset',
-        action='store_true'
-    )
-    parser_update.add_argument(
-        '-s', '--slack_channel',
-        help='Slack Channel [_cf_deploy]',
-        nargs='?',
-        const='_cf_deploy',
-        default=False,
-    )
+    parser_update.add_argument('-n', '--nochangeset',
+                               help='Do Not Use Stack Changeset '
+                                    '(no confirmation)',
+                               required=False, action='store_true')
+
+    parser_update.add_argument('-P', '--policy',
+                               help='Policy during Stack Update',
+                               type=str, choices=[
+                                   '*', 'Modify', 'Delete', 'Replace',
+                                   'Modify,Delete', 'Modify,Replace',
+                                   'Delete,Replace'])
+
+    parser_update.add_argument('-N', '--dryrun',
+                               help='Show changeset and exit',
+                               action='store_true')
+
+    parser_update.add_argument('-T', '--showtags',
+                               help='Show tags changes in changeset',
+                               action='store_true')
+
+    parser_update.add_argument('-D', '--dashboard',
+                               help='Update CloudWatch DashBoard',
+                               choices=[
+                                   'Always', 'OnChange', 'Generic', 'None'],
+                               default='OnChange')
+
+    parser_update.add_argument('-d', '--showdetails',
+                               help='Show extra details in changeset',
+                               action='store_true')
+
+    parser_update.add_argument('-s', '--slack_channel',
+                               help='Slack Channel [_cf_deploy]', nargs='?',
+                               const='_cf_deploy', default=False)
 
     # show parser
     parser_show = subparsers.add_parser('info', help='Show Stack Info')
 
     # log parser
     parser_log = subparsers.add_parser('log', help='Show Stack Log')
-    parser_log.add_argument('-d', '--day', help='Days, use 0 for realtime', default=1)
+    parser_log.add_argument('-d', '--day',
+                            help='Days, use 0 for realtime', default=1)
 
     # cancel_update parser
-    parser_cancel = subparsers.add_parser('cancel', help='Cancel Update Stack')
+    parser_cancel = subparsers.add_parser('cancel',
+                                          help='Cancel Update Stack')
 
     # delete parser
-    parser_delete = subparsers.add_parser('delete', help='Delete Stack (WARNING)')
+    parser_delete = subparsers.add_parser('delete',
+                                          help='Delete Stack (WARNING)')
 
     # continue_update parser
-    parser_continue = subparsers.add_parser('continue', help='Continue Update RollBack')
-    parser_continue.add_argument('--ResourcesToSkip', '-r', help='Resource to Skip', default=[], nargs='+')
+    parser_continue = subparsers.add_parser('continue',
+                                            help='Continue Update RollBack')
+    parser_continue.add_argument('--ResourcesToSkip', '-r',
+                                 help='Resource to Skip',
+                                 default=[], nargs='+')
 
     # args[0] contain know arguments args[1] the unkown remaining ones
     args = parser.parse_known_args()
@@ -179,7 +210,8 @@ def add_stack_params_as_args():
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-#    for parameter in sorted(stack_parameters, key=lambda x: x['ParameterKey']):
+    # for parameter in sorted(
+    #    stack_parameters, key=lambda x: x['ParameterKey']):
     for p in sorted(istack.parameters):
         v = istack.parameters[p]
         allowed_values = v['AllowedValues'] if 'AllowedValues' in v else []
@@ -217,12 +249,15 @@ def get_parameters_current():
     return params
 
 
-# if template in s3, force version to the one in his url part if from file force fixed value 1
+# if template in s3, force version to the one in his url part
+# if from file force fixed value 1
 # Ex for version=master-2ed25d5:
-# https://eu-west-1-ibox-app-repository.s3.amazonaws.com/ibox/master-2ed25d5/templates/cache-portal.json
+# https://eu-west-1-ibox-app-repository.s3.amazonaws.com
+# /ibox/master-2ed25d5/templates/cache-portal.json
 def do_envstackversion_from_s3_template():
     template = fargs.template
-    fargs.version = template.split("/")[4] if str(template).startswith('https') else '1'
+    fargs.version = template.split("/")[4] if str(
+        template).startswith('https') else '1'
     fargs.EnvStackVersion = fargs.version
 
 
@@ -251,8 +286,10 @@ def list_to_string_list(mylist):
     return mystring
 
 
-# set final parameters values to use for exectuing actions - istack.action_parameters and istack.r_parameters
-def set_action_parameters(params_default, params_changed, params_added, params_forced_default):
+# set final parameters values to use for exectuing actions -
+# istack.action_parameters and istack.r_parameters
+def set_action_parameters(params_default, params_changed,
+                          params_added, params_forced_default):
     for key in sorted(istack.parameters):
         v = istack.parameters[key]
 
@@ -320,7 +357,8 @@ def set_action_parameters(params_default, params_changed, params_added, params_f
         )
 
         # update resolved parameter final value istack.r_parameters
-        istack.r_parameters[key] = current_value if use_previous_value else value
+        istack.r_parameters[key] = (current_value
+                                    if use_previous_value else value)
 
 
 # get stack outputs as dict
@@ -332,13 +370,15 @@ def get_stack_outputs():
     if stack_outputs:
         for output in stack_outputs:
             key = output['OutputKey']
-            value = output['OutputValue'] if 'OutputValue' in output else None
+            value = (output['OutputValue']
+                     if 'OutputValue' in output else None)
             outputs_current[key] = value
 
     outputs_current['StackStatus'] = istack.stack.stack_status
     outputs_current['StackName'] = fargs.stack
     if last_updated_time:
-        outputs_current['LastUpdatedTime'] = last_updated_time.strftime('%Y-%m-%d %X %Z')
+        outputs_current['LastUpdatedTime'] = last_updated_time.strftime(
+            '%Y-%m-%d %X %Z')
 
     return outputs_current
 
@@ -351,7 +391,8 @@ def show_stack_outputs(when):
     mylog(
         '%s - Stack Outputs\n%s' % (when.capitalize(), pformat(
             outputs,
-            width=80 if (fargs.action == 'info' and not fargs.compact) else 1000000
+            width=80 if (
+                fargs.action == 'info' and not fargs.compact) else 1000000
         ))
     )
     print('\n')
@@ -396,7 +437,8 @@ def show_stack_params_override(stack_parameters):
         'Current - Stack Parameters - Not Default\n%s' %
         pformat(
             params,
-            width=80 if (fargs.action == 'info' and not fargs.compact) else 1000000
+            width=80 if (
+                fargs.action == 'info' and not fargs.compact) else 1000000
         )
     )
     print('\n')
@@ -466,10 +508,12 @@ def do_action_tags():
 
     print('\n')
     if len(tags_default) > 0:
-        mylog('Default - Stack Tags\n%s' % pformat(tags_default, width=1000000))
+        mylog(
+            'Default - Stack Tags\n%s' % pformat(tags_default, width=1000000))
         print('\n')
     if len(tags_changed) > 0:
-        mylog('Changed - Stack Tags\n%s' % pformat(tags_changed, width=1000000))
+        mylog(
+            'Changed - Stack Tags\n%s' % pformat(tags_changed, width=1000000))
         print('\n')
 
     istack.action_tags = final_tags
@@ -511,7 +555,7 @@ def get_last_event_timestamp():
     return last_event.timestamp
 
 
-# show old and new service tasks during an update 
+# show old and new service tasks during an update
 def show_service_update(service_logical_resource_id):
     service = task = cluster = deps_before = None
     deployment_task = ''
@@ -519,8 +563,10 @@ def show_service_update(service_logical_resource_id):
     client = boto3.client('ecs')
 
     try:
-        cluster = istack.stack.Resource('ScalableTarget').physical_resource_id.split('/')[1]
-        service = istack.stack.Resource(service_logical_resource_id).physical_resource_id
+        cluster = istack.stack.Resource(
+            'ScalableTarget').physical_resource_id.split('/')[1]
+        service = istack.stack.Resource(
+            service_logical_resource_id).physical_resource_id
     except:
         return
 
@@ -539,7 +585,9 @@ def show_service_update(service_logical_resource_id):
         deployments_len = len(deployments)
         for dep in deployments:
             status = dep['status']
-            for p in ['desiredCount', 'runningCount', 'pendingCount', 'taskDefinition']:
+            for p in [
+                    'desiredCount', 'runningCount',
+                    'pendingCount', 'taskDefinition']:
                 deps[status][p] = dep[p]
 
         deployment_task = deps['PRIMARY']['taskDefinition']
@@ -549,7 +597,8 @@ def show_service_update(service_logical_resource_id):
             deps_before = str(deps)
             for d in ['PRIMARY', 'ACTIVE']:
                 if 'taskDefinition' in deps[d]:
-                    deps[d]['taskDefinition'] = deps[d]['taskDefinition'].split('/')[-1]
+                    deps[d]['taskDefinition'] = deps[d][
+                        'taskDefinition'].split('/')[-1]
             mylog(
                 'PRIMARY%s' %
                 pformat(
@@ -585,7 +634,9 @@ def show_update_events(timestamp):
             " " + str(datetime.fromtimestamp(logtime)) +
             " " + str(event.resource_status_reason)
         )
-        if event.logical_resource_id == 'Service' and event.resource_status == 'UPDATE_IN_PROGRESS' and event.resource_status_reason is None:
+        if (event.logical_resource_id == 'Service' and
+                event.resource_status == 'UPDATE_IN_PROGRESS' and
+                event.resource_status_reason is None):
             show_service_update(event.logical_resource_id)
 
     if len(event_list) > 0:
@@ -633,7 +684,9 @@ def do_action_args():
     if hasattr(fargs, 'policy') and fargs.policy:
         action = ['"Update:%s"' % a for a in fargs.policy.split(',')]
         action = '[%s]' % ','.join(action)
-        us_args['StackPolicyDuringUpdateBody'] = '{"Statement" : [{"Effect" : "Allow","Action" :%s,"Principal": "*","Resource" : "*"}]}' % action
+        us_args['StackPolicyDuringUpdateBody'] = (
+            '{"Statement" : [{"Effect" : "Allow",'
+            '"Action" :%s,"Principal": "*","Resource" : "*"}]}' % action)
 
     if istack.template_from == 'Current':
         us_args['UsePreviousTemplate'] = True
@@ -648,7 +701,8 @@ def do_action_args():
 # create changeset
 def do_changeset(us_args):
     if not fargs.showtags:
-        # keep existing stack.tags so that they are excluded from changeset (not the new prepared ones)
+        # keep existing stack.tags so that they are excluded from changeset
+        # (not the new prepared ones)
         us_args['Tags'] = istack.stack.tags
 
     us_args['StackName'] = istack.name
@@ -700,7 +754,9 @@ def parse_changeset(changeset):
             for i in ResChange['Details']:
                 if 'Name' in i['Target'] and i['Target']['Name'] not in target:
                     target.append(i['Target']['Name'])
-                if 'CausingEntity' in i and 'Name' in i['Target'] and i['CausingEntity'] not in causingentity:
+                if ('CausingEntity' in i and
+                        'Name' in i['Target'] and
+                        i['CausingEntity'] not in causingentity):
                     causingentity.append(i['CausingEntity'])
             change_dict['Target'] = list_to_string_list(target)
             change_dict['CausingEntity'] = list_to_string_list(causingentity)
@@ -723,7 +779,9 @@ def show_changeset_changes(changes):
     table.align['LogicalResourceId'] = "l"
     table.align['ResourceType'] = "l"
     for row in changes:
-        table.add_row(['None' if i in fileds_ex and row['Action'] != 'Modify' else row[i] for i in fields])
+        table.add_row([
+            'None' if i in fileds_ex and row['Action'] != 'Modify'
+            else row[i] for i in fields])
 
     mylog('ChangeSet:')
     print(table.get_string(fields=fields))
@@ -767,7 +825,8 @@ def show_log(time_delta):
 
 def find_s3_files(name, sub_string):
     if ('AWS::AutoScaling::LaunchConfiguration' in istack.t_resources and
-            istack.t_resources['AWS::AutoScaling::LaunchConfiguration'] == name):
+            istack.t_resources[
+                'AWS::AutoScaling::LaunchConfiguration'] == name):
         data = sub_string[8:].partition('/')
         host = data[0]
         if not host.endswith('amazonaws.com'):
@@ -824,7 +883,8 @@ def check_ecr_images():
                 exit(0)
 
 
-# method should be identically to the one found in bin/ibox_add_to_dash.py, but dash param default to None
+# method should be identically to the one found in bin/ibox_add_to_dash.py,
+# but dash param default to None
 def get_resources(dash=None):
     resources = {}
     res_list = list(map_resources_on_dashboard.keys())
@@ -840,7 +900,9 @@ def get_resources(dash=None):
                 res_pid = res['PhysicalResourceId']
                 if res_pid.startswith('arn'):
                     res_pid = res_pid.split(':', 5)[5]
-                if res_lid in ['ListenerHttpsExternalRules1', 'ListenerHttpInternalRules1']:
+                if res_lid in [
+                        'ListenerHttpsExternalRules1',
+                        'ListenerHttpInternalRules1']:
                     res_pid = '/'.join(res_pid.split('/')[1:4])
                 if res_lid == 'ScalableTarget':
                     res_pid = res_pid.split('/')[1]
@@ -850,7 +912,9 @@ def get_resources(dash=None):
                         res_pid = res_pid_arr[2]
                     else:
                         res_pid = res_pid_arr[1]
-                if res_lid in ['LoadBalancerApplicationExternal', 'LoadBalancerApplicationInternal']:
+                if res_lid in [
+                        'LoadBalancerApplicationExternal',
+                        'LoadBalancerApplicationInternal']:
                     res_pid = '/'.join(res_pid.split('/')[1:4])
 
                 if dash and map_resources_on_dashboard[res_lid]:
@@ -894,14 +958,15 @@ def get_cloudformation_exports(client):
             name = export['Name']
             value = export['Value']
             exports[name] = value
-        #if all(key in exports for key in ['BucketAppRepository']):
+        # if all(key in exports for key in ['BucketAppRepository']):
         #    return exports
 
     return exports
 
 
 def do_update_dashboard(cw, resources_changed, mode, dashboard_name):
-    dashboard_body = cw.get_dashboard(DashboardName=dashboard_name)['DashboardBody']
+    dashboard_body = cw.get_dashboard(
+        DashboardName=dashboard_name)['DashboardBody']
     dashboard_body_dict = json.loads(dashboard_body)
 
     stackname_arr = istack.name.split('-')
@@ -933,17 +998,21 @@ def do_update_dashboard(cw, resources_changed, mode, dashboard_name):
                     if map_resources_on_dashboard[r] == m_name:
                         m_value_index = int(l) + 1
                         m_value = my_metric[m_value_index]
-                        if m_value.startswith(stack_prefix) or '/' + stack_prefix in m_value:
-                            out_msg = '%s\t%s: %s --> %s\n' % (out_msg, m_name, m_value, u)
+                        if (m_value.startswith(stack_prefix) or
+                                '/' + stack_prefix in m_value):
+                            out_msg = '%s\t%s: %s --> %s\n' % (
+                                out_msg, m_name, m_value, u)
                             my_metric[m_value_index] = u
-                            dashboard_body_dict['widgets'][k]['properties']['metrics'][j] = my_metric
+                            dashboard_body_dict['widgets'][k][
+                                'properties']['metrics'][j] = my_metric
                             changed = True
             my_metrics.append(my_metric)
 
     if changed:
         out = cw.put_dashboard(
             DashboardName=dashboard_name,
-            DashboardBody=json.dumps(dashboard_body_dict, separators=(',', ':'))
+            DashboardBody=json.dumps(
+                dashboard_body_dict, separators=(',', ':'))
         )
         if len(out['DashboardValidationMessages']) > 0:
             pprint(out)
@@ -969,22 +1038,26 @@ def update_dashboards():
     else:
         return
 
-    if not resources and 'ScalingPolicyTrackings' not in istack.changed['outputs']:
+    if (not resources and
+            'ScalingPolicyTrackings' not in istack.changed['outputs']):
         return
 
     # Update dynamic one
     for dash in response_dash['DashboardEntries']:
         if istack.name in dash['DashboardName']:
-            # If imported ibox_add_to_dash.py, execute it as external module in silent mode, rebuilding the dash from scratch ..
+            # If imported ibox_add_to_dash.py, execute it as external module
+            # in silent mode, rebuilding the dash from scratch ..
             if add_to_dashboard:
                 dashboard_param_stacks = dash['DashboardName'].split('_')[1:]
-                dashboard_params = ['--stack'] + dashboard_param_stacks + ['--silent']
+                dashboard_params = ['--stack'] + dashboard_param_stacks + [
+                    '--silent']
                 dashboard_parser = ibox_add_to_dash.get_parser()
                 dashboard_args = dashboard_parser.parse_args(dashboard_params)
                 ibox_add_to_dash.main(dashboard_args)
             # ... if not use the old method (no more maintained)
             elif resources:
-                do_update_dashboard(cw_client, resources, mode, dash['DashboardName'])
+                do_update_dashboard(
+                    cw_client, resources, mode, dash['DashboardName'])
 
     # Update fixed one
     if resources:
@@ -993,7 +1066,7 @@ def update_dashboards():
 
 
 def mylog(string):
-    message = istack.name + ' # ' + string
+    message = f'{istack.name} # {string}'
     print(message)
 
     if (
@@ -1005,7 +1078,7 @@ def mylog(string):
     ):
         slack_web = slack.WebClient(token=os.environ['BUILDKITE_SLACK_TOKEN'])
         ac = slack_web.chat_postMessage(
-            channel='#%s' % fargs.slack_channel,
+            channel=f'#{fargs.slack_channel}',
             text=message,
             username=os.environ['BUILDKITE_SLACK_USER'],
             icon_emoji=':robot_face:',
@@ -1025,9 +1098,10 @@ def update_template_param():
 
     try:
         response = s3.list_objects_v2(Bucket=app_repository, Prefix=s3_prefix)
-        fargs.template = 'https://%s.s3.amazonaws.com/%s' % (app_repository, response['Contents'][0]['Key'])
+        fargs.template = 'https://%s.s3.amazonaws.com/%s' % (
+            app_repository, response['Contents'][0]['Key'])
     except Exception as e:
-        print('Error retrieving stack template with prefix: %s' % s3_prefix)
+        print(f'Error retrieving stack template with prefix: {s3_prefix}')
         pprint(e)
         exit(1)
 
@@ -1070,7 +1144,7 @@ def get_stack():
         stack = cloudformation.Stack(fargs.stack)
         stack.stack_status
     except:
-        logging.error('Stack %s do not exist!' % istack.name)
+        logging.error(f'Stack {istack.name} do not exist!')
         exit(1)
 
     return stack
@@ -1121,7 +1195,7 @@ def resolve_sub(name, value):
         sub_data = ''
 
     while True:
-        found  = sub_string.find('${')
+        found = sub_string.find('${')
         if found == -1:
             break
         find_start = found + 2
@@ -1222,7 +1296,7 @@ def resolve_equals(name, v):
 
 
 def resolve_not(name, v):
-    value = True if recursive_resolve(name, v[0]) == False else False
+    value = True if not recursive_resolve(name, v[0]) else False
 
     return value
 
@@ -1249,15 +1323,15 @@ def recursive_resolve(name, value):
             elif r == 'Ref':
                 return resolve_ref(name, v)
             elif r == 'Fn::GetAtt':
-                return  '%s.%s' % (v[0], v[1])
+                return '%s.%s' % (v[0], v[1])
             elif r == 'Fn::ImportValue':
                 return resolve_import(name, v)
             elif r == 'Fn::Sub':
-                return  resolve_sub(name, v)
+                return resolve_sub(name, v)
             elif r == 'Fn::FindInMap':
-                return  resolve_findinmap(name, v)
+                return resolve_findinmap(name, v)
             elif r == 'Fn::Join':
-                return  resolve_join(name, v)
+                return resolve_join(name, v)
             elif r == 'Fn::Select':
                 return resolve_select(name, v)
             elif r == 'Fn::Split':
@@ -1363,24 +1437,30 @@ def process_parameters():
     # final resolved value stack parameters - {name: value} dictionary
     istack.r_parameters = {}
 
-    # set final parameters values to use for exectuing action - istack.action_parameters and istack.r_parameters
-    set_action_parameters(params_default, params_changed, params_added, params_forced_default)
+    # set final parameters values to use for exectuing action -
+    # istack.action_parameters and istack.r_parameters
+    set_action_parameters(params_default, params_changed,
+                          params_added, params_forced_default)
 
     # show changes to output
     print('\n')
     if istack.create and params_default:
-        print('Default - Stack Parameters\n%s\n' % pformat(params_default, width=1000000))
+        print('Default - Stack Parameters\n%s\n' % pformat(
+            params_default, width=1000000))
 
     if params_changed:
-        mylog('Changed - Stack Parameters\n%s' % pformat(params_changed, width=1000000))
+        mylog('Changed - Stack Parameters\n%s' % pformat(
+            params_changed, width=1000000))
         print('\n')
 
     if not istack.create and params_added:
-        mylog('Added - Stack Parameters\n%s' % pformat(params_added, width=1000000))
+        mylog('Added - Stack Parameters\n%s' % pformat(
+            params_added, width=1000000))
         print('\n')
 
     if params_forced_default:
-        mylog('Forced to Default - Stack Parameters\n%s' % pformat(params_forced_default, width=1000000))
+        mylog('Forced to Default - Stack Parameters\n%s' % pformat(
+            params_forced_default, width=1000000))
         print('\n')
 
 
@@ -1399,7 +1479,8 @@ def do_action_params():
     istack.mappings = try_template_section('Mappings')
     istack.resources = istack.template['Resources']
 
-    # process parameters: update fargs, istack.r_parameters and istack.action_parameters and show changes
+    # process parameters: update fargs, istack.r_parameters
+    # and istack.action_parameters and show changes
     logger.info('Processing Parameters')
     process_parameters()
 
@@ -1413,7 +1494,8 @@ def do_action_params():
         process_resources()
     except Exception as e:
         pprint(e)
-        logger.warning('Error resolving template. Will not be able to validate s3 files and ecr images.')
+        logger.warning('Error resolving template. '
+                       'Will not be able to validate s3 files and ecr images.')
 
 
 def get_args_for_action():
@@ -1496,7 +1578,8 @@ def do_action_create():
 
 def do_action_info():
     # -get stack parameters from current stack
-    stack_parameters = client.get_template_summary(StackName=fargs.stack)['Parameters']
+    stack_parameters = client.get_template_summary(
+        StackName=fargs.stack)['Parameters']
 
     # store stack info - ouputs, resources, last update time
     store_stack_info('current')
