@@ -867,7 +867,9 @@ def check_ecr_images():
         registry_id = image[0:image.find('.')]
         repository_name = image[image.find('/')+1:image.find(':')]
         image_id = image[image.find(':') + 1:]
-        if image not in images:
+        # Skip already processed images and images from public docker repo
+        if (image not in images and
+                registry_id != f'{repository_name}:'):
             try:
                 ecr.describe_images(
                     registryId=registry_id,
