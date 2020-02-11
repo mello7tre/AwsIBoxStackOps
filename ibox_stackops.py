@@ -241,7 +241,13 @@ def get_parameters_current():
     try:
         for p in istack.stack.parameters:
             key = p['ParameterKey']
-            value = p['ParameterValue'] if 'ParameterValue' in p else None
+            try:
+                value = p['ResolvedValue']
+            except:
+                try:
+                    value = p['ParameterValue']
+                except:
+                    value = None
             params[key] = value
     except:
         pass
