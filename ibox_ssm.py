@@ -81,6 +81,11 @@ def get_args():
                                         help='Show Regions Distribution',
                                         parents=[parser_putshow])
 
+    # list parser
+    parser_list = subparsers.add_parser('list',
+                                        help='List allowed parameters',
+                                        parents=[parser_putshow])
+
     # args[0] contain know arguments args[1] the unkown remaining ones
     args = parser.parse_known_args()
     return args
@@ -151,12 +156,24 @@ def do_fargs(args):
             setattr(fargs, property, value)
 
 
+def get_cloudformation_exports():
+    exports = {}
+    paginator = client.get_paginator('list_exports')
+    response_iterator = paginator.paginate()
+    for e in response_iterator:
+        for export in e['Exports']:
+            name = export['Name']
+            value = export['Value']
+            exports[name] = value
+        if all(key in exports for key in ['BucketAppRepository']):
+            return exports
+
+    return exports
+
+
 def update_template_param():
-    # try to get role from fargs or use current stack parameter value
-    try:
-        role = fargs.EnvRole
-    except:
-        role = istack.c_parameters['EnvRole']
+    istack.exports = get_cloudformation_exports()
+    role = fargs.EnvRole
 
     app_repository = istack.exports['BucketAppRepository']
     s3_prefix = 'ibox/%s/templates/%s.' % (fargs.version, role)
@@ -282,10 +299,6 @@ def get_args_for_action():
     logger.info('Getting CloudFormation Exports')
     istack.exports = get_cloudformation_exports(client)
 
-    # get current version parameters value - if creating return empty dict
-    logger.info('Getting Parameters current values')
-    istack.c_parameters = get_parameters_current()
-
     # update template param if using version one
     if fargs.version:
         update_template_param()
@@ -296,15 +309,6 @@ def get_args_for_action():
 
     # set istack.action_parameters - parameters args for action
     do_action_params()
-
-    # -build tags
-    do_action_tags()
-
-    # -build all args for action
-    us_args = do_action_args()
-    # pprint(us_args)
-
-    return us_args
 
 
 def do_action_update():
@@ -390,6 +394,7 @@ def do_action_setup():
 
 # main program function
 def run():
+    global istack
     global fargs
     global client
     global cloudformation
@@ -400,12 +405,14 @@ def run():
     # -get cmd args as argparse objects
     args = get_args()
 
-    do_fargs(args[0])
+    # init istack class
+    istack = ibox_stack()
+    istack.args = args[1]
 
+    do_fargs(args[0])
 
     if fargs.action == 'setup':
         do_action_setup()
-
 
     # create boto3 client/resource
 #    cloudformation = boto3.resource('cloudformation')
