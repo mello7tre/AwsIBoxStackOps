@@ -359,13 +359,22 @@ def do_action_create():
         update_waiter(istack.last_event_timestamp)
 
 
-def put_parameter(param):
+def put_ssm_parameter(param):
    resp = ssm.put_parameter(Name=param['name'],
                             Description=param['desc'],
                             Value=param['value'],
                             Type='String',
                             Overwrite=True,
                             Tier='Standard')
+
+
+def get_ssm_parameter(param):
+    try:
+        resp = ssm.get_parameter(Name=param)
+        
+        return resp['Value']
+    except:
+        pass
 
 
 def set_region(region):
@@ -389,7 +398,19 @@ def do_action_setup():
 
     for r in fargs.regions:
         set_region(r)
-        put_parameter(param)
+        put_ssm_parameter(param)
+
+
+def do_action_put():
+    pass
+
+
+def do_action_show():
+    pass
+
+
+def do_action_list():
+    pass
 
 
 # main program function
@@ -413,6 +434,12 @@ def run():
 
     if fargs.action == 'setup':
         do_action_setup()
+    if fargs.action == 'put':
+        do_action_put()
+    if fargs.action == 'show':
+        do_action_show()
+    if fargs.action == 'list':
+        do_action_list()
 
     # create boto3 client/resource
 #    cloudformation = boto3.resource('cloudformation')
