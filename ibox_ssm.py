@@ -14,6 +14,9 @@ from datetime import datetime, timedelta, tzinfo
 from calendar import timegm
 from prettytable import PrettyTable, ALL as ptALL
 
+logging.basicConfig()
+logger = logging.getLogger('ibox')
+logger.setLevel(logging.INFO)
 
 SSM_PATH='/ibox'
 
@@ -49,42 +52,46 @@ def get_args():
     parser_setup.add_argument('-s', '--stack',
                               help='Stack Name', type=str)
 
-    # putshow parser args - common to put and show
-    parser_putshow = argparse.ArgumentParser(add_help=False)
+    # putlistshow parser args - common to put, show and list
+    parser_pls = argparse.ArgumentParser(add_help=False)
 
-    parser_putshow.add_argument('-s', '--stack',
-                                help='Stack Name', required=True, type=str)
+    parser_pls.add_argument('-s', '--stack',
+                            help='Stack Name', required=True, type=str)
 
-    parser_putshow.add_argument('-R', '--EnvRole',
+    # putlist parser args - common to put and list
+    parser_putlist = argparse.ArgumentParser(add_help=False)
+
+    parser_putlist.add_argument('-R', '--EnvRole',
                                 help='Stack Role',
                                 type=str, required=True)
+
+    template_version_group_putlist = (
+        parser_putlist.add_mutually_exclusive_group())
+    template_version_group_putlist.add_argument('-t', '--template',
+                                                help='Template Location',
+                                                type=str)
+    template_version_group_putlist.add_argument('-v', '--version',
+                                                help='Stack Env Version',
+                                                type=str)
+
 
     # put parser
     parser_put = subparsers.add_parser('put',
                                        help='Put Parameters',
-                                       parents=[parser_putshow])
+                                       parents=[parser_pls, parser_putlist])
 
     parser_put.add_argument('-r', '--regions',
                             help='Regions', type=str, default=[], nargs='+')
 
-    template_version_group_put = parser_put.add_mutually_exclusive_group(
-        required=True)
-    template_version_group_put.add_argument('-t', '--template',
-                                            help='Template Location',
-                                            type=str)
-    template_version_group_put.add_argument('-v', '--version',
-                                            help='Stack Env Version',
-                                            type=str)
-
     # show parser
     parser_show = subparsers.add_parser('show',
                                         help='Show Regions Distribution',
-                                        parents=[parser_putshow])
+                                        parents=[parser_pls])
 
     # list parser
     parser_list = subparsers.add_parser('list',
                                         help='List allowed parameters',
-                                        parents=[parser_putshow])
+                                        parents=[parser_pls, parser_putlist])
 
     # args[0] contain know arguments args[1] the unkown remaining ones
     args = parser.parse_known_args()
@@ -118,7 +125,7 @@ def add_stack_params_as_args():
             **kwargs
         )
 
-    if fargs.params:
+    if fargs.action == 'list':
         parser.print_help()
         exit(0)
     else:
@@ -136,16 +143,6 @@ def do_envstackversion_from_s3_template():
     fargs.version = template.split("/")[4] if str(
         template).startswith('https') else '1'
     fargs.EnvStackVersion = fargs.version
-
-
-# change list in a string new line separated element
-def list_to_string_list(mylist):
-    # unique_list = []
-    # [unique_list.append(i) for i in mylist if i not in unique_list]
-    joined_string = '\n'.join(mylist)
-    mystring = joined_string if len(mylist) < 2 else '(' + joined_string + ')'
-
-    return mystring
 
 
 # build/update full_args from argparse arg objects
@@ -172,8 +169,14 @@ def get_cloudformation_exports():
 
 
 def update_template_param():
+    logger.info('Getting CloudFormation Exports')
     istack.exports = get_cloudformation_exports()
-    role = fargs.EnvRole
+
+    # try to get role from fargs or use current stack parameter value
+    try:
+        role = fargs.EnvRole
+    except:
+        role = istack.c_parameters['EnvRole']
 
     app_repository = istack.exports['BucketAppRepository']
     s3_prefix = 'ibox/%s/templates/%s.' % (fargs.version, role)
@@ -225,66 +228,6 @@ def get_template():
     return template
 
 
-def process_parameters():
-    # add stack parameters as argparse args and update fargs
-    add_stack_params_as_args()
-
-    # if template include EnvShort params force its value based on the Env one
-    if 'EnvShort' in istack.parameters:
-        force_envshort()
-
-    # if using template option set/force EnvStackVersion
-    if fargs.template:
-        do_envstackversion_from_s3_template()
-
-    # unchanged stack params
-    params_default = {}
-
-    # changed stack params
-    params_changed = {}
-
-    # new stack params - default value
-    params_added = {}
-
-    # forced to default stack params - current value not in allowed ones
-    params_forced_default = {}
-
-    # list of final parameters args to use for executing action
-    # as dict with ParameterKey ParameterValue keys
-    # Ex for EnvRole=cache:
-    # [{u'ParameterKey': 'EnvRole', u'ParameterValue': 'cache'}, {...}]
-    istack.action_parameters = []
-
-    # final resolved value stack parameters - {name: value} dictionary
-    istack.r_parameters = {}
-
-    # set final parameters values to use for exectuing action -
-    # istack.action_parameters and istack.r_parameters
-    set_action_parameters(params_default, params_changed,
-                          params_added, params_forced_default)
-
-    # show changes to output
-    print('\n')
-    if istack.create and params_default:
-        print('Default - Stack Parameters\n%s\n' % pformat(
-            params_default, width=1000000))
-
-    if params_changed:
-        mylog('Changed - Stack Parameters\n%s' % pformat(
-            params_changed, width=1000000))
-        print('\n')
-
-    if not istack.create and params_added:
-        mylog('Added - Stack Parameters\n%s' % pformat(
-            params_added, width=1000000))
-        print('\n')
-
-    if params_forced_default:
-        mylog('Forced to Default - Stack Parameters\n%s' % pformat(
-            params_forced_default, width=1000000))
-        print('\n')
-
-
 def try_template_section(name):
     try:
         section = istack.template[name]
@@ -292,71 +235,6 @@ def try_template_section(name):
         section = None
 
     return section
-
-
-def get_args_for_action():
-    # get cloudformation exports
-    logger.info('Getting CloudFormation Exports')
-    istack.exports = get_cloudformation_exports(client)
-
-    # update template param if using version one
-    if fargs.version:
-        update_template_param()
-
-    # get template body supplied or current one
-    logger.info('Getting Template Body')
-    istack.template = get_template()
-
-    # set istack.action_parameters - parameters args for action
-    do_action_params()
-
-
-def do_action_update():
-    # get final args for update/create
-    us_args = get_args_for_action()
-
-    # store stack info - ouputs, resources, last update time
-    store_stack_info('before')
-
-    # show stack outputs
-    show_stack_outputs('before')
-
-    # -if using changeset ...
-    if not fargs.nochangeset:
-        do_changeset_actions(us_args)
-
-    # -do update
-    update_response = update_stack(us_args)
-    mylog(json.dumps(update_response))
-    time.sleep(1)
-
-    # -show update status until complete
-    update_waiter(istack.last_event_timestamp)
-
-    # store stack info changed
-    store_stack_info_changed()
-
-    # show changed stack outputs
-    show_stack_outputs('changed')
-
-    # update dashboards
-    update_dashboards()
-
-
-def do_action_create():
-    # get final args for update/create
-    us_args = get_args_for_action()
-
-    if show_confirm():
-        create_response = create_stack(us_args)
-        print(create_response)
-        time.sleep(1)
-
-        istack.stack = cloudformation.Stack(fargs.stack)
-        istack.last_event_timestamp = get_last_event_timestamp()
-
-        # -show update status until complete
-        update_waiter(istack.last_event_timestamp)
 
 
 def put_ssm_parameter(param):
@@ -369,12 +247,25 @@ def put_ssm_parameter(param):
 
 
 def get_ssm_parameter(param):
-    try:
-        resp = ssm.get_parameter(Name=param)
+    resp = ssm.get_parameter(Name=param)
         
-        return resp['Value']
-    except:
-        pass
+    return resp['Parameter']['Value']
+
+
+def get_ssm_parameters_by_path(path):
+    params = {}
+    paginator = ssm.get_paginator('get_parameters_by_path')
+    response_iterator = paginator.paginate(Path=path)
+
+    for page in response_iterator:
+        for p in page['Parameters']:
+            name = p['Name']
+            name = name.split('/')[3]
+            value = p['Value']
+
+            params[name] = value
+
+    return params
 
 
 def set_region(region):
@@ -385,6 +276,23 @@ def set_region(region):
     myboto3 = boto3.session.Session(**kwarg_session)
     ssm = myboto3.client('ssm')
  
+
+def get_parameters_from_template():
+    istack.name = fargs.stack
+
+    # update template param if using version one
+    if fargs.version:
+        update_template_param()
+
+    logger.info('Getting Template Body')
+    istack.template = get_template()
+
+    istack.parameters = try_template_section('Parameters')
+    add_stack_params_as_args()
+    # if using template option set/force EnvStackVersion                        
+    if fargs.template:                                                          
+        do_envstackversion_from_s3_template()    
+
 
 def do_action_setup():
     param = {}
@@ -401,16 +309,74 @@ def do_action_setup():
         put_ssm_parameter(param)
 
 
+def get_setupped_regions():
+    set_region(current_region)
+    try:
+        rgs = get_ssm_parameter(f'{SSM_PATH}/{fargs.stack}/regions')
+    except Exception as e:
+        rgs = get_ssm_parameter(f'{SSM_PATH}/regions')
+
+    params = []
+
+    return rgs.split()
+
+
 def do_action_put():
-    pass
+    get_parameters_from_template()
+    regions = get_setupped_regions()
+
+    for key in sorted(istack.parameters):
+        v = istack.parameters[key]
+        param = {}
+        fargs_value = getattr(fargs, key)
+        if not fargs_value:
+            fargs_value = v['Default']
+            fargs_value = 'default'
+        param['name'] = f'{SSM_PATH}/{fargs.stack}/{key}'
+        param['desc'] = v['Description']
+        param['value'] = fargs_value
+
+        params.append(param)
+
+    # check if is passed as param a list of regions
+    # and use them, but only for regions that do alredy exist
+    # in ssm regions parameter.
+    if fargs.regions:
+        rgs = []
+        for r in fargs.regions:
+            if r in regions:
+                rgs.append(r)
+        regions = rgs
+
+    for r in regions:
+        logger.info(f'Inserting SSM Parameters in {r}')
+        set_region(r)
+        for p in params:
+            put_ssm_parameter(p)
 
 
 def do_action_show():
-    pass
+    regions = get_setupped_regions()
+    params_map = {}
+    first_column = None
+    table = PrettyTable()
+    table.padding_width = 1
+
+    for r in regions:
+        params_map[r] = get_ssm_parameters_by_path(
+            f'{SSM_PATH}/{fargs.stack}')
+        if not first_column:
+            table.add_column('Params', list(params_map[r].keys()))
+            first_column = True
+        table.add_column(r, list(params_map[r].values()))
+
+    table.align['Params'] = 'l'
+    print(table)
+    #pprint(params_map)
 
 
 def do_action_list():
-    pass
+    get_parameters_from_template()
 
 
 # main program function
@@ -419,6 +385,10 @@ def run():
     global fargs
     global client
     global cloudformation
+    global current_region
+
+    session = boto3.session.Session()
+    current_region = session.region_name
 
     # init class for full args program args + stack args
     fargs = full_args()
@@ -432,6 +402,8 @@ def run():
 
     do_fargs(args[0])
 
+    client = boto3.client('cloudformation')
+
     if fargs.action == 'setup':
         do_action_setup()
     if fargs.action == 'put':
@@ -443,7 +415,6 @@ def run():
 
     # create boto3 client/resource
 #    cloudformation = boto3.resource('cloudformation')
-#    client = boto3.client('cloudformation')
 
     exit(0)
 
