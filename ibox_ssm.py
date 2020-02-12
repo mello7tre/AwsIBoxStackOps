@@ -18,7 +18,8 @@ logging.basicConfig()
 logger = logging.getLogger('ibox')
 logger.setLevel(logging.INFO)
 
-SSM_PATH='/ibox'
+SSM_PATH = '/ibox'
+
 
 # full args
 class full_args(object):
@@ -43,7 +44,7 @@ def get_args():
 
     # setup parser
     parser_setup = subparsers.add_parser('setup',
-                                          help='Setup Regions Distribution')
+                                         help='Setup Regions Distribution')
 
     parser_setup.add_argument('-r', '--regions',
                               help='Regions', type=str,
@@ -73,7 +74,6 @@ def get_args():
     template_version_group_putlist.add_argument('-v', '--version',
                                                 help='Stack Env Version',
                                                 type=str)
-
 
     # put parser
     parser_put = subparsers.add_parser('put',
@@ -238,17 +238,17 @@ def try_template_section(name):
 
 
 def put_ssm_parameter(param):
-   resp = ssm.put_parameter(Name=param['name'],
-                            Description=param['desc'],
-                            Value=param['value'],
-                            Type='String',
-                            Overwrite=True,
-                            Tier='Standard')
+    resp = ssm.put_parameter(Name=param['name'],
+                             Description=param['desc'],
+                             Value=param['value'],
+                             Type='String',
+                             Overwrite=True,
+                             Tier='Standard')
 
 
 def get_ssm_parameter(param):
     resp = ssm.get_parameter(Name=param)
-        
+
     return resp['Parameter']['Value']
 
 
@@ -275,7 +275,7 @@ def set_region(region):
     kwarg_session['region_name'] = region
     myboto3 = boto3.session.Session(**kwarg_session)
     ssm = myboto3.client('ssm')
- 
+
 
 def get_parameters_from_template():
     istack.name = fargs.stack
@@ -289,9 +289,9 @@ def get_parameters_from_template():
 
     istack.parameters = try_template_section('Parameters')
     add_stack_params_as_args()
-    # if using template option set/force EnvStackVersion                        
-    if fargs.template:                                                          
-        do_envstackversion_from_s3_template()    
+    # if using template option set/force EnvStackVersion
+    if fargs.template:
+        do_envstackversion_from_s3_template()
 
 
 def do_action_setup():
@@ -372,7 +372,6 @@ def do_action_show():
 
     table.align['Params'] = 'l'
     print(table)
-    #pprint(params_map)
 
 
 def do_action_list():
