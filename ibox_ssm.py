@@ -324,6 +324,7 @@ def get_setupped_regions():
 def do_action_put():
     get_parameters_from_template()
     regions = get_setupped_regions()
+    params = []
 
     for key in sorted(istack.parameters):
         v = istack.parameters[key]
@@ -363,6 +364,7 @@ def do_action_show():
     table.padding_width = 1
 
     for r in regions:
+        set_region(r)
         params_map[r] = get_ssm_parameters_by_path(
             f'{SSM_PATH}/{fargs.stack}')
         if not first_column:
