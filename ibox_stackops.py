@@ -12,7 +12,12 @@ from collections import OrderedDict
 from pprint import pprint, pformat
 from datetime import datetime, timedelta, tzinfo
 from calendar import timegm
-from prettytable import PrettyTable, ALL as ptALL
+
+try:
+    from prettytable import PrettyTable, ALL as ptALL
+    have_prettytable = True
+except ImportError:
+    have_prettytable = None
 
 try:
     import ibox_add_to_dash
@@ -1132,7 +1137,8 @@ def do_changeset_actions(us_args):
     changeset_changes = parse_changeset(changeset)
 
     # -show changeset changes
-    show_changeset_changes(changeset_changes)
+    if have_prettytable:
+        show_changeset_changes(changeset_changes)
 
     # -delete changeset
     delete_changeset(changeset_id)
@@ -1686,7 +1692,6 @@ def run(args):
         if fargs.action == 'continue':
             do_action_continue()
 
-    exit(0)
 
 if __name__ == "__main__":
     parser = get_parser()
