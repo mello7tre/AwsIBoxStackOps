@@ -1692,6 +1692,8 @@ def run(args):
         if fargs.action == 'continue':
             do_action_continue()
 
+        return istack.stack.stack_status
+
 
 if __name__ == "__main__":
     parser = get_parser()
