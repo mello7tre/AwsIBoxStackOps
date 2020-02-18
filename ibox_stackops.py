@@ -74,7 +74,7 @@ class ibox_stack(object):
 
 
 # parse main argumets
-def get_args():
+def get_parser():
     parser = argparse.ArgumentParser(
         description='Stack Operations',
         epilog='Note: options for Stack Params must be put at the end!'
@@ -196,9 +196,7 @@ def get_args():
                                  help='Resource to Skip',
                                  default=[], nargs='+')
 
-    # args[0] contain know arguments args[1] the unkown remaining ones
-    args = parser.parse_known_args()
-    return args
+    return parser
 
 
 # parse stack arguments, the args[1] from get_args() and update fargs
@@ -1633,7 +1631,7 @@ def do_action_continue():
 
 
 # main program function
-def run():
+def run(args):
     global istack
     global boto3
     global fargs
@@ -1645,9 +1643,6 @@ def run():
 
     # init istack class
     istack = ibox_stack()
-
-    # -get cmd args as argparse objects
-    args = get_args()
 
     do_fargs(args[0])
 
@@ -1694,4 +1689,8 @@ def run():
     exit(0)
 
 if __name__ == "__main__":
-    run()
+    parser = get_parser()
+    # -get cmd args as argparse objects
+    # args[0] contain know arguments args[1] the unkown remaining ones
+    args = parser.parse_known_args(sys.argv[1:])
+    run(args)
