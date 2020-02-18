@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json
 import logging
-import boto3
+import boto3 as base_boto3
 import botocore
 import argparse
 import time
@@ -1656,7 +1656,7 @@ def run(args):
     kwarg_session = {}
     if fargs.region:
         kwarg_session['region_name'] = fargs.region
-    boto3 = boto3.session.Session(**kwarg_session)
+    boto3 = base_boto3.session.Session(**kwarg_session)
 
     # create boto3 client/resource
     cloudformation = boto3.resource('cloudformation')
