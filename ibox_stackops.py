@@ -144,9 +144,8 @@ def get_parser():
                                                help='Stack Env Version',
                                                type=str)
 
-    parser_update.add_argument('-n', '--nochangeset',
-                               help='Do Not Use Stack Changeset '
-                                    '(no confirmation)',
+    parser_update.add_argument('-n', '--noconfirm',
+                               help='No confirmation and no Changeset',
                                required=False, action='store_true')
 
     parser_update.add_argument('-P', '--policy',
@@ -815,6 +814,8 @@ def execute_changeset(changeset_id):
 
 
 def show_confirm():
+    if fargs.noconfirm:
+        return True
     print("")
     answer = input('Digit [y] to continue or any other key to exit: ')
     if not answer or answer[0].lower() != 'y':
@@ -1551,7 +1552,7 @@ def do_action_update():
     show_stack_outputs('before')
 
     # -if using changeset ...
-    if not fargs.nochangeset:
+    if not fargs.noconfirm:
         do_changeset_actions(us_args)
 
     # -do update
