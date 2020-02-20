@@ -97,19 +97,29 @@ def get_parser():
     # subparser
     subparsers = parser.add_subparsers(help='Desired Action', dest='action')
 
-    # parent parser args
-    parent_parser = argparse.ArgumentParser(add_help=False)
 
-    parent_parser.add_argument('-p', '--params',
-                               help='Show Available Stack Parameters',
-                               action='store_true')
+    # common parser
+    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser.add_argument('-n', '--noconfirm',
+                               help='No confirmation',
+                               required=False, action='store_true')
 
-    parent_parser.add_argument('--debug',
-                               help='Show parsed/resolved template and exit',
-                               action='store_true')
+    # updatecreate parser common args
+    updatecreate_parser = argparse.ArgumentParser(add_help=False)
+
+    updatecreate_parser.add_argument('-p', '--params',
+                                     help='Show Available Stack Parameters',
+                                     action='store_true')
+
+    updatecreate_parser.add_argument('--debug',
+                                     help='Show parsed/resolved template '
+                                          'and exit',
+                                     action='store_true')
 
     # create parser
-    parser_create = subparsers.add_parser('create', parents=[parent_parser],
+    parser_create = subparsers.add_parser('create',
+                                          parents=[common_parser,
+                                                   updatecreate_parser],
                                           help='Create Stack')
 
     template_version_group_create = parser_create.add_mutually_exclusive_group(
@@ -132,7 +142,9 @@ def get_parser():
                                type=str, default='')
 
     # update parser
-    parser_update = subparsers.add_parser('update', parents=[parent_parser],
+    parser_update = subparsers.add_parser('update',
+                                          parents=[common_parser,
+                                                   updatecreate_parser],
                                           help='Update Stack')
 
     template_version_group_update = parser_update.add_mutually_exclusive_group(
@@ -143,10 +155,6 @@ def get_parser():
     template_version_group_update.add_argument('-v', '--version',
                                                help='Stack Env Version',
                                                type=str)
-
-    parser_update.add_argument('-n', '--noconfirm',
-                               help='No confirmation and no Changeset',
-                               required=False, action='store_true')
 
     parser_update.add_argument('-P', '--policy',
                                help='Policy during Stack Update',
@@ -191,6 +199,7 @@ def get_parser():
 
     # delete parser
     parser_delete = subparsers.add_parser('delete',
+                                          parents=[common_parser],
                                           help='Delete Stack (WARNING)')
 
     # continue_update parser
