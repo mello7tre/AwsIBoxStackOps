@@ -1633,7 +1633,10 @@ def do_action_delete():
         time.sleep(1)
 
         # -show update status until complete
-        update_waiter(istack.last_event_timestamp)
+        try:
+            update_waiter(istack.last_event_timestamp)
+        except:
+            return
 
 
 def do_action_continue():
@@ -1702,7 +1705,10 @@ def run(args):
         if fargs.action == 'continue':
             do_action_continue()
 
-        return istack.stack.stack_status
+        if fargs.action != 'delete':
+            return istack.stack.stack_status
+
+        return True
 
 
 if __name__ == "__main__":
