@@ -668,11 +668,13 @@ def show_update_events(timestamp):
 
 # wait update until complete showing events status
 def update_waiter(timestamp):
+    last_timestamp = timestamp
+    istack.stack.reload()
+
+    # return without waiting
     if not fargs.wait:
         return
 
-    last_timestamp = timestamp
-    istack.stack.reload()
     while istack.stack.stack_status not in [
         'UPDATE_COMPLETE',
         'CREATE_COMPLETE',
