@@ -103,6 +103,10 @@ def get_parser():
     common_parser.add_argument('-n', '--noconfirm',
                                help='No confirmation',
                                required=False, action='store_true')
+    common_parser.add_argument('-w', '--wait',
+                               help='Wait for action to end',
+                               required=False, action='store_true',
+                               default=True)
 
     # updatecreate parser common args
     updatecreate_parser = argparse.ArgumentParser(add_help=False)
@@ -664,6 +668,9 @@ def show_update_events(timestamp):
 
 # wait update until complete showing events status
 def update_waiter(timestamp):
+    if not fargs.wait:
+        return
+
     last_timestamp = timestamp
     istack.stack.reload()
     while istack.stack.stack_status not in [
