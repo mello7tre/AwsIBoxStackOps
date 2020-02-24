@@ -78,6 +78,10 @@ class ibox_stack(object):
     pass
 
 
+class IboxError(Exception):
+    pass
+
+
 # parse main argumets
 def get_parser():
     parser = argparse.ArgumentParser(
@@ -103,10 +107,9 @@ def get_parser():
     common_parser.add_argument('-n', '--noconfirm',
                                help='No confirmation',
                                required=False, action='store_true')
-    common_parser.add_argument('-w', '--wait',
-                               help='Wait for action to end',
-                               required=False, action='store_true',
-                               default=True)
+    common_parser.add_argument('-W', '--nowait',
+                               help='Do not Wait for action to end',
+                               required=False, action='store_true')
 
     # updatecreate parser common args
     updatecreate_parser = argparse.ArgumentParser(add_help=False)
@@ -672,7 +675,7 @@ def update_waiter(timestamp):
     istack.stack.reload()
 
     # return without waiting
-    if not fargs.wait:
+    if fargs.nowait:
         return
 
     while istack.stack.stack_status not in [
@@ -881,8 +884,7 @@ def check_s3_files():
             s3.head_object(Bucket=bucket, Key=key)
         except botocore.exceptions.ClientError as e:
             print('%s/%s' % (bucket, key))
-            pprint(e)
-            exit(0)
+            raise IboxError(e)
 
 
 def check_ecr_images():
@@ -909,8 +911,7 @@ def check_ecr_images():
                 images.append(image)
             except botocore.exceptions.ClientError as e:
                 print(image)
-                pprint(e)
-                exit(0)
+                raise IboxError(e)
 
 
 # method should be identically to the one found in bin/ibox_add_to_dash.py,
@@ -1130,10 +1131,9 @@ def update_template_param():
         response = s3.list_objects_v2(Bucket=app_repository, Prefix=s3_prefix)
         fargs.template = 'https://%s.s3.amazonaws.com/%s' % (
             app_repository, response['Contents'][0]['Key'])
-    except Exception as e:
-        print(f'Error retrieving stack template with prefix: {s3_prefix}')
-        pprint(e)
-        exit(1)
+    except Exception:
+        raise IboxError(
+            f'Error retrieving stack template with prefix: {s3_prefix}')
 
 
 def do_changeset_actions(us_args):
@@ -1175,8 +1175,7 @@ def get_stack():
         stack = cloudformation.Stack(fargs.stack)
         stack.stack_status
     except:
-        logging.error(f'Stack {istack.name} do not exist!')
-        exit(1)
+        raise IboxError(f'Stack {istack.name} do not exist!')
 
     return stack
 
@@ -1209,8 +1208,7 @@ def get_template():
             istack.template_from = 'Current'
 
     except Exception as e:
-        print('Error retrieving template: %s' % e)
-        exit(1)
+        raise IboxError(f'Error retrieving template: %s {e}')
     else:
         template = json.loads(body)
 
@@ -1720,9 +1718,19 @@ def run(args):
         return True
 
 
+def main(args):
+    try:
+        result = run(args)
+        return result
+    except IboxError as e:
+        logging.error(e.args[0])
+
+
 if __name__ == "__main__":
     parser = get_parser()
     # -get cmd args as argparse objects
     # args[0] contain know arguments args[1] the unkown remaining ones
     args = parser.parse_known_args(sys.argv[1:])
-    run(args)
+    result = main(args)
+    if not result:
+        exit(1)
