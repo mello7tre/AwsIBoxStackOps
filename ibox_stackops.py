@@ -101,7 +101,6 @@ def get_parser():
     # subparser
     subparsers = parser.add_subparsers(help='Desired Action', dest='action')
 
-
     # common parser
     common_parser = argparse.ArgumentParser(add_help=False)
     common_parser.add_argument('-n', '--noconfirm',
@@ -1174,8 +1173,8 @@ def get_stack():
     try:
         stack = cloudformation.Stack(fargs.stack)
         stack.stack_status
-    except:
-        raise IboxError(f'Stack {istack.name} do not exist!')
+    except Exception as e:
+        raise IboxError(f'Stack {istack.name} do not exist! {e}')
 
     return stack
 
