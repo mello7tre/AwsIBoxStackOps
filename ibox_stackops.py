@@ -32,6 +32,7 @@ except ImportError:
     slack_client = None
 
 logging.basicConfig()
+logging.getLogger('botocore').setLevel('CRITICAL')
 logger = logging.getLogger('ibox')
 logger.setLevel(logging.INFO)
 
@@ -201,6 +202,7 @@ def get_parser():
 
     # cancel_update parser
     parser_cancel = subparsers.add_parser('cancel',
+                                          parents=[common_parser],
                                           help='Cancel Update Stack')
 
     # delete parser
@@ -210,6 +212,7 @@ def get_parser():
 
     # continue_update parser
     parser_continue = subparsers.add_parser('continue',
+                                            parents=[common_parser],
                                             help='Continue Update RollBack')
     parser_continue.add_argument('--ResourcesToSkip', '-r',
                                  help='Resource to Skip',
@@ -1711,10 +1714,10 @@ def run(args):
         if fargs.action == 'continue':
             do_action_continue()
 
-        if fargs.action != 'delete':
-            return istack.stack.stack_status
+    if fargs.action != 'delete':
+        return istack.stack.stack_status
 
-        return True
+    return True
 
 
 def main(args):
