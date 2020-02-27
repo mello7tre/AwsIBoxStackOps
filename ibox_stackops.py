@@ -1177,7 +1177,7 @@ def get_stack():
         stack = cloudformation.Stack(fargs.stack)
         stack.stack_status
     except Exception as e:
-        raise IboxError(f'Stack {istack.name} do not exist! {e}')
+        raise IboxError(e)
 
     return stack
 
