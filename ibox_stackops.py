@@ -1525,6 +1525,8 @@ def do_action_params():
         # resolve resources
         logger.debug('Processing Resources')
         process_resources()
+    except IboxError:
+        raise
     except Exception as e:
         pprint(e)
         logger.warning('Error resolving template. '
