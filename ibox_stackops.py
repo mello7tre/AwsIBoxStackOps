@@ -196,7 +196,9 @@ def get_parser():
     parser_show = subparsers.add_parser('info', help='Show Stack Info')
 
     # log parser
-    parser_log = subparsers.add_parser('log', help='Show Stack Log')
+    parser_log = subparsers.add_parser('log',
+                                       parents=[common_parser],
+                                       help='Show Stack Log')
     parser_log.add_argument('-d', '--day',
                             help='Days, use 0 for realtime', default=1)
 
