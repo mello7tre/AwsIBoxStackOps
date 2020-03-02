@@ -239,6 +239,10 @@ def add_stack_params_as_args():
         allowed_values = v['AllowedValues'] if 'AllowedValues' in v else []
         kwargs = {'type': str, 'metavar': '\t%s' % v['Description']}
 
+        # If Parameter do not have Default value, enforce it as required
+        if 'Default' not in v:
+            kwargs['required'] = True
+
         if len(allowed_values) > 0:
             kwargs['choices'] = allowed_values
             kwargs['help'] = '{%s}\n\n' % ', '.join(allowed_values)
@@ -711,7 +715,11 @@ def do_action_args():
         us_args['StackName'] = istack.name
     us_args['Parameters'] = istack.action_parameters
     us_args['Tags'] = istack.action_tags
-    us_args['Capabilities'] = ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM']
+    us_args['Capabilities'] = [
+        'CAPABILITY_IAM',
+        'CAPABILITY_NAMED_IAM',
+        'CAPABILITY_AUTO_EXPAND',
+    ]
 
     # Handle policy during update
     if hasattr(fargs, 'policy') and fargs.policy:
