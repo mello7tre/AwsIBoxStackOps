@@ -239,8 +239,13 @@ def add_stack_params_as_args():
         allowed_values = v['AllowedValues'] if 'AllowedValues' in v else []
         kwargs = {'type': str, 'metavar': '\t%s' % v['Description']}
 
-        # If Parameter do not have Default value, enforce it as required
-        if 'Default' not in v:
+        # If Parameter do not have Default value and is new or
+        # current value is not allowed in new template,
+        # enforce it as required
+        if 'Default' not in v and (
+                p not in istack.c_parameters or (
+                    allowed_values and
+                    istack.c_parameters[p] not in allowed_values)):
             kwargs['required'] = True
 
         if len(allowed_values) > 0:
@@ -325,7 +330,10 @@ def set_action_parameters(params_default, params_changed,
     for key in sorted(istack.parameters):
         v = istack.parameters[key]
 
-        default_value = v['Default']
+        try:
+            default_value = v['Default']
+        except:
+            default_value = None
         use_previous_value = False
 
         # get list of AllowedValues
@@ -370,6 +378,8 @@ def set_action_parameters(params_default, params_changed,
                 params_changed[key] = value
 
             # no cmd arg for new param
+            # should never be here make a change to enforce param
+            # in add_stack_params_as_args
             else:
                 # get template default value
                 value = default_value
