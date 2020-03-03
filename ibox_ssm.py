@@ -132,12 +132,12 @@ def add_stack_params_as_args():
                             help='Stack Role',
                             type=str, required=True)
 
-    if fargs.action == 'list':
+    if fargs.action == 'list' or not istack.args:
         parser.print_help()
         exit(0)
     else:
-        args = parser.parse_args(istack.args)
-        do_fargs(args)
+        istack.p_args = parser.parse_args(istack.args)
+        do_fargs(istack.p_args)
 
 
 # if template in s3, force version to the one in his url part
@@ -378,7 +378,7 @@ def do_action_show():
         params_keys.extend(list(params_map[r].keys()))
 
     params_keys = list(set(params_keys))
-    table.add_column('Params', params_keys)
+    table.add_column('Parameter', params_keys)
 
     for r, v in params_map.items():
         params_values = []
@@ -389,7 +389,7 @@ def do_action_show():
                 params_values.append('')
         table.add_column(r, params_values)
 
-    table.align['Params'] = 'l'
+    table.align['Parameter'] = 'l'
     print(table)
 
 
