@@ -64,7 +64,7 @@ def get_args():
 
     parser_putlist.add_argument('-R', '--EnvRole',
                                 help='Stack Role',
-                                type=str, required=True)
+                                type=str)
 
     template_version_group_putlist = (
         parser_putlist.add_mutually_exclusive_group())
@@ -124,6 +124,13 @@ def add_stack_params_as_args():
             '--%s' % p,
             **kwargs
         )
+
+    if (not fargs.EnvRole and fargs.version and
+            fargs.action in ['list', 'put'] and
+            'EnvRole' not in istack.c_parameters):
+        parser.add_argument('-R', '--EnvRole',
+                            help='Stack Role',
+                            type=str, required=True)
 
     if fargs.action == 'list':
         parser.print_help()
@@ -359,6 +366,7 @@ def do_action_put():
 def do_action_show():
     regions = get_setupped_regions()
     params_map = {}
+    params_keys = []
     first_column = None
     table = PrettyTable()
     table.padding_width = 1
@@ -367,10 +375,19 @@ def do_action_show():
         set_region(r)
         params_map[r] = get_ssm_parameters_by_path(
             f'{SSM_PATH}/{fargs.stack}')
-        if not first_column:
-            table.add_column('Params', list(params_map[r].keys()))
-            first_column = True
-        table.add_column(r, list(params_map[r].values()))
+        params_keys.extend(list(params_map[r].keys()))
+
+    params_keys = list(set(params_keys))
+    table.add_column('Params', params_keys)
+
+    for r, v in params_map.items():
+        params_values = []
+        for n in params_keys:
+            if n in v:
+                params_values.append(v[n])
+            else:
+                params_values.append('')
+        table.add_column(r, params_values)
 
     table.align['Params'] = 'l'
     print(table)
