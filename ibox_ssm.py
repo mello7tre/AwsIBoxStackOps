@@ -34,7 +34,7 @@ class ibox_stack(object):
 # parse main argumets
 def get_args():
     parser = argparse.ArgumentParser(
-        description='SSM Parameters Distribution for ibox_stackops',
+        description='SSM Parameters override for Stack Replicator',
         epilog='Note: options for Stack Params must be put at the end!')
 
     # common args
@@ -44,7 +44,7 @@ def get_args():
 
     # setup parser
     parser_setup = subparsers.add_parser('setup',
-                                         help='Setup Regions Distribution')
+                                         help='Setup Regions')
 
     parser_setup.add_argument('-r', '--regions',
                               help='Regions', type=str,
