@@ -53,45 +53,44 @@ def get_args():
     parser_setup.add_argument('-s', '--stack',
                               help='Stack Name', type=str)
 
-    # putlistshow parser args - common to put, show and list
-    parser_pls = argparse.ArgumentParser(add_help=False)
+    # putshow parser args - common to put and show
+    parser_putshow = argparse.ArgumentParser(add_help=False)
 
-    parser_pls.add_argument('-s', '--stack',
-                            help='Stack Name', required=True, type=str)
+    parser_putshow.add_argument('-s', '--stack',
+                                help='Stack Name', required=True, type=str)
 
-    # putlist parser args - common to put and list
+    # put parser args - common to put and list
     parser_putlist = argparse.ArgumentParser(add_help=False)
 
     parser_putlist.add_argument('-R', '--EnvRole',
                                 help='Stack Role',
                                 type=str)
 
-    template_version_group_putlist = (
+    template_version_group_put = (
         parser_putlist.add_mutually_exclusive_group())
-    template_version_group_putlist.add_argument('-t', '--template',
-                                                help='Template Location',
-                                                type=str)
-    template_version_group_putlist.add_argument('-v', '--version',
-                                                help='Stack Env Version',
-                                                type=str)
+    template_version_group_put.add_argument('-t', '--template',
+                                            help='Template Location',
+                                            type=str)
+    template_version_group_put.add_argument('-v', '--version',
+                                            help='Stack Env Version',
+                                            type=str)
 
     # put parser
     parser_put = subparsers.add_parser('put',
-                                       help='Put Parameters',
-                                       parents=[parser_pls, parser_putlist])
+                                       help='Put Parameters - '
+                                            'leave empty for a list',
+                                       parents=[
+                                           parser_putshow,
+                                           parser_putlist])
 
     parser_put.add_argument('-r', '--regions',
-                            help='Regions', type=str, default=[], nargs='+')
+                            help='Regions', type=str,
+                            required=True, default=[], nargs='+')
 
     # show parser
     parser_show = subparsers.add_parser('show',
                                         help='Show Regions Distribution',
-                                        parents=[parser_pls])
-
-    # list parser
-    parser_list = subparsers.add_parser('list',
-                                        help='List allowed parameters',
-                                        parents=[parser_pls, parser_putlist])
+                                        parents=[parser_putshow])
 
     # args[0] contain know arguments args[1] the unkown remaining ones
     args = parser.parse_known_args()
@@ -126,13 +125,13 @@ def add_stack_params_as_args():
         )
 
     if (not fargs.EnvRole and fargs.version and
-            fargs.action in ['list', 'put'] and
+            fargs.action == 'put' and
             'EnvRole' not in istack.c_parameters):
         parser.add_argument('-R', '--EnvRole',
                             help='Stack Role',
                             type=str, required=True)
 
-    if fargs.action == 'list' or not istack.args:
+    if not istack.args:
         parser.print_help()
         exit(0)
     else:
@@ -333,17 +332,14 @@ def do_action_put():
     regions = get_setupped_regions()
     params = []
 
-    for key in sorted(istack.parameters):
-        v = istack.parameters[key]
+    for n, v in vars(istack.p_args).items():
+        if not v:
+            continue
         param = {}
-        fargs_value = getattr(fargs, key)
-        if not fargs_value:
-            fargs_value = v['Default']
-            fargs_value = 'default'
-        param['name'] = f'{SSM_PATH}/{fargs.stack}/{key}'
-        param['desc'] = v['Description']
-        param['value'] = fargs_value
-
+        param['name'] = f'{SSM_PATH}/{fargs.stack}/{n}'
+        param['desc'] = istack.parameters[n]['Description']
+        param['value'] = v
+        
         params.append(param)
 
     # check if is passed as param a list of regions
@@ -377,7 +373,7 @@ def do_action_show():
             f'{SSM_PATH}/{fargs.stack}')
         params_keys.extend(list(params_map[r].keys()))
 
-    params_keys = list(set(params_keys))
+    params_keys = sorted(list(set(params_keys)))
     table.add_column('Parameter', params_keys)
 
     for r, v in params_map.items():
@@ -391,10 +387,6 @@ def do_action_show():
 
     table.align['Parameter'] = 'l'
     print(table)
-
-
-def do_action_list():
-    get_parameters_from_template()
 
 
 # main program function
@@ -428,13 +420,6 @@ def run():
         do_action_put()
     if fargs.action == 'show':
         do_action_show()
-    if fargs.action == 'list':
-        do_action_list()
-
-    # create boto3 client/resource
-#    cloudformation = boto3.resource('cloudformation')
-
-    exit(0)
 
 if __name__ == "__main__":
     run()
