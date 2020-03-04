@@ -28,7 +28,21 @@ class full_args(object):
 
 # ibox stack
 class ibox_stack(object):
-    pass
+    def __init__(self):
+        self.c_parameters = {}
+
+
+def get_arg_stackname():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('-s', '--stack',
+                        help='Stack Name', type=str)
+    parser.add_argument('-v', '--version',
+                        help='Stack Env Version',
+                        type=str)
+
+    args = parser.parse_known_args()
+
+    return args[0]
 
 
 # parse main argumets
@@ -59,33 +73,30 @@ def get_args():
     parser_putshow.add_argument('-s', '--stack',
                                 help='Stack Name', required=True, type=str)
 
-    # put parser args - common to put and list
-    parser_putlist = argparse.ArgumentParser(add_help=False)
-
-    parser_putlist.add_argument('-R', '--EnvRole',
-                                help='Stack Role',
-                                type=str)
-
-    template_version_group_put = (
-        parser_putlist.add_mutually_exclusive_group())
-    template_version_group_put.add_argument('-t', '--template',
-                                            help='Template Location',
-                                            type=str)
-    template_version_group_put.add_argument('-v', '--version',
-                                            help='Stack Env Version',
-                                            type=str)
-
     # put parser
     parser_put = subparsers.add_parser('put',
                                        help='Put Parameters - '
                                             'leave empty for a list',
-                                       parents=[
-                                           parser_putshow,
-                                           parser_putlist])
+                                       parents=[parser_putshow])
 
     parser_put.add_argument('-r', '--regions',
                             help='Regions', type=str,
                             required=True, default=[], nargs='+')
+
+    parser_put.add_argument('-R', '--EnvRole',
+                            help='Stack Role', type=str,
+                            required=True if fargs.version and
+                            'EnvRole' not in istack.c_parameters else False)
+
+    template_version_group = parser_put.add_mutually_exclusive_group(
+        required=False if istack.stack else True)
+    template_version_group.add_argument('-t', '--template',
+                                        help='Template Location',
+                                        type=str)
+    if 'BucketAppRepository' in istack.exports:
+        template_version_group.add_argument('-v', '--version',
+                                            help='Stack Env Version',
+                                            type=str)
 
     # show parser
     parser_show = subparsers.add_parser('show',
@@ -160,6 +171,7 @@ def do_fargs(args):
 
 
 def get_cloudformation_exports():
+    logger.info('Getting CloudFormation Exports')
     exports = {}
     paginator = client.get_paginator('list_exports')
     response_iterator = paginator.paginate()
@@ -175,17 +187,14 @@ def get_cloudformation_exports():
 
 
 def update_template_param():
-    logger.info('Getting CloudFormation Exports')
-    istack.exports = get_cloudformation_exports()
-
     # try to get role from fargs or use current stack parameter value
-    try:
+    if fargs.EnvRole:
         role = fargs.EnvRole
-    except:
+    else:
         role = istack.c_parameters['EnvRole']
 
     app_repository = istack.exports['BucketAppRepository']
-    s3_prefix = 'ibox/%s/templates/%s.' % (fargs.version, role)
+    s3_prefix = f'ibox/{fargs.version}/templates/{role}.'
     s3 = boto3.client('s3')
 
     try:
@@ -283,9 +292,37 @@ def set_region(region):
     ssm = myboto3.client('ssm')
 
 
-def get_parameters_from_template():
-    istack.name = fargs.stack
+def get_stack():
+    cloudformation = boto3.resource('cloudformation')
+    try:
+        stack = cloudformation.Stack(fargs.stack)
+        stack.stack_status
+    except Exception as e:
+        return None
 
+    return stack
+
+
+def get_parameters_current():
+    params = {}
+    try:
+        for p in istack.stack.parameters:
+            key = p['ParameterKey']
+            try:
+                value = p['ResolvedValue']
+            except:
+                try:
+                    value = p['ParameterValue']
+                except:
+                    value = None
+            params[key] = value
+    except:
+        pass
+
+    return params
+
+
+def get_parameters_from_template():
     # update template param if using version one
     if fargs.version:
         update_template_param()
@@ -339,7 +376,7 @@ def do_action_put():
         param['name'] = f'{SSM_PATH}/{fargs.stack}/{n}'
         param['desc'] = istack.parameters[n]['Description']
         param['value'] = v
-        
+
         params.append(param)
 
     # check if is passed as param a list of regions
@@ -400,19 +437,30 @@ def run():
     session = boto3.session.Session()
     current_region = session.region_name
 
-    # init class for full args program args + stack args
-    fargs = full_args()
-
-    # -get cmd args as argparse objects
-    args = get_args()
+    client = boto3.client('cloudformation')
 
     # init istack class
     istack = ibox_stack()
+    istack.exports = get_cloudformation_exports()
+
+    # init class for full args program args + stack args
+    fargs = full_args()
+
+    # get arg stack_name if present
+    do_fargs(get_arg_stackname())
+
+    if fargs.stack:
+        istack.name = fargs.stack
+        istack.stack = get_stack()
+        if istack.stack:
+            logger.info('Getting Parameters current values')
+            istack.c_parameters = get_parameters_current()
+
+    # -get cmd args as argparse objects
+    args = get_args()
     istack.args = args[1]
 
     do_fargs(args[0])
-
-    client = boto3.client('cloudformation')
 
     if fargs.action == 'setup':
         do_action_setup()
