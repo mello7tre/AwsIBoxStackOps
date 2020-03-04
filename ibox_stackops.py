@@ -228,6 +228,7 @@ def add_stack_params_as_args():
     parser = argparse.ArgumentParser(
         description='',
         add_help=False,
+        allow_abbrev=False,
         usage='Allowed Stack Params ... allowed values are in {}',
         formatter_class=argparse.RawTextHelpFormatter,
     )
