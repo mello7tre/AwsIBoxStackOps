@@ -135,13 +135,6 @@ def add_stack_params_as_args():
             **kwargs
         )
 
-    if (not fargs.EnvRole and fargs.version and
-            fargs.action == 'put' and
-            'EnvRole' not in istack.c_parameters):
-        parser.add_argument('-R', '--EnvRole',
-                            help='Stack Role',
-                            type=str, required=True)
-
     if not istack.args:
         parser.print_help()
         exit(0)
