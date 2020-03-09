@@ -1737,7 +1737,7 @@ def run(args):
         if fargs.action == 'continue':
             do_action_continue()
 
-    if fargs.action != 'delete':
+    if fargs.action != 'delete' and istack.stack:
         return istack.stack.stack_status
 
     return True
