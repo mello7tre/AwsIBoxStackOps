@@ -30,6 +30,7 @@ class full_args(object):
 class ibox_stack(object):
     def __init__(self):
         self.c_parameters = {}
+        self.stack = None
 
 
 def get_arg_stackname():
@@ -54,7 +55,8 @@ def get_args():
     # common args
 
     # subparser
-    subparsers = parser.add_subparsers(help='Desired Action', dest='action')
+    subparsers = parser.add_subparsers(help='Desired Action',
+                                       dest='action', required=True)
 
     # setup parser
     parser_setup = subparsers.add_parser('setup',
