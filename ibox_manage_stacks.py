@@ -8,10 +8,14 @@ import time
 import os
 import sys
 import concurrent.futures
-import requests
-import ibox_stackops
 from pprint import pprint, pformat
 from prettytable import PrettyTable, ALL as ptALL
+
+try:
+    import ibox_stackops
+    have_stackops = True
+except ImportError:
+    have_stackops = None
 
 logging.basicConfig()
 logging.getLogger('botocore').setLevel('CRITICAL')
@@ -88,21 +92,22 @@ def get_parser():
                              help='Show stack roles and exit',
                              action='store_true')
 
-    # update parser
-    parser_update = action_subparser.add_parser('update',
-                                                help='Update Stacks'
-                                                     'using ibox_stackops',
-                                                parents=[common_parser])
-    parser_update.add_argument('--dryrun',
-                               help='Show Command to be excuted',
-                               action='store_true')
-    parser_update.add_argument('-j', '--jobs',
-                               help='Max Concurrent jobs', type=int)
-    parser_update.add_argument('--pause',
-                               help='Pause for seconds between jobs - '
-                                    '0 for interactive - '
-                                    'valid only for jobs=1',
-                               type=int)
+    if have_stackops:
+        # update parser
+        parser_update = action_subparser.add_parser('update',
+                                                    help='Update Stacks'
+                                                         'using ibox_stackops',
+                                                    parents=[common_parser])
+        parser_update.add_argument('--dryrun',
+                                   help='Show Command to be excuted',
+                                   action='store_true')
+        parser_update.add_argument('-j', '--jobs',
+                                   help='Max Concurrent jobs', type=int)
+        parser_update.add_argument('--pause',
+                                   help='Pause for seconds between jobs - '
+                                        '0 for interactive - '
+                                        'valid only for jobs=1',
+                                   type=int)
 
     return parser
 
