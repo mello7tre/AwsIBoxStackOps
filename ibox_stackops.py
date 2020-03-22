@@ -1186,11 +1186,11 @@ def do_changeset_actions(us_args):
     delete_changeset(changeset_id)
 
     if not fargs.dryrun and show_confirm():
-        pass
         # execute_changeset(changeset_id)
+        return True
     else:
+        return None
         # delete_changeset(changeset_id)
-        exit(0)
 
 
 def get_stack():
@@ -1594,7 +1594,9 @@ def do_action_update():
 
     # -if using changeset ...
     if not fargs.noconfirm:
-        do_changeset_actions(us_args)
+        do_update = do_changeset_actions(us_args)
+        if not do_update:
+            return
 
     # -do update
     update_response = update_stack(us_args)
