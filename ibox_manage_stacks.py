@@ -61,28 +61,25 @@ def get_parser():
 
     # common parser
     common_parser = argparse.ArgumentParser(add_help=False)
-
-    subject_group = common_parser.add_mutually_exclusive_group(required=True)
-    subject_group.add_argument('-s', '--stack', nargs='+',
+    common_parser.add_argument('-s', '--stack', nargs='+',
                                help='Stack Names space separated',
-                               type=str, default = [])
-    subject_group.add_argument('-r', '--role', nargs='+',
+                               type=str, default=[])
+    common_parser.add_argument('-r', '--role', nargs='+',
                                help='Stack Roles space separated',
-                               type=str, default = [])
-    subject_group.add_argument('-t', '--type', nargs='+',
+                               type=str, default=[])
+    common_parser.add_argument('-t', '--type', nargs='+',
                                help='Stack Types space separated - '
                                     'ALL to show all',
-                               type=str, default = [])
-
+                               type=str, default=[])
 
     # show parser
     parser_show = action_subparser.add_parser('show',
                                               help='Show Stacks summary',
                                               parents=[common_parser])
     parser_show.add_argument('-F', '--fields', nargs='+',
-                             type=str, default = TABLE_FIELDS) 
+                             type=str, default=TABLE_FIELDS)
     parser_show.add_argument('-O', '--output',
-                             type=str, default = 'text',
+                             type=str, default='text',
                              choices=['text', 'html'])
     parser_show.add_argument('-S', '--show_names',
                              help='Show stack names and exit',
@@ -144,7 +141,7 @@ def do_stackops(stack):
     args_list = []
     if args.region:
         args_list.extend(['-r', args.region])
-    args_list += ['--stack', stack, args.action] + myargs[1] 
+    args_list += ['--stack', stack, args.action] + myargs[1]
 
     stack_args = parser.parse_known_args(args_list)
 
@@ -192,7 +189,6 @@ def get_stackdata(stack):
         pass
 
     return data
-
 
 
 def get_table(data):
@@ -278,7 +274,7 @@ def run(args):
     global boto3
     global client
     global cloudformation
-    
+
     # set region from parameter if exist
     kwarg_session = {}
     if args.region:
