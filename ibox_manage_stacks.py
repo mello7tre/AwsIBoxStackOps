@@ -232,7 +232,8 @@ def get_data():
             stack_type = stack_data.get('StackType', None)
             if (stack_name in args.stack or
                     stack_role in args.role or
-                    stack_type in args.type):
+                    stack_type in args.type or
+                    'ALL' in args.type):
                 data.append(stack_data)
 
     return data
