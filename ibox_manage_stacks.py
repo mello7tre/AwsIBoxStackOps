@@ -146,7 +146,7 @@ def do_stackops(stack):
     args_list = []
     if args.region:
         args_list.extend(['-r', args.region])
-    args_list += ['--stack', stack, args.action] + myargs[1]
+    args_list += ['--stack', stack, args.action, '-n'] + myargs[1]
 
     stack_args = parser.parse_known_args(args_list)
 
