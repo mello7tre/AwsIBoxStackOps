@@ -184,8 +184,9 @@ def get_stackdata(stack):
 
     if 'Outputs' in stack:
         outputs = get_stack_output(stack['Outputs'])
-        for d in STACK_OUTPUT_DATA:
-            try_to_get(outputs, data, d)
+        data.update(outputs)
+        # for d in STACK_OUTPUT_DATA:
+        #     try_to_get(outputs, data, d)
 
     # ugly fix
     try:
