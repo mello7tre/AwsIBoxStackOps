@@ -285,7 +285,7 @@ def run(args):
     # set region from parameter if exist
     kwarg_session = {}
     if args.region:
-        kwarg_session['region_name'] = fargs.region
+        kwarg_session['region_name'] = args.region
     boto3 = base_boto3.session.Session(**kwarg_session)
 
     # create boto3 client/resource
