@@ -1314,7 +1314,12 @@ def resolve_select(name, v):
     index = v[0]
     s_list = recursive_resolve(name, v[1])
 
-    return s_list[index] if isinstance(s_list, list) else s_list
+    try:
+        value = s_list[index]
+    except:
+        value = s_list
+
+    return value
 
 
 def resolve_split(name, v):
@@ -1396,7 +1401,7 @@ def recursive_resolve(name, value):
                 return resolve_equals(name, v)
             elif r == 'Fn::Not':
                 return resolve_not(name, v)
-            elif r == 'Condition':
+            elif r == 'Condition' and isinstance(v, str):
                 return resolve_condition(name, v)
             else:
                 r_value = recursive_resolve(name, v)
