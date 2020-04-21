@@ -91,6 +91,9 @@ def get_parser():
     parser_show.add_argument('-R', '--show_roles',
                              help='Show stack roles and exit',
                              action='store_true')
+    parser_show.add_argument('-T', '--show_types',
+                             help='Show stack types and exit',
+                             action='store_true')
 
     if have_stackops:
         # update parser
@@ -242,11 +245,19 @@ def get_data():
 
 def do_action_show():
     data = get_data()
-    if args.show_names or args.show_roles:
+    if args.show_names or args.show_roles or args.show_types:
         names = []
         for d in data:
-            names.append(
-                d['StackName'] if args.show_names else d['EnvRole'])
+            try:
+                if args.show_names:
+                    name_type = d['StackName']
+                elif args.show_roles:
+                    name_type = d['EnvRole']
+                else:
+                    name_type = d['StackType']
+                names.append(name_type)
+            except:
+                pass
 
         return ' '.join(names)
 
