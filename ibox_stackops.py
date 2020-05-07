@@ -110,6 +110,9 @@ def get_parser():
     common_parser.add_argument('-W', '--nowait',
                                help='Do not Wait for action to end',
                                required=False, action='store_true')
+    common_parser.add_argument('-s', '--slack_channel',
+                               help='Slack Channel [_cf_deploy]', nargs='?',
+                               const='_cf_deploy', default=False)
 
     # updatecreate parser common args
     updatecreate_parser = argparse.ArgumentParser(add_help=False)
@@ -187,10 +190,6 @@ def get_parser():
     parser_update.add_argument('-d', '--showdetails',
                                help='Show extra details in changeset',
                                action='store_true')
-
-    parser_update.add_argument('-s', '--slack_channel',
-                               help='Slack Channel [_cf_deploy]', nargs='?',
-                               const='_cf_deploy', default=False)
 
     # show parser
     parser_show = subparsers.add_parser('info', help='Show Stack Info')
@@ -1124,7 +1123,6 @@ def mylog(string):
     print(message)
 
     if (
-        fargs.action == 'update' and
         fargs.slack_channel and
         slack_client and
         'IBOX_SLACK_TOKEN' in os.environ and
