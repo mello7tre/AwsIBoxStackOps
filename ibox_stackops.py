@@ -200,8 +200,11 @@ def get_parser():
     parser_log = subparsers.add_parser('log',
                                        parents=[common_parser],
                                        help='Show Stack Log')
-    parser_log.add_argument('-d', '--day',
-                            help='Days, use 0 for realtime', default=1)
+    parser_log.add_argument('-d', '--timedelta',
+                            help='How many seconds go back in time '
+                                 'from stack last event - '
+                                 'use 0 for realtime - '
+                                 'if < 30 assume days', default=300)
 
     # cancel_update parser
     parser_cancel = subparsers.add_parser('cancel',
@@ -874,7 +877,9 @@ def show_confirm():
 
 
 def show_log(time_delta):
-    time_event = istack.last_event_timestamp - timedelta(days=time_delta)
+    if time_delta < 30:
+        time_delta = time_delta * 86400
+    time_event = istack.last_event_timestamp - timedelta(seconds=time_delta)
 
     if time_delta == 0:
         update_waiter(time_event)
@@ -1656,7 +1661,7 @@ def do_action_info():
 
 
 def do_action_log():
-    show_log(int(fargs.day))
+    show_log(int(fargs.timedelta))
 
 
 def do_action_cancel():
