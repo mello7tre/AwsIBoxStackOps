@@ -122,9 +122,11 @@ def get_parser():
                                      action='store_true')
 
     updatecreate_parser.add_argument('--debug',
-                                     help='Show parsed/resolved template '
+                                     help='Show parsed/resolved template'
                                           'and exit',
                                      action='store_true')
+    updatecreate_parser.add_argument('--topic',
+                                     help='SNS Topic Arn for notification')
 
     # create parser
     parser_create = subparsers.add_parser('create',
@@ -731,6 +733,10 @@ def do_action_args():
         'CAPABILITY_AUTO_EXPAND',
     ]
 
+    # sns topic
+    if fargs.topic:
+        us_args['NotificationARNs'] = [fargs.topic]
+
     # Handle policy during update
     if hasattr(fargs, 'policy') and fargs.policy:
         action = ['"Update:%s"' % a for a in fargs.policy.split(',')]
@@ -1123,6 +1129,7 @@ def mylog(string):
     print(message)
 
     if (
+        fargs.action != 'info' and
         fargs.slack_channel and
         slack_client and
         'IBOX_SLACK_TOKEN' in os.environ and
