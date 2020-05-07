@@ -1127,14 +1127,14 @@ def mylog(string):
         fargs.action == 'update' and
         fargs.slack_channel and
         slack_client and
-        'BUILDKITE_SLACK_TOKEN' in os.environ and
-        'BUILDKITE_SLACK_USER' in os.environ
+        'IBOX_SLACK_TOKEN' in os.environ and
+        'IBOX_SLACK_USER' in os.environ
     ):
-        slack_web = slack.WebClient(token=os.environ['BUILDKITE_SLACK_TOKEN'])
+        slack_web = slack.WebClient(token=os.environ['IBOX_SLACK_TOKEN'])
         ac = slack_web.chat_postMessage(
             channel=f'#{fargs.slack_channel}',
             text=message,
-            username=os.environ['BUILDKITE_SLACK_USER'],
+            username=os.environ['IBOX_SLACK_USER'],
             icon_emoji=':robot_face:',
         )
 
