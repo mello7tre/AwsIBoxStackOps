@@ -1129,9 +1129,11 @@ def update_dashboards():
             do_update_dashboard(cw_client, resources, mode, dash)
 
 
-def mylog(string):
-    message = f'{istack.name} # {string}'
-    print(message)
+def setup_mylog():
+    global log_to_slack
+    global slack_web
+
+    log_to_slack = None
 
     if (
         fargs.action != 'info' and
@@ -1141,6 +1143,14 @@ def mylog(string):
         'IBOX_SLACK_USER' in os.environ
     ):
         slack_web = slack.WebClient(token=os.environ['IBOX_SLACK_TOKEN'])
+        log_to_slack = True
+
+
+def mylog(string):
+    message = f'{istack.name} # {string}'
+    print(message)
+
+    if log_to_slack:
         ac = slack_web.chat_postMessage(
             channel=f'#{fargs.slack_channel}',
             text=message,
@@ -1729,6 +1739,9 @@ def run(args):
     istack.args = args[1]
 
     istack.create = None
+
+    # setup mylog
+    setup_mylog()
 
     if fargs.action == 'create':
         istack.create = True
