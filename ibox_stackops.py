@@ -125,8 +125,9 @@ def get_parser():
                                      help='Show parsed/resolved template'
                                           'and exit',
                                      action='store_true')
-    updatecreate_parser.add_argument('--topic',
-                                     help='SNS Topic Arn for notification')
+    updatecreate_parser.add_argument('--topics', nargs='+',
+                                     help='SNS Topics Arn for notification',
+                                     type=str, default=[]))
 
     # create parser
     parser_create = subparsers.add_parser('create',
@@ -737,8 +738,7 @@ def do_action_args():
     ]
 
     # sns topic
-    if fargs.topic:
-        us_args['NotificationARNs'] = [fargs.topic]
+    us_args['NotificationARNs'] = fargs.topics
 
     # Handle policy during update
     if hasattr(fargs, 'policy') and fargs.policy:
