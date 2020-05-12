@@ -104,6 +104,7 @@ def get_parser():
 
     # common parser
     common_parser = argparse.ArgumentParser(add_help=False)
+
     common_parser.add_argument('-n', '--noconfirm',
                                help='No confirmation',
                                required=False, action='store_true')
@@ -120,7 +121,6 @@ def get_parser():
     updatecreate_parser.add_argument('-p', '--params',
                                      help='Show Available Stack Parameters',
                                      action='store_true')
-
     updatecreate_parser.add_argument('--debug',
                                      help='Show parsed/resolved template'
                                           'and exit',
@@ -175,21 +175,17 @@ def get_parser():
                                    '*', 'Modify', 'Delete', 'Replace',
                                    'Modify,Delete', 'Modify,Replace',
                                    'Delete,Replace'])
-
     parser_update.add_argument('-N', '--dryrun',
                                help='Show changeset and exit',
                                action='store_true')
-
     parser_update.add_argument('-T', '--showtags',
                                help='Show tags changes in changeset',
                                action='store_true')
-
     parser_update.add_argument('-D', '--dashboard',
                                help='Update CloudWatch DashBoard',
                                choices=[
                                    'Always', 'OnChange', 'Generic', 'None'],
                                default='OnChange')
-
     parser_update.add_argument('-d', '--showdetails',
                                help='Show extra details in changeset',
                                action='store_true')
