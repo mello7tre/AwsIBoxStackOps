@@ -127,7 +127,7 @@ def get_parser():
                                      action='store_true')
     updatecreate_parser.add_argument('--topics', nargs='+',
                                      help='SNS Topics Arn for notification',
-                                     type=str, default=[]))
+                                     type=str, default=[])
 
     # create parser
     parser_create = subparsers.add_parser('create',
