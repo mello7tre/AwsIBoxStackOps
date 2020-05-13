@@ -31,6 +31,12 @@ try:
 except ImportError:
     slack_client = None
 
+try:
+    import yaml
+    have_yaml = True
+except ImportError:
+    have_yaml = None
+
 logging.basicConfig()
 logging.getLogger('botocore').setLevel('CRITICAL')
 logger = logging.getLogger('ibox')
@@ -1458,8 +1464,11 @@ def process_resources():
             istack.r_resources[r] = recursive_resolve(r, v)
 
     if fargs.debug:
-        pprint(istack.r_resources)
-        pprint(istack.t_resources)
+        if have_yaml:
+            print(yaml.dump(istack.r_resources))
+        else:
+            pprint(istack.r_resources)
+            pprint(istack.t_resources)
         exit(0)
 
     if istack.s3_files:
