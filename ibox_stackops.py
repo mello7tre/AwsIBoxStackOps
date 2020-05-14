@@ -37,6 +37,24 @@ try:
 except ImportError:
     have_yaml = None
 
+if have_yaml:
+    CLF_FUNC = (
+        '!Ref',
+        '!GetAtt',
+        '!GetAZs',
+    )
+
+    def yaml_exclamation_mark(dumper, data):
+        if data.startswith(CLF_FUNC):
+            tag = data.split(' ')[0]
+            value = dumper.represent_scalar(tag, data.replace(f'{tag} ', ''))
+        else:
+            value = dumper.represent_scalar(u'tag:yaml.org,2002:str', data)
+
+        return value
+
+    yaml.add_representer(str, yaml_exclamation_mark)
+
 logging.basicConfig()
 logging.getLogger('botocore').setLevel('CRITICAL')
 logger = logging.getLogger('ibox')
@@ -127,7 +145,7 @@ def get_parser():
     updatecreate_parser.add_argument('-p', '--params',
                                      help='Show Available Stack Parameters',
                                      action='store_true')
-    updatecreate_parser.add_argument('--debug',
+    updatecreate_parser.add_argument('--resolve',
                                      help='Show parsed/resolved template'
                                           'and exit',
                                      action='store_true')
@@ -1304,8 +1322,11 @@ def resolve_if(name, v):
 def resolve_ref(name, v):
     if v == 'AWS::Region':
         value = boto3.region_name
+    elif v in istack.r_parameters:
+        value = istack.r_parameters[v]
     else:
-        value = istack.r_parameters[v] if v in istack.r_parameters else v
+        # value = {'Ref': v}
+        value = f'!Ref {v}'
 
     return value
 
@@ -1320,6 +1341,13 @@ def resolve_findinmap(name, v):
     mapname = recursive_resolve(name, v[0])
     key = recursive_resolve(name, v[1])
     key_value = recursive_resolve(name, v[2])
+
+    value = istack.mappings[mapname][key][key_value]
+
+    if isinstance(value, list):
+        return value
+    else:
+        return str(value)
 
     return str(istack.mappings[mapname][key][key_value])
 
@@ -1387,7 +1415,7 @@ def resolve_condition(name, v):
 
 
 def awsnovalue(value):
-    if value == 'AWS::NoValue':
+    if value == 'AWS::NoValue' or value == '!Ref AWS::NoValue':
         return True
 
     return False
@@ -1402,7 +1430,9 @@ def recursive_resolve(name, value):
             elif r == 'Ref':
                 return resolve_ref(name, v)
             elif r == 'Fn::GetAtt':
-                return '%s.%s' % (v[0], v[1])
+                return '!GetAtt %s.%s' % (v[0], v[1])
+            elif r == 'Fn::GetAZs':
+                return '!GetAZs %s' % boto3.region_name
             elif r == 'Fn::ImportValue':
                 return resolve_import(name, v)
             elif r == 'Fn::Sub':
@@ -1463,13 +1493,17 @@ def process_resources():
             istack.t_resources[v['Type']] = r
             istack.r_resources[r] = recursive_resolve(r, v)
 
-    if fargs.debug:
-        if have_yaml:
-            print(yaml.dump(istack.r_resources))
-        else:
-            pprint(istack.r_resources)
-            pprint(istack.t_resources)
-        exit(0)
+    if fargs.resolve:
+        try:
+            if have_yaml:
+                print(yaml.dump(istack.r_resources))
+            else:
+                pprint(istack.r_resources)
+                pprint(istack.t_resources)
+        except Exception as e:
+            logger.error(e)
+        finally:
+            exit(0)
 
     if istack.s3_files:
         check_s3_files()
