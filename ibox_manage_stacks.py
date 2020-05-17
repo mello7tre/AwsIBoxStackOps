@@ -9,7 +9,9 @@ import os
 import sys
 import concurrent.futures
 from pprint import pprint, pformat
-from prettytable import PrettyTable, ALL as ptALL
+from prettytable import (PrettyTable,
+                         ALL as ptALL, FRAME as ptFRAME,
+                         HEADER as ptHEADER, NONE as ptNONE)
 
 try:
     import ibox_stackops
@@ -84,7 +86,7 @@ def get_parser():
                              type=str, default=TABLE_FIELDS)
     parser_show.add_argument('-O', '--output',
                              type=str, default='text',
-                             choices=['text', 'html'])
+                             choices=['text', 'html', 'bare'])
     parser_show.add_argument('-S', '--show_names',
                              help='Show stack names and exit',
                              action='store_true')
@@ -213,13 +215,18 @@ def get_table(data):
     table.reversesort = True
     table.align = 'l'
 
-    if args.output == 'text':
-        out_table = table.get_string(fields=fields)
-    else:
+    if args.output == 'html':
         table.format = True
-        out_table = table.get_html_string(fields=fields)
 
-    return out_table
+        return table.get_html_string(fields=fields)
+
+    if args.output == 'bare':
+        table.header = False
+        table.border = False
+        table.left_padding_width = 0
+        table.padding_width = 1
+
+    return table.get_string(fields=fields)
 
 
 def get_data():
