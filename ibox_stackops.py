@@ -139,24 +139,17 @@ def get_parser():
                                help='Slack Channel [_cf_deploy]', nargs='?',
                                const='_cf_deploy', default=False)
 
-    # updatecreate parser common args
-    updatecreate_parser = argparse.ArgumentParser(add_help=False)
+    # update create parser common args
+    upd_crt_parser = argparse.ArgumentParser(add_help=False)
 
-    updatecreate_parser.add_argument('-p', '--params',
-                                     help='Show Available Stack Parameters',
-                                     action='store_true')
-    updatecreate_parser.add_argument('--resolve',
-                                     help='Show parsed/resolved template'
-                                          'and exit',
-                                     action='store_true')
-    updatecreate_parser.add_argument('--topics', nargs='+',
-                                     help='SNS Topics Arn for notification',
-                                     type=str, default=[])
+    upd_crt_parser.add_argument('--topics', nargs='+',
+                                help='SNS Topics Arn for notification',
+                                type=str, default=[])
 
     # create parser
     parser_create = subparsers.add_parser('create',
                                           parents=[common_parser,
-                                                   updatecreate_parser],
+                                                   upd_crt_parser],
                                           help='Create Stack')
 
     template_version_group_create = parser_create.add_mutually_exclusive_group(
@@ -178,20 +171,24 @@ def get_parser():
                                help='App Version',
                                type=str, default='')
 
+    # update resolve parameters parser common args
+    upd_rsl_prm_parser = argparse.ArgumentParser(add_help=False)
+
+    template_version_group_upd_rsl_prm = (
+        upd_rsl_prm_parser.add_mutually_exclusive_group())
+    template_version_group_upd_rsl_prm.add_argument('-t', '--template',
+                                                    help='Template Location',
+                                                    type=str)
+    template_version_group_upd_rsl_prm.add_argument('-v', '--version',
+                                                    help='Stack Env Version',
+                                                    type=str)
+
     # update parser
     parser_update = subparsers.add_parser('update',
                                           parents=[common_parser,
-                                                   updatecreate_parser],
+                                                   upd_crt_parser,
+                                                   upd_rsl_prm_parser],
                                           help='Update Stack')
-
-    template_version_group_update = parser_update.add_mutually_exclusive_group(
-        )
-    template_version_group_update.add_argument('-t', '--template',
-                                               help='Template Location',
-                                               type=str)
-    template_version_group_update.add_argument('-v', '--version',
-                                               help='Stack Env Version',
-                                               type=str)
 
     parser_update.add_argument('-P', '--policy',
                                help='Policy during Stack Update',
@@ -216,6 +213,18 @@ def get_parser():
 
     # show parser
     parser_show = subparsers.add_parser('info', help='Show Stack Info')
+
+    # parameters parser
+    parser_parameters = subparsers.add_parser('parameters',
+                                              parents=[upd_rsl_prm_parser],
+                                              help='Show Available Stack '
+                                                   'Parameters')
+
+    # resolve parser
+    parser_resolve = subparsers.add_parser('resolve',
+                                           parents=[upd_rsl_prm_parser],
+                                           help='Resolve Stack template - '
+                                                'output in yaml short format')
 
     # log parser
     parser_log = subparsers.add_parser('log',
@@ -285,7 +294,7 @@ def add_stack_params_as_args():
             **kwargs
         )
 
-    if fargs.params:
+    if fargs.action == 'parameters':
         parser.print_help()
         exit(0)
     else:
@@ -1155,6 +1164,11 @@ def setup_mylog():
 
     log_to_slack = None
 
+    try:
+        fargs.slack_channel
+    except:
+        fargs.slack_channel = None
+
     if (
         fargs.action != 'info' and
         fargs.slack_channel and
@@ -1493,7 +1507,7 @@ def process_resources():
             istack.t_resources[v['Type']] = r
             istack.r_resources[r] = recursive_resolve(r, v)
 
-    if fargs.resolve:
+    if fargs.action == 'resolve':
         try:
             if have_yaml:
                 print(yaml.dump(istack.r_resources))
@@ -1713,6 +1727,11 @@ def do_action_log():
     show_log(int(fargs.timedelta))
 
 
+def do_action_parameters_or_resolve():
+    # get final args for update/create/parameters/resolve
+    us_args = get_args_for_action()
+
+
 def do_action_cancel():
     cancel_response = cancel_update_stack()
     mylog(json.dumps(cancel_response))
@@ -1799,6 +1818,8 @@ def run(args):
             do_action_info()
         if fargs.action == 'log':
             do_action_log()
+        if fargs.action == 'parameters' or fargs.action == 'resolve':
+            do_action_parameters_or_resolve()
         if fargs.action == 'cancel':
             do_action_cancel()
         if fargs.action == 'delete':
