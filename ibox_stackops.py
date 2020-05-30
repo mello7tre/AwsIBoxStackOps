@@ -1835,10 +1835,11 @@ def run(args):
 
 def main(args):
     try:
-        result = run(args)
-        return result
+        return run(args)
     except IboxError as e:
         logging.error(e.args[0])
+
+        return e
 
 
 if __name__ == "__main__":
@@ -1847,5 +1848,6 @@ if __name__ == "__main__":
     # args[0] contain know arguments args[1] the unkown remaining ones
     args = parser.parse_known_args(sys.argv[1:])
     result = main(args)
-    if not result:
+
+    if isinstance(result, IboxError):
         exit(1)
