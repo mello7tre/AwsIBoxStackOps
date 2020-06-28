@@ -1287,7 +1287,13 @@ def get_template():
     except Exception as e:
         raise IboxError(f'Error retrieving template: %s {e}')
     else:
-        template = json.loads(body)
+        try:
+            template = json.loads(body)
+        except:
+            try:
+                template = yaml.load(body, Loader=yaml.FullLoader)
+            except:
+                raise IboxError('Error parsing template body')
 
     return template
 
