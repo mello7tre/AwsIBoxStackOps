@@ -699,7 +699,6 @@ def show_service_update(service_logical_resource_id):
             )
 
             # is update stuck ?
-            print(stuck_n)
             max_retry = fargs.max_retry_ecs_service_running_count
             if max_retry > 0 and stuck_n > max_retry:
                 logger.warning(
