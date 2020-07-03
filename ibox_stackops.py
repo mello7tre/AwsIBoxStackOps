@@ -708,6 +708,8 @@ def show_service_update(service_logical_resource_id):
                     do_action_cancel()
                 except Exception as e:
                     raise IboxError(e)
+                finally:
+                    return
 
             if desiredCount > 0 and pendingCount > 0 and runningCount == 0:
                 stuck_n += 1
