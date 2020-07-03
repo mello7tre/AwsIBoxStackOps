@@ -766,7 +766,14 @@ def update_waiter(timestamp):
         'DELETE_FAILED',
     ]:
         istack.stack.reload()
-        last_timestamp = show_update_events(last_timestamp)
+        try:
+            last_timestamp = show_update_events(last_timestamp)
+
+        # ECS Service did not stabilize, cancel update [ROLLBACK]
+        except IboxErrorECSService as e:
+            logger.warning(e.args[0])
+            do_action_cancel()
+
         time.sleep(5)
 
 
@@ -1871,16 +1878,6 @@ def main(args):
         logging.error(e.args[0])
 
         return e
-
-    # ECS Service did not stabilize, cancel update [ROLLBACK]
-    except IboxErrorECSService as e:
-        logger.warning(e.args[0])
-        try:
-            do_action_cancel()
-        except IboxError as e:
-            logging.error(e.args[0])
-
-            return e
 
 
 if __name__ == "__main__":
