@@ -684,35 +684,36 @@ def show_service_update(service_logical_resource_id):
                     deps[d]['taskDefinition'] = deps[d][
                         'taskDefinition'].split('/')[-1]
             mylog(
-                'PRIMARY%s' %
+                'PRIMARY: %s' %
                 pformat(
                     deps['PRIMARY'],
                     width=1000000
                 )
             )
             mylog(
-                'ACTIVE%s' %
+                'ACTIVE: %s\n' %
                 pformat(
                     deps['ACTIVE'],
                     width=1000000
                 )
             )
 
-        # is update stuck ?
-        max_retry = fargs.max_retry_ecs_service_running_count
-        if max_retry > 0 and stuck_n > max_retry:
-            logger.warning(
-                f'Service did not stabilize [{stuck_n} > {max_retry}] - '
-                'cancelling update [ROLLBACK]')
-            try:
-                do_action_cancel()
-            except Exception as e:
-                raise IboxError(e)
+            # is update stuck ?
+            print(stuck_n)
+            max_retry = fargs.max_retry_ecs_service_running_count
+            if max_retry > 0 and stuck_n > max_retry:
+                logger.warning(
+                    f'Service did not stabilize [{stuck_n} > {max_retry}] - '
+                    'cancelling update [ROLLBACK]')
+                try:
+                    do_action_cancel()
+                except Exception as e:
+                    raise IboxError(e)
 
-        if desiredCount > 0 and pendingCount > 0 and runningCount == 0:
-            stuck_n += 1
+            if desiredCount > 0 and pendingCount > 0 and runningCount == 0:
+                stuck_n += 1
 
-        time.sleep(3)
+        time.sleep(5)
 
 
 # show all events after specific timestamp and return last event timestamp
