@@ -138,6 +138,11 @@ def get_parser():
     common_parser.add_argument('-s', '--slack_channel',
                                help='Slack Channel [_cf_deploy]', nargs='?',
                                const='_cf_deploy', default=False)
+    common_parser.add_argument('-M', '--max_retry_ecs_service_running_count',
+                               help='Max retry numbers when updating ECS '
+                                    'service and runningCount is stuck to '
+                                    'zero',
+                               type=int, default=0)
 
     # update create parser common args
     upd_crt_parser = argparse.ArgumentParser(add_help=False)
@@ -636,7 +641,7 @@ def get_last_event_timestamp():
 def show_service_update(service_logical_resource_id):
     service = task = cluster = deps_before = None
     deployment_task = ''
-    deployments_len = pendingCount = 0
+    deployments_len = pendingCount = stuck_n = 0
     client = boto3.client('ecs')
 
     try:
@@ -668,7 +673,9 @@ def show_service_update(service_logical_resource_id):
                 deps[status][p] = dep[p]
 
         deployment_task = deps['PRIMARY']['taskDefinition']
+        desiredCount = deps['PRIMARY']['desiredCount']
         pendingCount = deps['PRIMARY']['pendingCount']
+        runningCount = deps['PRIMARY']['runningCount']
 
         if str(deps) != deps_before:
             deps_before = str(deps)
@@ -690,6 +697,20 @@ def show_service_update(service_logical_resource_id):
                     width=1000000
                 )
             )
+
+        # is update stuck ?
+        max_retry = fargs.max_retry_ecs_service_running_count
+        if max_retry > 0 and stuck_n > max_retry:
+            logger.warning(
+                f'Service did not stabilize [{stuck_n} > {max_retry}] - '
+                'cancelling update [ROLLBACK]')
+            try:
+                do_action_cancel()
+            except Exception as e:
+                raise IboxError(e)
+
+        if desiredCount > 0 and pendingCount > 0 and runningCount == 0:
+            stuck_n += 1
 
         time.sleep(3)
 
