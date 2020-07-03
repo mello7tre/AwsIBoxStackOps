@@ -107,6 +107,10 @@ class IboxError(Exception):
     pass
 
 
+class IboxErrorECSService(Exception):
+    pass
+
+
 # parse main argumets
 def get_parser():
     parser = argparse.ArgumentParser(
@@ -638,7 +642,8 @@ def get_last_event_timestamp():
 
 
 # show old and new service tasks during an update
-def show_service_update(service_logical_resource_id):
+def show_service_update(event):
+    service_logical_resource_id = event.logical_resource_id
     service = task = cluster = deps_before = None
     deployment_task = ''
     deployments_len = pendingCount = stuck_n = 0
@@ -701,15 +706,11 @@ def show_service_update(service_logical_resource_id):
             # is update stuck ?
             max_retry = fargs.max_retry_ecs_service_running_count
             if max_retry > 0 and stuck_n > max_retry:
-                logger.warning(
-                    f'Service did not stabilize [{stuck_n} > {max_retry}] - '
+                istack.last_event_timestamp = event.timestamp
+                raise IboxErrorECSService(
+                    'ECS Service did not stabilize '
+                    f'[{stuck_n} > {max_retry}] - '
                     'cancelling update [ROLLBACK]')
-                try:
-                    do_action_cancel()
-                except Exception as e:
-                    raise IboxError(e)
-                finally:
-                    return
 
             if desiredCount > 0 and pendingCount > 0 and runningCount == 0:
                 stuck_n += 1
@@ -736,8 +737,9 @@ def show_update_events(timestamp):
         )
         if (event.logical_resource_id == 'Service' and
                 event.resource_status == 'UPDATE_IN_PROGRESS' and
-                event.resource_status_reason is None):
-            show_service_update(event.logical_resource_id)
+                event.resource_status_reason is None and
+                fargs.action != 'log'):
+            show_service_update(event)
 
     if len(event_list) > 0:
         return(event_list.pop().timestamp)
@@ -1869,6 +1871,16 @@ def main(args):
         logging.error(e.args[0])
 
         return e
+
+    # ECS Service did not stabilize, cancel update [ROLLBACK]
+    except IboxErrorECSService as e:
+        logger.warning(e.args[0])
+        try:
+            do_action_cancel()
+        except IboxError as e:
+            logging.error(e.args[0])
+
+            return e
 
 
 if __name__ == "__main__":
