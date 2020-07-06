@@ -318,13 +318,13 @@ def get_parameters_current():
             key = p['ParameterKey']
             try:
                 value = p['ResolvedValue']
-            except:
+            except Exception:
                 try:
                     value = p['ParameterValue']
-                except:
+                except Exception:
                     value = None
             params[key] = value
-    except:
+    except Exception:
         pass
 
     return params
@@ -376,7 +376,7 @@ def set_action_parameters(params_default, params_changed,
 
         try:
             default_value = v['Default']
-        except:
+        except Exception:
             default_value = None
         use_previous_value = False
 
@@ -387,7 +387,7 @@ def set_action_parameters(params_default, params_changed,
         try:
             fargs_value = getattr(fargs, key)
             in_fargs = True if fargs_value is not None else None
-        except:
+        except Exception:
             in_fargs = None
 
         # update param is not new ...
@@ -554,7 +554,7 @@ def do_action_tags():
         try:
             fargs_value = getattr(fargs, key)
             in_fargs = True if fargs_value is not None else None
-        except:
+        except Exception:
             in_fargs = None
 
         # Skip LastUpdate Tag
@@ -643,6 +643,9 @@ def get_last_event_timestamp():
 
 # show old and new service tasks during an update
 def show_service_update(event):
+    if fargs.action == 'log' and fargs.timedelta != 0:
+        return
+
     service_logical_resource_id = event.logical_resource_id
     service = task = cluster = deps_before = None
     deployment_task = ''
@@ -654,7 +657,7 @@ def show_service_update(event):
             'ScalableTarget').physical_resource_id.split('/')[1]
         service = istack.stack.Resource(
             service_logical_resource_id).physical_resource_id
-    except:
+    except Exception:
         return
 
     deps = {
@@ -735,10 +738,9 @@ def show_update_events(timestamp):
             " " + str(datetime.fromtimestamp(logtime)) +
             " " + str(event.resource_status_reason)
         )
-        if (event.logical_resource_id == 'Service' and
-                event.resource_status == 'UPDATE_IN_PROGRESS' and
-                event.resource_status_reason is None and
-                fargs.action != 'log'):
+        if (event.logical_resource_id == 'Service'
+                and event.resource_status == 'UPDATE_IN_PROGRESS'
+                and event.resource_status_reason is None):
             show_service_update(event)
 
     if len(event_list) > 0:
@@ -772,7 +774,8 @@ def update_waiter(timestamp):
         # ECS Service did not stabilize, cancel update [ROLLBACK]
         except IboxErrorECSService as e:
             logger.warning(e.args[0])
-            do_action_cancel()
+            if fargs.action != 'log':
+                do_action_cancel()
 
         time.sleep(5)
 
@@ -1118,10 +1121,10 @@ def do_update_dashboard(cw, resources_changed, mode, dashboard_name):
                 else:
                     my_metric.append(v)
             for r, u in resources_changed.items():
-                for l in set([2, len(my_metric) - 2]):
-                    m_name = my_metric[l]
+                for line in set([2, len(my_metric) - 2]):
+                    m_name = my_metric[line]
                     if map_resources_on_dashboard[r] == m_name:
-                        m_value_index = int(l) + 1
+                        m_value_index = int(line) + 1
                         m_value = my_metric[m_value_index]
                         if (m_value.startswith(stack_prefix) or
                                 '/' + stack_prefix in m_value):
@@ -1198,7 +1201,7 @@ def setup_mylog():
 
     try:
         fargs.slack_channel
-    except:
+    except Exception:
         fargs.slack_channel = None
 
     if (
@@ -1229,7 +1232,7 @@ def update_template_param():
     # try to get role from fargs or use current stack parameter value
     try:
         role = fargs.EnvRole
-    except:
+    except Exception:
         role = istack.c_parameters['EnvRole']
 
     app_repository = istack.exports['BucketAppRepository']
@@ -1321,10 +1324,10 @@ def get_template():
     else:
         try:
             template = json.loads(body)
-        except:
+        except Exception:
             try:
                 template = yaml.load(body, Loader=yaml.FullLoader)
-            except:
+            except Exception:
                 raise IboxError('Error parsing template body')
 
     return template
@@ -1418,7 +1421,7 @@ def resolve_select(name, v):
 
     try:
         value = s_list[index]
-    except:
+    except Exception:
         value = s_list
 
     return value
@@ -1540,7 +1543,7 @@ def process_resources():
         if not ('Condition' in v and not istack.r_conditions[v['Condition']]):
             try:
                 del v['Condition']
-            except:
+            except Exception:
                 pass
             istack.t_resources[v['Type']] = r
             istack.r_resources[r] = recursive_resolve(r, v)
@@ -1635,7 +1638,7 @@ def process_parameters():
 def try_template_section(name):
     try:
         section = istack.template[name]
-    except:
+    except Exception:
         section = None
 
     return section
@@ -1790,7 +1793,7 @@ def do_action_delete():
         # -show update status until complete
         try:
             update_waiter(istack.last_event_timestamp)
-        except:
+        except Exception:
             return
 
 
