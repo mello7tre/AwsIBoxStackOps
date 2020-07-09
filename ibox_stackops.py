@@ -1011,6 +1011,16 @@ def check_ecr_images():
                 raise IboxError(e)
 
 
+def check_lambda(r):
+    try:
+        bucket = istack.r_resources[r]['Properties']['Code']['S3Bucket']
+        key = istack.r_resources[r]['Properties']['Code']['S3Key']
+    except Exception:
+        pass
+    else:
+        istack.s3_files.add((bucket, key))
+
+
 # method should be identically to the one found in bin/ibox_add_to_dash.py,
 # but dash param default to None
 def get_resources(dash=None):
@@ -1547,6 +1557,9 @@ def process_resources():
                 pass
             istack.t_resources[v['Type']] = r
             istack.r_resources[r] = recursive_resolve(r, v)
+
+            if v['Type'] == 'AWS::Lambda::Function':
+                check_lambda(r)
 
     if fargs.action == 'resolve':
         try:
