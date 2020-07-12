@@ -715,7 +715,7 @@ def show_service_update(event):
                     f'[{stuck_n} > {max_retry}] - '
                     'cancelling update [ROLLBACK]')
 
-            if desiredCount > 0 and pendingCount > 0 and runningCount == 0:
+            if desiredCount > 0 and runningCount == 0:
                 stuck_n += 1
 
         time.sleep(5)
