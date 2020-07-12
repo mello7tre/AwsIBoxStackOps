@@ -643,7 +643,7 @@ def get_last_event_timestamp():
 
 # show old and new service tasks during an update
 def show_service_update(event):
-    if fargs.action == 'log' and fargs.timedelta != 0:
+    if fargs.action == 'log' and fargs.timedelta != '0':
         return
 
     service_logical_resource_id = event.logical_resource_id
@@ -941,13 +941,15 @@ def show_confirm():
 
 
 def show_log(time_delta):
-    if time_delta < 30:
-        time_delta = time_delta * 86400
-    time_event = istack.last_event_timestamp - timedelta(seconds=time_delta)
+    event_timestamp = istack.last_event_timestamp
 
     if time_delta == 0:
+        time_event = event_timestamp - timedelta(seconds=1)
         update_waiter(time_event)
     else:
+        if time_delta < 30:
+            time_delta = time_delta * 86400
+        time_event = event_timestamp - timedelta(seconds=time_delta)
         show_update_events(time_event)
 
 
