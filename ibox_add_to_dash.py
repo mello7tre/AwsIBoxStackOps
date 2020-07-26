@@ -62,7 +62,9 @@ widget_height = {
 widget_title = {
     '5xx': '5xx - 4xx',
     'req': 'Requests - Healthy',
-    'net': 'NetworkIN - NetworkOUT'
+    'net': 'NetworkIN - NetworkOUT',
+    '5xx_elb': '5xx - 4xx [ELB]',
+    '50x': '50x',
 }
 
 widget_annotations = {}
@@ -412,6 +414,22 @@ def update_widget_5xx_properties(widget, res):
             widget_label['4xx_internal'], m, widget, '4xx Internal')
 
 
+def update_widget_5xx_elb_properties(widget, res):
+    for m in metrics['5xx_elb']:
+        do_insert_metrics(widget_label['5xx_elb'], m, widget, '5xx_elb')
+        do_insert_metrics(
+            widget_label['5xx_elb_external'], m, widget, '5xx External ELB')
+        do_insert_metrics(
+            widget_label['5xx_elb_internal'], m, widget, '5xx Internal ELB')
+
+    for m in metrics['4xx_elb']:
+        do_insert_metrics(widget_label['4xx_elb'], m, widget, '4xx_elb')
+        do_insert_metrics(
+            widget_label['4xx_elb_external'], m, widget, '4xx External ELB')
+        do_insert_metrics(
+            widget_label['4xx_elb_internal'], m, widget, '4xx Internal ELB')
+
+
 def update_widget_req_properties(widget, res):
     for m in metrics['requests']:
         do_insert_metrics(widget_label['req'], m, widget, 'Requests')
@@ -483,6 +501,16 @@ def update_dashboard(stack, res, dashboard_name):
         'global', list_5xx, index_5xx, widget_title['5xx'], w)
     update_widget_5xx_properties(widget, res)
 
+    # BEGIN 5xx ELB
+    list_5xx_elb = [n for n, v in enumerate(w)
+                if v['properties']['title'] == widget_title['5xx_elb']]
+    index_5xx_elb = list_5xx_elb[0] if len(list_5xx_elb) > 0 else len(w)
+
+    if len(list_5xx_elb) > 0:
+        widget = get_widget_base(
+            'global', list_5xx_elb, index_5xx_elb, widget_title['5xx_elb'], w)
+        update_widget_5xx_elb_properties(widget, res)
+
     # BEGIN network
     list_net = [n for n, v in enumerate(w)
                 if v['properties']['title'] == widget_title['net']]
@@ -542,10 +570,16 @@ def set_vars_for_metrics(res):
         args_dict['statisticresponse'])
     widget_label['5xx'] = f'{title_role} 5xx'
     widget_label['4xx'] = f'{title_role} 4xx'
+    widget_label['5xx_elb'] = f'{title_role} 5xx'
+    widget_label['4xx_elb'] = f'{title_role} 4xx'
     widget_label['5xx_external'] = f'{title_role} External - 5xx'
     widget_label['4xx_external'] = f'{title_role} External - 4xx'
     widget_label['5xx_internal'] = f'{title_role} Internal - 5xx'
     widget_label['4xx_internal'] = f'{title_role} Internal - 4xx'
+    widget_label['5xx_elb_external'] = f'{title_role} External - 5xx'
+    widget_label['4xx_elb_external'] = f'{title_role} External - 4xx'
+    widget_label['5xx_elb_internal'] = f'{title_role} Internal - 5xx'
+    widget_label['4xx_elb_internal'] = f'{title_role} Internal - 4xx'
     widget_label['req'] = f'{title_role} - Requests'
     widget_label['healthy'] = f'{title_role} - Healthy'
     widget_label['req_external'] = f'{title_role} External - Requests'
@@ -582,6 +616,8 @@ def set_vars_for_metrics(res):
         'response': [],
         '5xx': [],
         '4xx': [],
+        '5xx_elb': [],
+        '4xx_elb': [],
         'requests': [],
         'healthy': [],
         'netin': [],
@@ -937,6 +973,68 @@ def set_vars_for_metrics(res):
             }
         ])
 
+    # Stack ALB
+    elif (stack_type == 'alb'):
+        # LoadBalancerExternal
+        if LoadBalancerNameExternal in res:
+            # Requests
+            metrics['requests'].append([
+                'AWS/ApplicationELB',
+                'RequestCount',
+                'LoadBalancer',
+                res['LoadBalancerExternal'],
+                {
+                    'label': widget_label['req_external'],
+                    'stat': 'Sum'
+                }
+            ])
+            # 5xx
+            metrics['5xx'].append([
+                'AWS/ApplicationELB',
+                'HTTPCode_Target_5XX_Count',
+                'LoadBalancer',
+                res['LoadBalancerExternal'],
+                {
+                    'label': widget_label['5xx_external'],
+                    'stat': 'Sum'
+                }
+            ])
+            # 4xx
+            metrics['4xx'].append([
+                'AWS/ApplicationELB',
+                'HTTPCode_Target_4XX_Count',
+                'LoadBalancer',
+                res['LoadBalancerExternal'],
+                {
+                    'label': widget_label['4xx_external'],
+                    'stat': 'Sum',
+                    'yAxis': 'right'
+                }
+            ])
+            # 5xx ELB
+            metrics['5xx_elb'].append([
+                'AWS/ApplicationELB',
+                'HTTPCode_ELB_5XX_Count',
+                'LoadBalancer',
+                res['LoadBalancerExternal'],
+                {
+                    'label': widget_label['5xx_external'],
+                    'stat': 'Sum'
+                }
+            ])
+            # 4xx ELB
+            metrics['4xx_elb'].append([
+                'AWS/ApplicationELB',
+                'HTTPCode_ELB_4XX_Count',
+                'LoadBalancer',
+                res['LoadBalancerExternal'],
+                {
+                    'label': widget_label['4xx_external'],
+                    'stat': 'Sum',
+                    'yAxis': 'right'
+                }
+            ])
+ 
 
 # main program function
 def add_stack(cloudformation, client, dash_stack, dashboard):
@@ -954,8 +1052,8 @@ def add_stack(cloudformation, client, dash_stack, dashboard):
     stack_outputs_before = get_stack_outputs(stack)
     stack_type = stack_outputs_before['StackType']
     # stacktype alb must use same metrics of ec2 one
-    if stack_type == 'alb':
-        stack_type = 'ec2'
+    #if stack_type == 'alb':
+    #    stack_type = 'ec2'
     # get stack resources before update
     resources = get_resources(client, stack)
     # set widget annotations for alarms threshold
