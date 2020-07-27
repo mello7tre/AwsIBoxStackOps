@@ -64,8 +64,17 @@ widget_title = {
     'req': 'Requests - Healthy',
     'net': 'NetworkIN - NetworkOUT',
     '5xx_elb': '5xx - 4xx [ELB]',
-    '50x': '50x',
+    '50x_elb': '50x External - 50x Internal [ELB]',
 }
+
+widget_map = {
+    'req': ['requests', 'healthy'],
+    '5xx': ['5xx', '4xx'],
+    '5xx_elb': ['5xx_elb', '4xx_elb'],
+    '50x_elb': ['500_elb', '502_elb', '503_elb', '504_elb'],
+    'net': ['netin', 'netout'],
+}
+
 
 widget_annotations = {}
 widget_annotations_type = 'tracking'
@@ -189,6 +198,15 @@ def get_policy(res):
     return value, f'{ScalingPolicyTrackingsCpuBaseLabel}{stat}'
 
 
+def resolve_widget_map(name):
+    count = 0
+    for n in widget_map[name]:
+        count += len(metrics[n])
+
+    if count > 0:
+        return True
+
+
 def set_widget_annotations(res):
     global AlarmCPUHighThreshold
     global AlarmCPULowThreshold
@@ -289,7 +307,7 @@ def do_insert_metrics(label, metric, widget, msg):
             out_msg = 'Added'
         else:
             widget_metrics[label_index] = metric
-            out_msg = 'Updated'
+            out_msg = '-- Updated'
         if not args_dict['silent']:
             print(f'\tMetrics: {msg} {out_msg}')
 
@@ -416,18 +434,39 @@ def update_widget_5xx_properties(widget, res):
 
 def update_widget_5xx_elb_properties(widget, res):
     for m in metrics['5xx_elb']:
-        do_insert_metrics(widget_label['5xx_elb'], m, widget, '5xx_elb')
         do_insert_metrics(
-            widget_label['5xx_elb_external'], m, widget, '5xx External ELB')
+            widget_label['5xx_external'], m, widget, '5xx External ELB')
         do_insert_metrics(
-            widget_label['5xx_elb_internal'], m, widget, '5xx Internal ELB')
+            widget_label['5xx_internal'], m, widget, '5xx Internal ELB')
 
     for m in metrics['4xx_elb']:
-        do_insert_metrics(widget_label['4xx_elb'], m, widget, '4xx_elb')
         do_insert_metrics(
-            widget_label['4xx_elb_external'], m, widget, '4xx External ELB')
+            widget_label['4xx_external'], m, widget, '4xx External ELB')
         do_insert_metrics(
-            widget_label['4xx_elb_internal'], m, widget, '4xx Internal ELB')
+            widget_label['4xx_internal'], m, widget, '4xx Internal ELB')
+
+
+def update_widget_50x_elb_properties(widget, res):
+    for m in metrics['500_elb']:
+        do_insert_metrics(
+            widget_label['500_external'], m, widget, '500 External ELB')
+        do_insert_metrics(
+            widget_label['500_internal'], m, widget, '500 Internal ELB')
+    for m in metrics['502_elb']:
+        do_insert_metrics(
+            widget_label['502_external'], m, widget, '502 External ELB')
+        do_insert_metrics(
+            widget_label['502_internal'], m, widget, '502 Internal ELB')
+    for m in metrics['503_elb']:
+        do_insert_metrics(
+            widget_label['503_external'], m, widget, '503 External ELB')
+        do_insert_metrics(
+            widget_label['503_internal'], m, widget, '503 Internal ELB')
+    for m in metrics['504_elb']:
+        do_insert_metrics(
+            widget_label['504_external'], m, widget, '504 External ELB')
+        do_insert_metrics(
+            widget_label['504_internal'], m, widget, '504 Internal ELB')
 
 
 def update_widget_req_properties(widget, res):
@@ -460,7 +499,7 @@ def update_dashboard(stack, res, dashboard_name):
         dashboard_body = cw.get_dashboard(
             DashboardName=dashboard_name)['DashboardBody']
         dash = json.loads(dashboard_body)
-    except:
+    except Exception as e:
         print('DashBoard do not exist, creating one..\n')
         dash = {'widgets': []}
 
@@ -488,35 +527,47 @@ def update_dashboard(stack, res, dashboard_name):
                 if v['properties']['title'] == widget_title['req']]
     index_req = list_req[0] if len(list_req) > 0 else len(w)
 
-    widget = get_widget_base(
-        'global', list_req, index_req, widget_title['req'], w)
-    update_widget_req_properties(widget, res)
+    if resolve_widget_map('req'):
+        widget = get_widget_base(
+            'global', list_req, index_req, widget_title['req'], w)
+        update_widget_req_properties(widget, res)
 
     # BEGIN 5xx
     list_5xx = [n for n, v in enumerate(w)
                 if v['properties']['title'] == widget_title['5xx']]
     index_5xx = list_5xx[0] if len(list_5xx) > 0 else len(w)
 
-    widget = get_widget_base(
-        'global', list_5xx, index_5xx, widget_title['5xx'], w)
-    update_widget_5xx_properties(widget, res)
+    if resolve_widget_map('5xx'):
+        widget = get_widget_base(
+            'global', list_5xx, index_5xx, widget_title['5xx'], w)
+        update_widget_5xx_properties(widget, res)
 
     # BEGIN 5xx ELB
     list_5xx_elb = [n for n, v in enumerate(w)
-                if v['properties']['title'] == widget_title['5xx_elb']]
+                    if v['properties']['title'] == widget_title['5xx_elb']]
     index_5xx_elb = list_5xx_elb[0] if len(list_5xx_elb) > 0 else len(w)
 
-    if len(list_5xx_elb) > 0:
+    if resolve_widget_map('5xx_elb'):
         widget = get_widget_base(
             'global', list_5xx_elb, index_5xx_elb, widget_title['5xx_elb'], w)
         update_widget_5xx_elb_properties(widget, res)
+
+    # BEGIN 50x ELB
+    list_50x_elb = [n for n, v in enumerate(w)
+                    if v['properties']['title'] == widget_title['50x_elb']]
+    index_50x_elb = list_50x_elb[0] if len(list_50x_elb) > 0 else len(w)
+
+    if resolve_widget_map('50x_elb'):
+        widget = get_widget_base(
+            'global', list_50x_elb, index_50x_elb, widget_title['50x_elb'], w)
+        update_widget_50x_elb_properties(widget, res)
 
     # BEGIN network
     list_net = [n for n, v in enumerate(w)
                 if v['properties']['title'] == widget_title['net']]
     index_net = list_net[0] if len(list_net) > 0 else len(w)
 
-    if stack_type == 'ec2' or len(list_net) > 0:
+    if resolve_widget_map('net'):
         widget = get_widget_base(
             'global', list_net, index_net, widget_title['net'], w)
         update_widget_network_properties(widget, res)
@@ -570,16 +621,22 @@ def set_vars_for_metrics(res):
         args_dict['statisticresponse'])
     widget_label['5xx'] = f'{title_role} 5xx'
     widget_label['4xx'] = f'{title_role} 4xx'
-    widget_label['5xx_elb'] = f'{title_role} 5xx'
-    widget_label['4xx_elb'] = f'{title_role} 4xx'
+    widget_label['500_elb'] = f'{title_role} 500'
+    widget_label['502_elb'] = f'{title_role} 502'
+    widget_label['503_elb'] = f'{title_role} 503'
+    widget_label['504_elb'] = f'{title_role} 504'
     widget_label['5xx_external'] = f'{title_role} External - 5xx'
     widget_label['4xx_external'] = f'{title_role} External - 4xx'
     widget_label['5xx_internal'] = f'{title_role} Internal - 5xx'
     widget_label['4xx_internal'] = f'{title_role} Internal - 4xx'
-    widget_label['5xx_elb_external'] = f'{title_role} External - 5xx'
-    widget_label['4xx_elb_external'] = f'{title_role} External - 4xx'
-    widget_label['5xx_elb_internal'] = f'{title_role} Internal - 5xx'
-    widget_label['4xx_elb_internal'] = f'{title_role} Internal - 4xx'
+    widget_label['500_external'] = f'{title_role} External - 500'
+    widget_label['500_internal'] = f'{title_role} Internal - 500'
+    widget_label['502_external'] = f'{title_role} External - 502'
+    widget_label['502_internal'] = f'{title_role} Internal - 502'
+    widget_label['503_external'] = f'{title_role} External - 503'
+    widget_label['503_internal'] = f'{title_role} Internal - 503'
+    widget_label['504_external'] = f'{title_role} External - 504'
+    widget_label['504_internal'] = f'{title_role} Internal - 504'
     widget_label['req'] = f'{title_role} - Requests'
     widget_label['healthy'] = f'{title_role} - Healthy'
     widget_label['req_external'] = f'{title_role} External - Requests'
@@ -597,6 +654,8 @@ def set_vars_for_metrics(res):
         Latency = 'Latency'
         HTTPCode_Backend_5XX = 'HTTPCode_Backend_5XX'
         HTTPCode_Backend_4XX = 'HTTPCode_Backend_4XX'
+        HTTPCode_ELB_5XX = 'HTTPCode_ELB_5XX'
+        HTTPCode_ELB_4XX = 'HTTPCode_ELB_4XX'
     elif any(n in res
              for n in ['LoadBalancerExternal', 'LoadBalancerInternal']):
         LoadBalancerName = 'LoadBalancer'
@@ -606,6 +665,8 @@ def set_vars_for_metrics(res):
         Latency = 'TargetResponseTime'
         HTTPCode_Backend_5XX = 'HTTPCode_Target_5XX_Count'
         HTTPCode_Backend_4XX = 'HTTPCode_Target_4XX_Count'
+        HTTPCode_ELB_5XX = 'HTTPCode_ELB_5XX_Count'
+        HTTPCode_ELB_4XX = 'HTTPCode_ELB_4XX_Count'
     else:
         LoadBalancerName = None
         LoadBalancerNameExternal = None
@@ -618,13 +679,17 @@ def set_vars_for_metrics(res):
         '4xx': [],
         '5xx_elb': [],
         '4xx_elb': [],
+        '500_elb': [],
+        '502_elb': [],
+        '503_elb': [],
+        '504_elb': [],
         'requests': [],
         'healthy': [],
         'netin': [],
         'netout': []
     }
 
-    # Stack ECS
+    # ECS
     if all(n in res for n in ['ServiceName', 'ClusterName']):
         # CPU
         metrics['cpu'].append([
@@ -799,8 +864,8 @@ def set_vars_for_metrics(res):
                 }
             ])
 
-    # Stack EC2
-    elif all(n in res for n in ['AutoScalingGroupName']):
+    # EC2
+    if all(n in res for n in ['AutoScalingGroupName']):
         # CPU
         metrics['cpu'].append([
             'AWS/EC2',
@@ -850,104 +915,6 @@ def set_vars_for_metrics(res):
                 'yAxis': 'right'
             }
         ])
-        # LoadBalancerExternal
-        if LoadBalancerNameExternal in res:
-            # Response
-            metrics['response'].append([
-                AWS_ELB,
-                Latency,
-                LoadBalancerName,
-                res[LoadBalancerNameExternal],
-                {
-                    'period': 300,
-                    'stat': args_dict['statisticresponse'],
-                    'yAxis': 'right',
-                    'label': widget_label['response_external']
-                }
-            ])
-            # Requests
-            metrics['requests'].append([
-                AWS_ELB,
-                'RequestCount',
-                LoadBalancerName,
-                res[LoadBalancerNameExternal],
-                {
-                    'label': widget_label['req_external'],
-                    'stat': 'Sum'
-                }
-            ])
-            # 5xx
-            metrics['5xx'].append([
-                AWS_ELB,
-                HTTPCode_Backend_5XX,
-                LoadBalancerName,
-                res[LoadBalancerNameExternal],
-                {
-                    'label': widget_label['5xx_external'],
-                    'stat': 'Sum'
-                }
-            ])
-            # 4xx
-            metrics['4xx'].append([
-                AWS_ELB,
-                HTTPCode_Backend_4XX,
-                LoadBalancerName,
-                res[LoadBalancerNameExternal],
-                {
-                    'label': widget_label['4xx_external'],
-                    'stat': 'Sum',
-                    'yAxis': 'right'
-                }
-            ])
-        # LoadBalancerInternal
-        if LoadBalancerNameInternal in res:
-            # Response
-            metrics['response'].append([
-                AWS_ELB,
-                Latency,
-                LoadBalancerName,
-                res[LoadBalancerNameInternal],
-                {
-                    'period': 300,
-                    'stat': args_dict['statisticresponse'],
-                    'yAxis': 'right',
-                    'label': widget_label['response_internal']
-                }
-            ])
-            # Requests
-            metrics['requests'].append([
-                AWS_ELB,
-                'RequestCount',
-                LoadBalancerName,
-                res[LoadBalancerNameInternal],
-                {
-                    'label': widget_label['req_internal'],
-                    'stat': 'Sum'
-                }
-            ])
-            # 5xx
-            metrics['5xx'].append([
-                AWS_ELB,
-                HTTPCode_Backend_5XX,
-                LoadBalancerName,
-                res[LoadBalancerNameInternal],
-                {
-                    'label': widget_label['5xx_internal'],
-                    'stat': 'Sum'
-                }
-            ])
-            # 4xx
-            metrics['4xx'].append([
-                AWS_ELB,
-                HTTPCode_Backend_4XX,
-                LoadBalancerName,
-                res[LoadBalancerNameInternal],
-                {
-                    'label': widget_label['4xx_internal'],
-                    'stat': 'Sum',
-                    'yAxis': 'right'
-                }
-            ])
         # Network
         metrics['netin'].append([
             'AWS/EC2',
@@ -973,68 +940,134 @@ def set_vars_for_metrics(res):
             }
         ])
 
-    # Stack ALB
-    elif (stack_type == 'alb'):
-        # LoadBalancerExternal
-        if LoadBalancerNameExternal in res:
+    # ELB
+    for n in ['External', 'Internal']:
+        res_name = globals()[f'LoadBalancerName{n}']
+        label = n.lower()
+
+        if res_name in res:
+            # Response
+            metrics['response'].append([
+                AWS_ELB,
+                Latency,
+                LoadBalancerName,
+                res[res_name],
+                {
+                    'period': 300,
+                    'stat': args_dict['statisticresponse'],
+                    'yAxis': 'right',
+                    'label': widget_label[f'response_{label}']
+                }
+            ])
             # Requests
             metrics['requests'].append([
-                'AWS/ApplicationELB',
+                AWS_ELB,
                 'RequestCount',
-                'LoadBalancer',
-                res['LoadBalancerExternal'],
+                LoadBalancerName,
+                res[res_name],
                 {
-                    'label': widget_label['req_external'],
+                    'label': widget_label[f'req_{label}'],
                     'stat': 'Sum'
                 }
             ])
             # 5xx
             metrics['5xx'].append([
-                'AWS/ApplicationELB',
-                'HTTPCode_Target_5XX_Count',
-                'LoadBalancer',
-                res['LoadBalancerExternal'],
+                AWS_ELB,
+                HTTPCode_Backend_5XX,
+                LoadBalancerName,
+                res[res_name],
                 {
-                    'label': widget_label['5xx_external'],
+                    'label': widget_label[f'5xx_{label}'],
                     'stat': 'Sum'
                 }
             ])
             # 4xx
             metrics['4xx'].append([
-                'AWS/ApplicationELB',
-                'HTTPCode_Target_4XX_Count',
-                'LoadBalancer',
-                res['LoadBalancerExternal'],
+                AWS_ELB,
+                HTTPCode_Backend_4XX,
+                LoadBalancerName,
+                res[res_name],
                 {
-                    'label': widget_label['4xx_external'],
+                    'label': widget_label[f'4xx_{label}'],
                     'stat': 'Sum',
                     'yAxis': 'right'
                 }
             ])
             # 5xx ELB
             metrics['5xx_elb'].append([
-                'AWS/ApplicationELB',
-                'HTTPCode_ELB_5XX_Count',
-                'LoadBalancer',
-                res['LoadBalancerExternal'],
+                AWS_ELB,
+                HTTPCode_ELB_5XX,
+                LoadBalancerName,
+                res[res_name],
                 {
-                    'label': widget_label['5xx_external'],
+                    'label': widget_label[f'5xx_{label}'],
                     'stat': 'Sum'
                 }
             ])
             # 4xx ELB
             metrics['4xx_elb'].append([
-                'AWS/ApplicationELB',
-                'HTTPCode_ELB_4XX_Count',
-                'LoadBalancer',
-                res['LoadBalancerExternal'],
+                AWS_ELB,
+                HTTPCode_ELB_4XX,
+                LoadBalancerName,
+                res[res_name],
                 {
-                    'label': widget_label['4xx_external'],
+                    'label': widget_label[f'4xx_{label}'],
                     'stat': 'Sum',
                     'yAxis': 'right'
                 }
             ])
- 
+
+            # 50x ELB
+            if f'LoadBalancer{n}' in res:
+                # 500
+                metrics['500_elb'].append([
+                    'AWS/ApplicationELB',
+                    'HTTPCode_ELB_500_Count',
+                    'LoadBalancer',
+                    res[res_name],
+                    {
+                        'label': widget_label[f'500_{label}'],
+                        'stat': 'Sum',
+                        'yAxis': 'right' if n == 'Internal' else 'left',
+                    }
+                ])
+                # 502
+                metrics['502_elb'].append([
+                    'AWS/ApplicationELB',
+                    'HTTPCode_ELB_502_Count',
+                    'LoadBalancer',
+                    res[res_name],
+                    {
+                        'label': widget_label[f'502_{label}'],
+                        'stat': 'Sum',
+                        'yAxis': 'right' if n == 'Internal' else 'left',
+                    }
+                ])
+                # 503
+                metrics['503_elb'].append([
+                    'AWS/ApplicationELB',
+                    'HTTPCode_ELB_503_Count',
+                    'LoadBalancer',
+                    res[res_name],
+                    {
+                        'label': widget_label[f'503_{label}'],
+                        'stat': 'Sum',
+                        'yAxis': 'right' if n == 'Internal' else 'left',
+                    }
+                ])
+                # 504
+                metrics['504_elb'].append([
+                    'AWS/ApplicationELB',
+                    'HTTPCode_ELB_504_Count',
+                    'LoadBalancer',
+                    res[res_name],
+                    {
+                        'label': widget_label[f'504_{label}'],
+                        'stat': 'Sum',
+                        'yAxis': 'right' if n == 'Internal' else 'left',
+                    }
+                ])
+
 
 # main program function
 def add_stack(cloudformation, client, dash_stack, dashboard):
@@ -1051,9 +1084,6 @@ def add_stack(cloudformation, client, dash_stack, dashboard):
     # get stack outputs before update
     stack_outputs_before = get_stack_outputs(stack)
     stack_type = stack_outputs_before['StackType']
-    # stacktype alb must use same metrics of ec2 one
-    #if stack_type == 'alb':
-    #    stack_type = 'ec2'
     # get stack resources before update
     resources = get_resources(client, stack)
     # set widget annotations for alarms threshold
