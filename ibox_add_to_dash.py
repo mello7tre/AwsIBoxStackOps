@@ -547,7 +547,7 @@ def update_dashboard(stack, res, dashboard_name):
                     if v['properties']['title'] == widget_title['5xx_elb']]
     index_5xx_elb = list_5xx_elb[0] if len(list_5xx_elb) > 0 else len(w)
 
-    if resolve_widget_map('5xx_elb'):
+    if resolve_widget_map('5xx_elb') and 'ServiceName' not in res:
         widget = get_widget_base(
             'global', list_5xx_elb, index_5xx_elb, widget_title['5xx_elb'], w)
         update_widget_5xx_elb_properties(widget, res)
@@ -557,7 +557,7 @@ def update_dashboard(stack, res, dashboard_name):
                     if v['properties']['title'] == widget_title['50x_elb']]
     index_50x_elb = list_50x_elb[0] if len(list_50x_elb) > 0 else len(w)
 
-    if resolve_widget_map('50x_elb'):
+    if resolve_widget_map('50x_elb') and 'ServiceName' not in res:
         widget = get_widget_base(
             'global', list_50x_elb, index_50x_elb, widget_title['50x_elb'], w)
         update_widget_50x_elb_properties(widget, res)
