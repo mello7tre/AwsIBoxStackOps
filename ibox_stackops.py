@@ -1328,7 +1328,11 @@ def get_template():
         # Current template
         else:
             response = client.get_template(StackName=istack.name)
-            body = json.dumps(response['TemplateBody'])
+            tbody = response['TemplateBody']
+            if isinstance(tbody, OrderedDict):
+                body = json.dumps(response['TemplateBody'])
+            else:
+                body = tbody
             istack.template_from = 'Current'
 
     except Exception as e:
