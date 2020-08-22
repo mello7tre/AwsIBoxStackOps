@@ -1,7 +1,7 @@
 # AwsIBoxStackOps
-Aws Infrastucture in a Box - Stack Operations Program
+Aws Infrastucture in a Box - Stacks management program.
 
-Work in progres...
+Used to create and update an AWS CloudFormation stack in a simple way.
 
 ## License ##
 
