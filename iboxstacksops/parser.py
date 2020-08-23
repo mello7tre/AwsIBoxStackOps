@@ -5,7 +5,7 @@ def get_template_parser(required=True):
     parser = argparse.ArgumentParser(add_help=False)
 
     group = parser.add_mutually_exclusive_group(required=required)
-    group.add_argument('-t', '--template',
+    group.add_argument('--template',
                        help='Template Location',
                        type=str)
     group.add_argument('-v', '--version',
@@ -20,6 +20,9 @@ def set_create_parser(subparser, parents=[]):
                                   parents=parents,
                                   help='Create Stack')
 
+    parser.add_argument('-s', '--stack',
+                        help='Stack Name',
+                        required=True, type=str)
     parser.add_argument('--Env',
                         help='Environment to use',
                         type=str, required=True)
@@ -35,6 +38,18 @@ def set_update_parser(subparser, parents=[]):
     parser = subparser.add_parser('update',
                                   parents=parents,
                                   help='Update Stack')
+    parser.add_argument(
+        '-s', '--stack', nargs='+',
+        help='Stack Names space separated',
+        type=str, default=[])
+    parser.add_argument(
+        '-r', '--role', nargs='+',
+        help='Stack Roles space separated',
+        type=str, default=[])
+    parser.add_argument(
+        '-t', '--type', nargs='+',
+        help='Stack Types space separated - use ALL for any type',
+        type=str, default=[])
 
     parser.add_argument('-P', '--policy',
                         help='Policy during Stack Update',
@@ -56,6 +71,15 @@ def set_update_parser(subparser, parents=[]):
     parser.add_argument('-d', '--showdetails',
                         help='Show extra details in changeset',
                         action='store_true')
+
+    parser.add_argument(
+        '-j', '--jobs',
+	help='Max Concurrent jobs - default to number of stacks', type=int)
+    parser.add_argument(
+        '--pause',
+        help='Pause for seconds between jobs - '
+	     '0 for interactive - valid only for jobs=1',
+        type=int)
 
 
 # parse main argumets
