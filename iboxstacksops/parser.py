@@ -1,5 +1,6 @@
 import argparse
 from . import fargs
+from .update import update as i_update
 
 
 def get_template_parser(required=True):
@@ -39,6 +40,8 @@ def set_update_parser(subparser, parents=[]):
     parser = subparser.add_parser('update',
                                   parents=parents,
                                   help='Update Stack')
+    parser.set_defaults(func=i_update)
+
     parser.add_argument(
         '-s', '--stack', nargs='+',
         help='Stack Names space separated',
