@@ -1,4 +1,5 @@
 import argparse
+from . import fargs
 
 
 def get_template_parser(required=True):
@@ -199,3 +200,14 @@ def get_parser():
              'use 0 for realtime - if < 30 assume days', default=300)
 
     return parser
+
+
+def set_fargs(argv):
+    parser = get_parser()
+    args = parser.parse_known_args(argv)
+
+    for n, v in vars(args[0]).items():
+        if not hasattr(fargs, n):
+            setattr(fargs, n, v)
+
+    fargs.stack_args = args[1]
