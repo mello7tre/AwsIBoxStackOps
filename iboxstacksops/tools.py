@@ -48,11 +48,12 @@ def concurrent_exec(command, stacks):
                     data[stack] = future.result()
                 except Exception as e:
                     print(f'{stack} generated an exception: {e}')
+                    raise IboxError(e)
 
     return data
 
 
-def set_region(get_resource=None):
+def get_aws_clients():
     kwarg_session = {}
 
     if fargs.region:
@@ -60,26 +61,30 @@ def set_region(get_resource=None):
 
     boto3 = base_boto3.session.Session(**kwarg_session)
 
-    cloudformation = boto3.resource('cloudformation')
+    cloudformation = boto3.client('cloudformation')
+    res_cloudformation = boto3.resource('cloudformation')
+    s3 = boto3.client('s3')
 
-    if get_resource:
-        return cloudformation
+    aws.client = cloudformation
 
-    aws.cloudformation = cloudformation
-    aws.client = boto3.client('cloudformation')
+    return {
+        'cloudformation': cloudformation,
+        'res_cloudformation': res_cloudformation,
+        's3': s3,
+    }
 
 
 def get_exports():
     logger.info('Getting CloudFormation Exports')
-    exports = {}                                                                
-    paginator = aws.client.get_paginator('list_exports')                            
-    response_iterator = paginator.paginate()                                    
-    for e in response_iterator:                                                 
-        for export in e['Exports']:                                             
-            name = export['Name']                                               
-            value = export['Value']                                             
-            exports[name] = value                                               
-        # if all(key in exports for key in ['BucketAppRepository']):            
-        #    return exports                                                     
-                                                                                
+    exports = {}
+    paginator = aws.client.get_paginator('list_exports')
+    response_iterator = paginator.paginate()
+    for e in response_iterator:
+        for export in e['Exports']:
+            name = export['Name']
+            value = export['Value']
+            exports[name] = value
+        # if all(key in exports for key in ['BucketAppRepository']):
+        #    return exports
+
     return exports

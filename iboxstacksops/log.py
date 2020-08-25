@@ -2,9 +2,9 @@ import logging
 from . import fargs
 from .common import *
 
-logging.basicConfig()                                                           
-logging.getLogger('botocore').setLevel('CRITICAL')                              
-logger = logging.getLogger('stackops')                                              
+logging.basicConfig()
+logging.getLogger('botocore').setLevel('CRITICAL')
+logger = logging.getLogger('stackops')
 logger.setLevel(logging.INFO)
 
 
@@ -22,5 +22,5 @@ def get_msg_client():
         slack_web = slack.WebClient(
             token=os.environ['IBOX_SLACK_TOKEN'])
         return slack_web
-    
+
     return None

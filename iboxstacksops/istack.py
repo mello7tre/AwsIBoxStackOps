@@ -1,5 +1,5 @@
-from . import shared, aws, fargs, log
-from .tools import IboxError, set_region, get_exports
+from . import (shared, fargs, aws, template, parameters)
+from .tools import IboxError, get_aws_clients, get_exports
 from .log import logger, get_msg_client
 from .common import *
 
@@ -16,22 +16,35 @@ STACK_BASE_DATA = [
 class ibox_stack(object):
     def __init__(self, name, base_data):
         try:
-            cloudformation = set_region(get_resource=True)
-            self.stack = cloudformation.Stack(name)
+            clients = get_aws_clients()
+            self.cloudformation = clients['res_cloudformation']
+            self.s3 = clients['s3']
+            self.client = clients['cloudformation']
+            self.stack = self.cloudformation.Stack(name)
             self.stack.stack_status
         except Exception as e:
             raise IboxError(e)
         self.name = name
         self.bdata = base_data
+        self.create = None
 
         for n, v in base_data.items():
             setattr(self, n, v)
 
 
     def update(self):
-        self.export = shared.exports
+        self.exports = shared.exports
+        self.template = template.get_template(self)
+        parameters.process(self)
 
         return 'eccomi'
+
+
+    def parameters(self):
+        self.exports = shared.exports
+        self.template = template.get_template(self)
+        parser = parameters.get_stack_parameter_parser(self)
+        parser.print_help()
 
 
     def mylog(self, msg, chat=True):
@@ -124,7 +137,7 @@ def _get_stack(r, data):
 
 
 def get_stacks(names=[]):
-    logger.info('Getting stacks description')
+    logger.info('Getting Stacks Description')
     data = {}
 
     if not names:

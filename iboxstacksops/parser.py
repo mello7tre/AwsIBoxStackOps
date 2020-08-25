@@ -1,6 +1,6 @@
 import argparse
 from . import fargs
-from .actions import update
+from .actions import (update, parameters)
 
 
 def get_template_parser(required=True):
@@ -92,6 +92,7 @@ def get_parser():
         description='Stacks Operations',
         epilog='Note: options for Stack Params must be put at the end!'
     )
+    parser.set_defaults(role=None, type=None, jobs=None, pause=None)
 
     # common parser
     parser.add_argument('--region',
@@ -184,6 +185,12 @@ def get_parser():
             template_parser_update,
         ],
         help='Show Available Stack Parameters')
+    parser_parameters.set_defaults(func=parameters)
+
+    parser_parameters.add_argument(
+        '-s', '--stack', nargs='+',
+        help='Stack Names space separated',
+        type=str, default=[])
 
     # resolve parser
     parser_resolve = command_subparser.add_parser(
