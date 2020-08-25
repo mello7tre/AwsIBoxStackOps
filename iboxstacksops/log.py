@@ -4,7 +4,7 @@ from .common import *
 
 logging.basicConfig()                                                           
 logging.getLogger('botocore').setLevel('CRITICAL')                              
-logger = logging.getLogger('ibox')                                              
+logger = logging.getLogger('stackops')                                              
 logger.setLevel(logging.INFO)
 
 

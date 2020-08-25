@@ -53,7 +53,7 @@ def exec_command(name, data, command):
     return getattr(istack, command)()
 
 
-def _set_outputs(stack, data):
+def _get_outputs(stack):
     try:
         s_outputs = stack['Outputs']
     except Exception:
@@ -65,11 +65,10 @@ def _set_outputs(stack, data):
             value = output.get('OutputValue', None)
             outputs[key] = value
 
-        data.update(outputs)
-        data['outputs'] = outputs
+        return outputs
 
 
-def _set_parameters(stack, data):
+def _get_parameters(stack):
     try:
         s_parameters = stack['Parameters']
     except Exception as e:
@@ -82,16 +81,22 @@ def _set_parameters(stack, data):
                 'ResolvedValue', parameter.get('ParameterValue'))
             parameters[key] = value
 
-        data['parameters'] = parameters
+        return parameters
 
 
 def get_base_data(stack):
-    data = {}
+    data = {'before': {}}
     for d in STACK_BASE_DATA:
         data[d] = stack.get(d, None)
 
-    _set_outputs(stack, data)
-    _set_parameters(stack, data)
+    outputs = _get_outputs(stack)
+    if outputs:
+        data.update(outputs)
+        data['before']['outputs'] = outputs
+
+    parameters = _get_parameters(stack)
+    if parameters:
+        data['c_parameters'] = parameters
 
     # ugly fix
     try:
@@ -119,6 +124,7 @@ def _get_stack(r, data):
 
 
 def get_stacks(names=[]):
+    logger.info('Getting stacks description')
     data = {}
 
     if not names:
