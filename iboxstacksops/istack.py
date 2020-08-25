@@ -44,6 +44,7 @@ class ibox_stack(object):
         self.exports = shared.exports
         self.template = template.get_template(self)
         parser = parameters.get_stack_parameter_parser(self)
+        logger.info(f'{self.name} Parameters:')
         parser.print_help()
 
 

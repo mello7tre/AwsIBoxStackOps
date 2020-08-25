@@ -1,30 +1,14 @@
 import argparse
 from . import fargs
-from .actions import (update, parameters)
-
-
-def get_template_parser(required=True):
-    parser = argparse.ArgumentParser(add_help=False)
-
-    group = parser.add_mutually_exclusive_group(required=required)
-    group.add_argument('--template',
-                       help='Template Location',
-                       type=str)
-    group.add_argument('-v', '--version',
-                       help='Stack Env Version',
-                       type=str)
-
-    return parser
+from .actions import (update, parameters, create)
 
 
 def set_create_parser(subparser, parents=[]):
     parser = subparser.add_parser('create',
                                   parents=parents,
                                   help='Create Stack')
-
-    parser.add_argument('-s', '--stack',
-                        help='Stack Name',
-                        required=True, type=str)
+    parser.set_defaults(func=create)
+    
     parser.add_argument('--Env',
                         help='Environment to use',
                         type=str, required=True)
@@ -36,24 +20,12 @@ def set_create_parser(subparser, parents=[]):
                         type=str, default='')
 
 
+
 def set_update_parser(subparser, parents=[]):
     parser = subparser.add_parser('update',
                                   parents=parents,
                                   help='Update Stack')
     parser.set_defaults(func=update)
-
-    parser.add_argument(
-        '-s', '--stack', nargs='+',
-        help='Stack Names space separated',
-        type=str, default=[])
-    parser.add_argument(
-        '-r', '--role', nargs='+',
-        help='Stack Roles space separated',
-        type=str, default=[])
-    parser.add_argument(
-        '-t', '--type', nargs='+',
-        help='Stack Types space separated - use ALL for any type',
-        type=str, default=[])
 
     parser.add_argument('-P', '--policy',
                         help='Policy during Stack Update',
@@ -84,6 +56,39 @@ def set_update_parser(subparser, parents=[]):
         help='Pause for seconds between jobs - '
 	     '0 for interactive - valid only for jobs=1',
         type=int)
+
+
+def get_template_parser(required=True):
+    parser = argparse.ArgumentParser(add_help=False)
+
+    group = parser.add_mutually_exclusive_group(required=required)
+    group.add_argument('--template',
+                       help='Template Location',
+                       type=str)
+    group.add_argument('-v', '--version',
+                       help='Stack Env Version',
+                       type=str)
+
+    return parser
+
+
+def get_stack_selection_parser():
+    parser = argparse.ArgumentParser(add_help=False)
+    
+    parser.add_argument(
+        '-s', '--stack', nargs='+',
+        help='Stack Names space separated',
+        type=str, default=[])
+    parser.add_argument(
+        '-r', '--role', nargs='+',
+        help='Stack Roles space separated',
+        type=str, default=[])
+    parser.add_argument(
+        '-t', '--type', nargs='+',
+        help='Stack Types space separated - use ALL for any type',
+        type=str, default=[])
+
+    return parser
 
 
 # parse main argumets
@@ -118,6 +123,16 @@ def get_parser():
     template_parser_create = get_template_parser()
     template_parser_update = get_template_parser(required=False)
 
+    # stack selection parser
+    stack_selection_parser = get_stack_selection_parser()
+
+    # stack single parser
+    stack_single_parser = argparse.ArgumentParser(add_help=False)
+    stack_single_parser.add_argument(
+        '-s', '--stack',
+        help='Stack Name',
+        required=True, type=str)
+
     # update create parser
     updcrt_parser = argparse.ArgumentParser(add_help=False)
 
@@ -141,6 +156,7 @@ def get_parser():
         command_subparser, [
             action_parser,
             template_parser_create,
+            stack_single_parser,
             updcrt_parser,
         ])
 
@@ -149,13 +165,16 @@ def get_parser():
         command_subparser, [
             action_parser,
             template_parser_update,
+            stack_selection_parser,
             updcrt_parser,
         ])
 
     # cancel_update parser
     parser_cancel = command_subparser.add_parser(
         'cancel',
-        parents=[action_parser],
+        parents=[
+            action_parser,
+            stack_selection_parser],
         help='Cancel Update Stack')
 
     # delete parser
@@ -183,15 +202,11 @@ def get_parser():
     parser_parameters = command_subparser.add_parser(
         'parameters', parents=[
             template_parser_update,
-        ],
+            stack_selection_parser],
         help='Show Available Stack Parameters')
     parser_parameters.set_defaults(func=parameters)
 
-    parser_parameters.add_argument(
-        '-s', '--stack', nargs='+',
-        help='Stack Names space separated',
-        type=str, default=[])
-
+    
     # resolve parser
     parser_resolve = command_subparser.add_parser(
         'resolve', parents=[

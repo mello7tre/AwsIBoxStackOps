@@ -10,12 +10,17 @@ def update():
     result = concurrent_exec('update', stacks)
     print(result)
 
+
 def parameters():
     stacks = istack.get_stacks()
     shared.exports = get_exports()
-    print('parameters:')
-    pprint(stacks)
     result = concurrent_exec('parameters', stacks)
+
+
+def create():
+    stacks = istack.get_stacks()
+    shared.exports = get_exports()
+    print('create command:')
+    pprint(stacks)
+    result = concurrent_exec('create', stacks)
     print(result)
-
-
