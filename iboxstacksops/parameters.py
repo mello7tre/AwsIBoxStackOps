@@ -1,0 +1,226 @@
+import argparse
+from . import (shared, fargs)
+from .log import logger
+from .common import *
+
+
+# set final parameters values to use for exectuing actions -
+# istack.action_parameters and istack.r_parameters
+def _set_action_parameters(params_default, params_changed,
+                          params_added, params_forced_default):
+    for key in sorted(istack.parameters):
+        v = istack.parameters[key]
+
+        try:
+            default_value = v['Default']
+        except Exception:
+            default_value = None
+        use_previous_value = False
+
+        # get list of AllowedValues
+        allowed_values = v['AllowedValues'] if 'AllowedValues' in v else []
+
+        # check if key exist as fargs param/attr too
+        try:
+            fargs_value = getattr(fargs, key)
+            in_fargs = True if fargs_value is not None else None
+        except Exception:
+            in_fargs = None
+
+        # update param is not new ...
+        if key in istack.c_parameters:
+            current_value = istack.c_parameters[key]
+
+            # current value its different from specified cmd arg
+            if in_fargs and current_value != fargs_value:
+                # get value from specified cmd arg
+                value = fargs_value
+                params_changed[key] = current_value + " => " + value
+
+            # current value is not allowed by new template
+            elif len(allowed_values) > 0 and (
+                    current_value not in allowed_values):
+                # get value from template default
+                value = default_value
+                params_forced_default[key] = (
+                    current_value + " => " + default_value)
+
+            # current value is unchanged and allowed
+            else:
+                value = ''
+                use_previous_value = True
+                params_default[key] = current_value
+
+        # update param is new ...
+        else:
+            # template default value its different from specified cmd arg
+            if in_fargs and default_value != fargs_value:
+                value = fargs_value
+                params_changed[key] = value
+
+            # no cmd arg for new param
+            # should never be here make a change to enforce param
+            # in add_stack_params_as_args
+            else:
+                # get template default value
+                value = default_value
+                params_added[key] = default_value
+
+        # append dictionary element to list
+        istack.action_parameters.append(
+            {
+                'ParameterKey': key,
+                'ParameterValue': value,
+            } if istack.create else
+            {
+                'ParameterKey': key,
+                'ParameterValue': value,
+                'UsePreviousValue': use_previous_value,
+            }
+        )
+
+        # update resolved parameter final value istack.r_parameters
+        istack.r_parameters[key] = (current_value
+                                    if use_previous_value else value)
+
+
+# force EnvShort param value based on Env one
+def _force_envshort():
+    # use arg if exist or use current value
+    env = fargs.Env if fargs.Env else istack.c_parameters['Env']
+
+    env_envshort_dict = {
+        'dev': 'dev',
+        'stg': 'stg',
+        'prd': 'prd',
+        'prod': 'prd',
+    }
+
+    fargs.EnvShort = env_envshort_dict[env]
+
+
+# if template in s3, force version to the one in his url part
+# if from file force fixed value 1
+# Ex for version=master-2ed25d5:
+# https://eu-west-1-ibox-app-repository.s3.amazonaws.com
+# /ibox/master-2ed25d5/templates/cache-portal.json
+def _do_envstackversion_from_s3_template():
+    template = fargs.template
+    fargs.version = template.split("/")[4] if str(
+        template).startswith('https') else '1'
+    fargs.EnvStackVersion = fargs.version
+
+
+
+def get_stack_parameter_parser(istack):
+    parser = argparse.ArgumentParser(
+        description='',
+        add_help=False,
+        allow_abbrev=False,
+        usage='Allowed Stack Params ... allowed values are in {}',
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+
+    # for parameter in sorted(
+    #    stack_parameters, key=lambda x: x['ParameterKey']):
+    for p in sorted(istack.parameters):
+        v = istack.parameters[p]
+        allowed_values = v['AllowedValues'] if 'AllowedValues' in v else []
+        kwargs = {'type': str, 'metavar': '\t%s' % v['Description']}
+
+        # If Parameter do not have Default value and is new or
+        # current value is not allowed in new template,
+        # enforce it as required
+        if 'Default' not in v and (
+                p not in istack.c_parameters or (
+                    allowed_values and
+                    istack.c_parameters[p] not in allowed_values)):
+            kwargs['required'] = True
+
+        if len(allowed_values) > 0:
+            kwargs['choices'] = allowed_values
+            kwargs['help'] = '{%s}\n\n' % ', '.join(allowed_values)
+        else:
+            kwargs['help'] = '\n'
+
+        parser.add_argument(
+            '--%s' % p,
+            **kwargs
+        )
+
+    return parser
+
+
+def _add_stack_params_as_args(parser):
+    args = parser.parse_args(fargs.stack_args)
+
+    for n, v in vars(args).items():
+        if not hasattr(fargs, n):
+            setattr(fargs, n, v)
+
+
+def process(obj):
+    global istack
+
+    istack = obj
+
+    # get stack parameter parser
+    parser = get_stack_parameter_parser(istack)
+
+    # add stack parameters as argparse args and update fargs
+    _add_stack_params_as_args(parser)
+
+    # if template include EnvShort params force its value based on the Env one
+    if 'EnvShort' in istack.parameters:
+        _force_envshort()
+
+    # if using template option set/force EnvStackVersion
+    if fargs.template:
+        _do_envstackversion_from_s3_template()
+
+    # unchanged stack params
+    params_default = {}
+
+    # changed stack params
+    params_changed = {}
+
+    # new stack params - default value
+    params_added = {}
+
+    # forced to default stack params - current value not in allowed ones
+    params_forced_default = {}
+
+    # list of final parameters args to use for executing action
+    # as dict with ParameterKey ParameterValue keys
+    # Ex for EnvRole=cache:
+    # [{u'ParameterKey': 'EnvRole', u'ParameterValue': 'cache'}, {...}]
+    istack.action_parameters = []
+
+    # final resolved value stack parameters - {name: value} dictionary
+    istack.r_parameters = {}
+
+    # set final parameters values to use for exectuing action -
+    # istack.action_parameters and istack.r_parameters
+    _set_action_parameters(params_default, params_changed,
+                          params_added, params_forced_default)
+
+    # show changes to output
+    print('\n')
+    if istack.create and params_default:
+        print('Default - Stack Parameters\n%s\n' % pformat(
+            params_default, width=1000000))
+
+    if params_changed:
+        istack.mylog('Changed - Stack Parameters\n%s' % pformat(
+            params_changed, width=1000000))
+        print('\n')
+
+    if not istack.create and params_added:
+        istack.mylog('Added - Stack Parameters\n%s' % pformat(
+            params_added, width=1000000))
+        print('\n')
+
+    if params_forced_default:
+        istack.mylog('Forced to Default - Stack Parameters\n%s' % pformat(
+            params_forced_default, width=1000000))
+        print('\n')
