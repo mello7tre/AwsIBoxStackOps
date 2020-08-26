@@ -129,9 +129,9 @@ def get_parser():
     # stack single parser
     stack_single_parser = argparse.ArgumentParser(add_help=False)
     stack_single_parser.add_argument(
-        '-s', '--stack',
-        help='Stack Name',
-        required=True, type=str)
+        '-s', '--stack', nargs=1,
+        help='Stack Names space separated',
+        required=True, type=str, default=[])
 
     # update create parser
     updcrt_parser = argparse.ArgumentParser(add_help=False)
@@ -180,13 +180,17 @@ def get_parser():
     # delete parser
     parser_delete = command_subparser.add_parser(
         'delete',
-        parents=[action_parser],
+        parents=[
+            action_parser,
+            stack_single_parser],
         help='Delete Stack (WARNING)')
 
     # continue_update parser
     parser_continue = command_subparser.add_parser(
         'continue',
-        parents=[action_parser],
+        parents=[
+            action_parser,
+            stack_selection_parser],
         help='Continue Update RollBack')
     parser_continue.add_argument(
         '--resources_to_Skip', '-R',
@@ -195,7 +199,7 @@ def get_parser():
 
     # show parser
     parser_show = command_subparser.add_parser(
-        'info', parents=[],
+        'info', parents=[stack_selection_parser],
         help='Show Stack Info')
 
     # parameters parser
@@ -218,7 +222,8 @@ def get_parser():
     # log parser
     parser_log = command_subparser.add_parser(
         'log',
-        parents=[],
+        parents=[
+            stack_single_parser],
         help='Show Stack Log')
     parser_log.add_argument(
         '-d', '--timedelta',
