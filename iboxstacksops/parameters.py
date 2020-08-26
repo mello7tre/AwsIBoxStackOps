@@ -1,5 +1,5 @@
 import argparse
-from . import (shared, fargs)
+from . import cfg
 from .log import logger
 from .common import *
 
@@ -20,21 +20,21 @@ def _set_action_parameters(params_default, params_changed,
         # get list of AllowedValues
         allowed_values = v['AllowedValues'] if 'AllowedValues' in v else []
 
-        # check if key exist as fargs param/attr too
+        # check if key exist as cfg param/attr too
         try:
-            fargs_value = getattr(fargs, key)
-            in_fargs = True if fargs_value is not None else None
+            cfg_value = getattr(cfg, key)
+            in_cfg = True if cfg_value is not None else None
         except Exception:
-            in_fargs = None
+            in_cfg = None
 
         # update param is not new ...
         if key in istack.c_parameters:
             current_value = istack.c_parameters[key]
 
             # current value its different from specified cmd arg
-            if in_fargs and current_value != fargs_value:
+            if in_cfg and current_value != cfg_value:
                 # get value from specified cmd arg
-                value = fargs_value
+                value = cfg_value
                 params_changed[key] = current_value + " => " + value
 
             # current value is not allowed by new template
@@ -54,8 +54,8 @@ def _set_action_parameters(params_default, params_changed,
         # update param is new ...
         else:
             # template default value its different from specified cmd arg
-            if in_fargs and default_value != fargs_value:
-                value = fargs_value
+            if in_cfg and default_value != cfg_value:
+                value = cfg_value
                 params_changed[key] = value
 
             # no cmd arg for new param
@@ -87,7 +87,7 @@ def _set_action_parameters(params_default, params_changed,
 # force EnvShort param value based on Env one
 def _force_envshort():
     # use arg if exist or use current value
-    env = fargs.Env if fargs.Env else istack.c_parameters['Env']
+    env = cfg.Env if cfg.Env else istack.c_parameters['Env']
 
     env_envshort_dict = {
         'dev': 'dev',
@@ -96,7 +96,7 @@ def _force_envshort():
         'prod': 'prd',
     }
 
-    fargs.EnvShort = env_envshort_dict[env]
+    cfg.EnvShort = env_envshort_dict[env]
 
 
 # if template in s3, force version to the one in his url part
@@ -105,10 +105,10 @@ def _force_envshort():
 # https://eu-west-1-ibox-app-repository.s3.amazonaws.com
 # /ibox/master-2ed25d5/templates/cache-portal.json
 def _do_envstackversion_from_s3_template():
-    template = fargs.template
-    fargs.version = template.split("/")[4] if str(
+    template = cfg.template
+    cfg.version = template.split("/")[4] if str(
         template).startswith('https') else '1'
-    fargs.EnvStackVersion = fargs.version
+    cfg.EnvStackVersion = cfg.version
 
 
 
@@ -152,11 +152,11 @@ def get_stack_parameter_parser(istack):
 
 
 def _add_stack_params_as_args(parser):
-    args = parser.parse_args(fargs.stack_args)
+    args = parser.parse_args(cfg.stack_args)
 
     for n, v in vars(args).items():
-        if not hasattr(fargs, n):
-            setattr(fargs, n, v)
+        if not hasattr(cfg, n):
+            setattr(cfg, n, v)
 
 
 def process(obj):
@@ -167,7 +167,7 @@ def process(obj):
     # get stack parameter parser
     parser = get_stack_parameter_parser(istack)
 
-    # add stack parameters as argparse args and update fargs
+    # add stack parameters as argparse args and update cfg
     _add_stack_params_as_args(parser)
 
     # if template include EnvShort params force its value based on the Env one
@@ -175,7 +175,7 @@ def process(obj):
         _force_envshort()
 
     # if using template option set/force EnvStackVersion
-    if fargs.template:
+    if cfg.template:
         _do_envstackversion_from_s3_template()
 
     # unchanged stack params

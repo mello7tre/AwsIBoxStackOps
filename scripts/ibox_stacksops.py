@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 import sys
-from iboxstacksops import parser, fargs, tools, log
+from iboxstacksops.parser import set_cfg
+from iboxstacksops.tools import IboxError
+from iboxstacksops.log import logger
+from iboxstacksops import cfg
 
 
 def main():
-    parser.set_fargs(sys.argv[1:])
-    tools.get_aws_clients()
+    set_cfg(sys.argv[1:])
 
     try:
-        fargs.func()
-    except tools.IboxError as e:
-        log.logger.error(e.args[0])
+        cfg.func()
+    except IboxError as e:
+        logger.error(e.args[0])
         return e
 
 
 if __name__ == "__main__":
     result = main()
 
-    if isinstance(result, tools.IboxError):
+    if isinstance(result, IboxError):
         exit(1)

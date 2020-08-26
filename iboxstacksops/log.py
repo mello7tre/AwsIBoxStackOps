@@ -1,5 +1,5 @@
 import logging
-from . import fargs
+from . import cfg
 from .common import *
 
 logging.basicConfig()
@@ -10,12 +10,12 @@ logger.setLevel(logging.INFO)
 
 def get_msg_client():
     try:
-        fargs.slack_channel
+        cfg.slack_channel
     except:
-        fargs.slack_channel = None
+        cfg.slack_channel = None
 
-    if (fargs.slack_channel
-        and fargs.action in [
+    if (cfg.slack_channel
+        and cfg.action in [
             'update', 'create', 'delete', 'cancel', 'continue']
         and 'IBOX_SLACK_TOKEN' in os.environ
         and 'IBOX_SLACK_USER' in os.environ):

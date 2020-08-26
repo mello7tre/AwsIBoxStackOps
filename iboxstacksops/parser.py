@@ -1,6 +1,6 @@
 import argparse
-from . import fargs
-from .actions import (update, parameters, create)
+from . import cfg
+from .actions import (create, update, parameters, resolve)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -211,8 +211,9 @@ def get_parser():
     parser_resolve = command_subparser.add_parser(
         'resolve', parents=[
             template_parser_update,
-        ],
+            stack_selection_parser],
         help='Resolve Stack template - output in yaml short format')
+    parser_resolve.set_defaults(func=resolve)
 
     # log parser
     parser_log = command_subparser.add_parser(
@@ -227,12 +228,12 @@ def get_parser():
     return parser
 
 
-def set_fargs(argv):
+def set_cfg(argv):
     parser = get_parser()
     args = parser.parse_known_args(argv)
 
     for n, v in vars(args[0]).items():
-        if not hasattr(fargs, n):
-            setattr(fargs, n, v)
+        if not hasattr(cfg, n):
+            setattr(cfg, n, v)
 
-    fargs.stack_args = args[1]
+    cfg.stack_args = args[1]

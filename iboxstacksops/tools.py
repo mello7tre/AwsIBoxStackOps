@@ -1,7 +1,7 @@
 import time
 import concurrent.futures
 import boto3 as base_boto3
-from . import aws, fargs, istack
+from . import cfg, istack
 from .log import logger
 
 
@@ -19,7 +19,7 @@ def show_confirm():
 
 
 def _pause():
-    if fargs.pause == 0:
+    if cfg.pause == 0:
         if not show_confirm():
             exit(0)
     elif args.pause and args.pause > 0:
@@ -29,13 +29,13 @@ def _pause():
 def concurrent_exec(command, stacks):
     data = {}
 
-    if fargs.jobs == 1:
+    if cfg.jobs == 1:
         for s, v in stacks.items():
             data[s] = istack.exec_command(s, v, command)
             if list(stacks)[-1] != s:
                 _pause()
     else:
-        jobs = fargs.jobs if fargs.jobs else len(stacks)
+        jobs = cfg.jobs if cfg.jobs else len(stacks)
 
         with concurrent.futures.ProcessPoolExecutor(
                 max_workers=jobs) as executor:
@@ -56,8 +56,8 @@ def concurrent_exec(command, stacks):
 def get_aws_clients():
     kwarg_session = {}
 
-    if fargs.region:
-        kwarg_session['region_name'] = fargs.region
+    if cfg.region:
+        kwarg_session['region_name'] = cfg.region
 
     boto3 = base_boto3.session.Session(**kwarg_session)
 
@@ -65,9 +65,10 @@ def get_aws_clients():
     res_cloudformation = boto3.resource('cloudformation')
     s3 = boto3.client('s3')
 
-    aws.client = cloudformation
+    cfg.client = cloudformation
 
     return {
+        'boto3': boto3,
         'cloudformation': cloudformation,
         'res_cloudformation': res_cloudformation,
         's3': s3,
@@ -77,7 +78,7 @@ def get_aws_clients():
 def get_exports():
     logger.info('Getting CloudFormation Exports')
     exports = {}
-    paginator = aws.client.get_paginator('list_exports')
+    paginator = cfg.client.get_paginator('list_exports')
     response_iterator = paginator.paginate()
     for e in response_iterator:
         for export in e['Exports']:

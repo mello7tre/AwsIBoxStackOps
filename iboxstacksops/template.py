@@ -1,24 +1,24 @@
 from collections import OrderedDict
-from . import shared, fargs
+from . import cfg
 from .tools import IboxError
 from .log import logger, get_msg_client
 from .common import *
 
 
 def _update_template_param():
-    # try to get role from fargs or use current stack parameter value
+    # try to get role from cfg or use current stack parameter value
     try:
-        role = fargs.EnvRole
+        role = cfg.EnvRole
     except Exception:
         role = istack.c_parameters['EnvRole']
 
     app_repository = istack.exports['BucketAppRepository']
-    s3_prefix = 'ibox/%s/templates/%s.' % (fargs.version, role)
+    s3_prefix = 'ibox/%s/templates/%s.' % (cfg.version, role)
 
     try:
         response = istack.s3.list_objects_v2(
             Bucket=app_repository, Prefix=s3_prefix)
-        fargs.template = 'https://%s.s3.amazonaws.com/%s' % (
+        cfg.template = 'https://%s.s3.amazonaws.com/%s' % (
             app_repository, response['Contents'][0]['Key'])
     except Exception:
         raise IboxError(
@@ -28,13 +28,13 @@ def _update_template_param():
 def get_template(istack):
     logger.info('Getting Template Body')
     # update template param if using version one
-    if fargs.version:
+    if cfg.version:
         _update_template_param(istack)
 
     try:
         # New template
-        if fargs.template:
-            template = str(fargs.template)
+        if cfg.template:
+            template = str(cfg.template)
             # From s3
             if template.startswith('https'):
                 url = template[template.find('//') + 2:]
@@ -46,7 +46,7 @@ def get_template(istack):
                 istack.template_from = 'S3'
             # From file
             else:
-                f = open(fargs.template[7:], 'r')
+                f = open(cfg.template[7:], 'r')
                 body = f.read()
                 istack.template_from = 'File'
         # Current template
