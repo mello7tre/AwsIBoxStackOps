@@ -1,33 +1,44 @@
-from . import cfg, istack
-from .tools import concurrent_exec, get_exports
-from .common import *
+from . import resources
+
+# build all args for action                                                     
+def do_action_args():                                                           
+    us_args = {}                                                                
+    us_args['StackName'] = istack.name                                      
+    us_args['Parameters'] = istack.action_parameters                            
+    us_args['Tags'] = istack.action_tags                                        
+    us_args['Capabilities'] = [                                                 
+        'CAPABILITY_IAM',                                                       
+        'CAPABILITY_NAMED_IAM',                                                 
+        'CAPABILITY_AUTO_EXPAND',                                               
+    ]                                                                           
+                                                                                
+    # sns topic                                                                 
+    us_args['NotificationARNs'] = fargs.topics                                  
+                                                                                
+    # Handle policy during update                                               
+    if hasattr(fargs, 'policy') and fargs.policy:                               
+        action = ['"Update:%s"' % a for a in fargs.policy.split(',')]           
+        action = '[%s]' % ','.join(action)                                      
+        us_args['StackPolicyDuringUpdateBody'] = (                              
+            '{"Statement" : [{"Effect" : "Allow",'                              
+            '"Action" :%s,"Principal": "*","Resource" : "*"}]}' % action)       
+                                                                                
+    if istack.template_from == 'Current':                                       
+        us_args['UsePreviousTemplate'] = True                                   
+    if istack.template_from == 'S3':                                            
+        us_args['TemplateURL'] = fargs.template                                 
+    if istack.template_from == 'File':                                          
+        us_args['TemplateBody'] = json.dumps(istack.template)                   
+                                                                                
+    return us_args
 
 
-def create():
-    stacks = istack.get_stacks()
-    cfg.exports = get_exports()
-    print('create command:')
-    # pprint(stacks)
-    result = concurrent_exec('create', stacks)
-    print(result)
+def update(obj):
+    global istack
 
+    istack = obj
 
-def update():
-    stacks = istack.get_stacks()
-    cfg.exports = get_exports()
-    print('update command:')
-    # pprint(stacks)
-    result = concurrent_exec('update', stacks)
-    print(result)
+    # get final args for update
+    do_action_args()
 
-
-def parameters():
-    stacks = istack.get_stacks()
-    cfg.exports = get_exports()
-    result = concurrent_exec('parameters', stacks)
-
-
-def resolve():
-    stacks = istack.get_stacks()
-    cfg.exports = get_exports()
-    result = concurrent_exec('resolve', stacks)
+    istack.before['resources'] = resources.get()

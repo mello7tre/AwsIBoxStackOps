@@ -1,6 +1,6 @@
 import argparse
 from . import cfg
-from .actions import (create, update, parameters, resolve)
+from .commands import (create, update, parameters, resolve)
 
 
 def set_create_parser(subparser, parents=[]):

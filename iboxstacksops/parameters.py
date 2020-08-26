@@ -4,7 +4,7 @@ from .log import logger
 from .common import *
 
 
-# set final parameters values to use for exectuing actions -
+# set final parameters values to use for exectuing commands -
 # istack.action_parameters and istack.r_parameters
 def _set_action_parameters(params_default, params_changed,
                           params_added, params_forced_default):
@@ -163,6 +163,8 @@ def process(obj):
     global istack
 
     istack = obj
+
+    logger.info('Processing Parameters')
 
     # get stack parameter parser
     parser = get_stack_parameter_parser(istack)

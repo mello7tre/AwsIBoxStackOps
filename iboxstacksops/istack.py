@@ -1,4 +1,4 @@
-from . import (cfg, template, parameters, resolve)
+from . import (cfg, template, parameters, resolve, actions)
 from .tools import IboxError, get_aws_clients, get_exports
 from .log import logger, get_msg_client
 from .common import *
@@ -42,6 +42,7 @@ class ibox_stack(object):
         self.template = template.get_template(self)
         parameters.process(self)
         resolve.process(self)
+        actions.update(self)
 
         return 'eccomi'
 
@@ -67,8 +68,7 @@ class ibox_stack(object):
                 channel=f'#{cfg.slack_channel}',
                 text=message,
                 username=os.environ['IBOX_SLACK_USER'],
-                icon_emoji=':robot_face:',
-            )
+                icon_emoji=':robot_face:')
 
 
 def exec_command(name, data, command):
