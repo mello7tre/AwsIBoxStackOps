@@ -275,10 +275,10 @@ def _check_lambda(r):
 
 
 def _process_conditions():
-    istack.r_conditions = {}                                                    
-    for c in sorted(istack.conditions):                                         
-        v = istack.conditions[c]                                                
-        if c not in istack.r_conditions:                                        
+    istack.r_conditions = {}
+    for c in sorted(istack.conditions):
+        v = istack.conditions[c]
+        if c not in istack.r_conditions:
             istack.r_conditions[c] = _recursive_resolve(c, v)
 
 

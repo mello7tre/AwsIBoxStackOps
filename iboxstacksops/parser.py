@@ -8,7 +8,7 @@ def set_create_parser(subparser, parents=[]):
                                   parents=parents,
                                   help='Create Stack')
     parser.set_defaults(func=create)
-    
+
     parser.add_argument('--Env',
                         help='Environment to use',
                         type=str, required=True)
@@ -74,7 +74,7 @@ def get_template_parser(required=True):
 
 def get_stack_selection_parser():
     parser = argparse.ArgumentParser(add_help=False)
-    
+
     parser.add_argument(
         '-s', '--stack', nargs='+',
         help='Stack Names space separated',
@@ -210,7 +210,7 @@ def get_parser():
         help='Show Available Stack Parameters')
     parser_parameters.set_defaults(func=parameters)
 
-    
+
     # resolve parser
     parser_resolve = command_subparser.add_parser(
         'resolve', parents=[
