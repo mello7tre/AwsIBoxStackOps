@@ -13,7 +13,6 @@ def create():
 def update():
     stacks = istack.get_stacks()
     cfg.exports = get_exports()
-    print('update command:')
     # pprint(stacks)
     result = concurrent_exec('update', stacks)
     print(result)

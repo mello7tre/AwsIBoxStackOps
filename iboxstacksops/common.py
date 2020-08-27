@@ -2,10 +2,11 @@ import os
 import yaml
 import json
 import botocore
+from datetime import datetime, timedelta, tzinfo
 from pprint import pprint, pformat
 
 
-CLF_FUNC = (
+CLF_YAML_FUNC = (
     '!Ref',
     '!GetAtt',
     '!GetAZs',

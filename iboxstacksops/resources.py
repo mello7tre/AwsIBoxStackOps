@@ -1,7 +1,11 @@
 from . import cfg
 
 
-def get(dash=None):
+def get(obj, dash=None):
+    global istack
+
+    istack = obj
+
     resources = {}
     res_list = list(cfg.RESOURCES_MAP.keys())
 

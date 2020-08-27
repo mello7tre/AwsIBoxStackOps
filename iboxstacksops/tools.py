@@ -1,5 +1,6 @@
 import time
 import concurrent.futures
+from traceback import print_exc
 import boto3 as base_boto3
 from . import cfg, istack
 from .log import logger
@@ -48,6 +49,7 @@ def concurrent_exec(command, stacks):
                     data[stack] = future.result()
                 except Exception as e:
                     print(f'{stack} generated an exception: {e}')
+                    print_exc()
                     raise IboxError(e)
 
     return data
