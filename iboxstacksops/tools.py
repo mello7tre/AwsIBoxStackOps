@@ -10,6 +10,10 @@ class IboxError(Exception):
     pass
 
 
+class IboxErrorECSService(Exception):
+    pass
+
+
 def show_confirm():
     print('')
     answer = input('Enter [y] to continue or any other key to exit: ')
@@ -30,7 +34,7 @@ def _pause():
 def concurrent_exec(command, stacks):
     data = {}
 
-    if cfg.jobs == 1:
+    if cfg.jobs == 1 or len(stacks) == 1:
         for s, v in stacks.items():
             data[s] = istack.exec_command(s, v, command)
             if list(stacks)[-1] != s:
@@ -91,3 +95,16 @@ def get_exports():
         #    return exports
 
     return exports
+
+
+def stack_resource_to_dict(stack):
+    out = {}
+    for n in dir(stack):
+        if not n.startswith('__'):
+            prop = ''
+            words = n.split('_')
+            for w in words:
+                prop += w.capitalize()
+            out[prop] = getattr(stack, n)
+                
+    return out

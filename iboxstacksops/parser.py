@@ -44,8 +44,8 @@ def set_update_parser(subparser, parents=[]):
                         choices=[
                             'Always', 'OnChange', 'Generic', 'None'],
                         default='OnChange')
-    parser.add_argument('-d', '--showdetails',
-                        help='Show extra details in changeset',
+    parser.add_argument('--nodetails',
+                        help='Do not show extra details in changeset',
                         action='store_true')
 
     parser.add_argument(
@@ -97,7 +97,8 @@ def get_parser():
         description='Stacks Operations',
         epilog='Note: options for Stack Params must be put at the end!'
     )
-    parser.set_defaults(role=None, type=None, jobs=None, pause=None)
+    parser.set_defaults(role=None, type=None, jobs=None, pause=None,
+                        max_retry_ecs_service_running_count=0)
 
     # common parser
     parser.add_argument('--region',
@@ -110,7 +111,7 @@ def get_parser():
     action_parser = argparse.ArgumentParser(add_help=False)
 
     action_parser.add_argument('-N', '--noconfirm',
-                               help='No confirmation',
+                               help='No confirmation - (No ChangeSet)',
                                required=False, action='store_true')
     action_parser.add_argument('-W', '--nowait',
                                help='Do not Wait for action to end',

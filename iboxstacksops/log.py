@@ -1,10 +1,11 @@
 import logging
+import slack
 from . import cfg
 from .common import *
 
 logging.basicConfig()
 logging.getLogger('botocore').setLevel('CRITICAL')
-logger = logging.getLogger('stackops')
+logger = logging.getLogger('stacksops')
 logger.setLevel(logging.INFO)
 
 

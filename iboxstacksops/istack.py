@@ -1,33 +1,18 @@
-from . import (cfg, template, parameters, resolve, actions)
+from . import (cfg, template, parameters, resolve, actions, events,
+               outputs)
 from .tools import IboxError, get_aws_clients, get_exports
 from .log import logger, get_msg_client
 from .common import *
 
 
-STACK_BASE_DATA = [
-    'StackName',
-    'Description',
-    'StackStatus',
-    'CreationTime',
-    'LastUpdatedTime',
-]
-
-
 class ibox_stack(object):
     def __init__(self, name, base_data):
-        # check if stack exists
-        try:
-            # aws clients/resource
-            aws = get_aws_clients()
-            self.boto3 = aws['boto3']
-            self.cloudformation = aws['res_cloudformation']
-            self.s3 = aws['s3']
-            self.client = aws['cloudformation']
-
-            self.stack = self.cloudformation.Stack(name)
-            self.stack.stack_status
-        except Exception as e:
-            raise IboxError(e)
+        # aws clients/resource
+        aws = get_aws_clients()
+        self.boto3 = aws['boto3']
+        self.cloudformation = aws['res_cloudformation']
+        self.s3 = aws['s3']
+        self.client = aws['cloudformation']
 
         # set property
         self.name = name
@@ -38,13 +23,16 @@ class ibox_stack(object):
             setattr(self, n, v)
 
     def update(self):
+        self.stack = self.cloudformation.Stack(self.name)
         self.exports = cfg.exports
         self.template = template.get_template(self)
         parameters.process(self)
         resolve.process(self)
-        actions.update(self)
+        result = actions.update(self)
 
-        return 'eccomi'
+        if result:
+            self.stack.reload()
+            return self.stack.stack_status
 
     def parameters(self):
         self.exports = cfg.exports
@@ -77,50 +65,21 @@ def exec_command(name, data, command):
     return getattr(istack, command)()
 
 
-def _get_outputs(stack):
-    try:
-        s_outputs = stack['Outputs']
-    except Exception:
-        pass
-    else:
-        outputs = {}
-        for output in s_outputs:
-            key = output['OutputKey']
-            value = output.get('OutputValue', None)
-            outputs[key] = value
-
-        return outputs
-
-
-def _get_parameters(stack):
-    try:
-        s_parameters = stack['Parameters']
-    except Exception as e:
-        pass
-    else:
-        parameters = {}
-        for parameter in s_parameters:
-            key = parameter['ParameterKey']
-            value = parameter.get(
-                'ResolvedValue', parameter.get('ParameterValue'))
-            parameters[key] = value
-
-        return parameters
-
-
 def get_base_data(stack):
-    data = {'before': {}}
-    for d in STACK_BASE_DATA:
-        data[d] = stack.get(d, None)
+    data = {
+        'before': {},
+        'after': {},
+        'changed': {},
+    }
 
-    outputs = _get_outputs(stack)
-    if outputs:
-        data.update(outputs)
-        data['before']['outputs'] = outputs
+    stack_outputs = outputs.get(stack)
 
-    parameters = _get_parameters(stack)
-    if parameters:
-        data['c_parameters'] = parameters
+    data.update(stack_outputs)
+    data['before']['outputs'] = stack_outputs
+
+    stack_parameters = parameters.get(stack)
+    if stack_parameters:
+        data['c_parameters'] = stack_parameters
 
     # ugly fix
     try:

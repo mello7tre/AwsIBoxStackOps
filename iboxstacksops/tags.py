@@ -61,14 +61,11 @@ def get_action_tags(istack):
         'Value': str(datetime.now())
     })
 
-    print('\n')
     if len(tags_default) > 0:
         istack.mylog(
-            'Default - Stack Tags\n%s' % pformat(tags_default, width=1000000))
-        print('\n')
+            'DEFAULT - STACK TAGS\n%s\n' % pformat(tags_default, width=1000000))
     if len(tags_changed) > 0:
         istack.mylog(
-            'Changed - Stack Tags\n%s' % pformat(tags_changed, width=1000000))
-        print('\n')
+            'CHANGED - STACK TAGS\n%s\n' % pformat(tags_changed, width=1000000))
 
     return final_tags

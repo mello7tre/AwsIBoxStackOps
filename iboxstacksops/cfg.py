@@ -1,5 +1,13 @@
 MAX_SINGLE_STACKS = 5
 
+STACK_BASE_DATA = [                                                             
+    'StackName',                                                                
+    'Description',                                                              
+    'StackStatus',                                                              
+    'CreationTime',                                                             
+    'LastUpdatedTime',                                                          
+]   
+
 RESOURCES_MAP = {
     'AutoScalingGroup': 'AutoScalingGroupName',
     'AutoScalingGroupSpot': 'AutoScalingGroupSpotName',
@@ -27,3 +35,13 @@ RESOURCES_MAP = {
     'ScalingPolicyTrackingsAPPCpu': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsAPPCustom': 'ScalingPolicyTrackings1',
 }
+
+STACK_COMPLETE_STATUS = [
+    'UPDATE_COMPLETE',
+    'CREATE_COMPLETE',
+    'ROLLBACK_COMPLETE',
+    'UPDATE_ROLLBACK_COMPLETE',
+    'UPDATE_ROLLBACK_FAILED',
+    'DELETE_COMPLETE',
+    'DELETE_FAILED',
+]

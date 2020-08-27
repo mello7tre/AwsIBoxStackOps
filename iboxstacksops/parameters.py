@@ -159,6 +159,22 @@ def _add_stack_params_as_args(parser):
             setattr(cfg, n, v)
 
 
+def get(stack):                                                     
+    try:                                                                        
+        s_parameters = stack['Parameters']                                      
+    except Exception as e:                                                      
+        pass                                                                    
+    else:                                                                       
+        parameters = {}                                                         
+        for parameter in s_parameters:                                          
+            key = parameter['ParameterKey']                                     
+            value = parameter.get(                                              
+                'ResolvedValue', parameter.get('ParameterValue'))               
+            parameters[key] = value                                             
+                                                                                
+        return parameters
+
+
 def process(obj):
     global istack
 
@@ -209,20 +225,17 @@ def process(obj):
     # show changes to output
     print('\n')
     if istack.create and params_default:
-        print('Default - Stack Parameters\n%s\n' % pformat(
+        print('DEFAULT - STACK PARAMETERS\n%s\n' % pformat(
             params_default, width=1000000))
 
     if params_changed:
-        istack.mylog('Changed - Stack Parameters\n%s' % pformat(
+        istack.mylog('CHANGED - STACK PARAMETERS\n%s\n' % pformat(
             params_changed, width=1000000))
-        print('\n')
 
     if not istack.create and params_added:
-        istack.mylog('Added - Stack Parameters\n%s' % pformat(
+        istack.mylog('ADDED - STACK PARAMETERS\n%s\n' % pformat(
             params_added, width=1000000))
-        print('\n')
 
     if params_forced_default:
-        istack.mylog('Forced to Default - Stack Parameters\n%s' % pformat(
+        istack.mylog('FORCED TO DEFAULT - STACK PARAMETERS\n%s\n' % pformat(
             params_forced_default, width=1000000))
-        print('\n')

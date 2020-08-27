@@ -15,7 +15,8 @@ def update():
     cfg.exports = get_exports()
     # pprint(stacks)
     result = concurrent_exec('update', stacks)
-    print(result)
+    if not cfg.dryrun:
+        print(result)
 
 
 def parameters():
