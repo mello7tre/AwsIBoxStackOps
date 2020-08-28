@@ -1,6 +1,7 @@
 from . import (cfg, template, parameters, resolve, actions, events,
-               outputs)
-from .tools import IboxError, get_aws_clients, get_exports
+               outputs, dashboard)
+from .aws import myboto3
+from .tools import IboxError, get_exports
 from .log import logger, get_msg_client
 from .common import *
 
@@ -8,11 +9,10 @@ from .common import *
 class ibox_stack(object):
     def __init__(self, name, base_data):
         # aws clients/resource
-        aws = get_aws_clients()
-        self.boto3 = aws['boto3']
-        self.cloudformation = aws['res_cloudformation']
-        self.s3 = aws['s3']
-        self.client = aws['cloudformation']
+        self.boto3 = myboto3(self)
+        self.cloudformation = self.boto3.resource('cloudformation')
+        self.s3 = self.boto3.client('s3')
+        self.client = self.boto3.client('cloudformation')
 
         # set property
         self.name = name
@@ -57,6 +57,9 @@ class ibox_stack(object):
                 text=message,
                 username=os.environ['IBOX_SLACK_USER'],
                 icon_emoji=':robot_face:')
+
+    def dash(self):
+        dashboard.add_stack(self)
 
 
 def exec_command(name, data, command):
@@ -106,7 +109,9 @@ def _get_stack(r, data):
 
 
 def get_stacks(names=[]):
-    client = get_aws_clients()['cloudformation']
+    boto3 = myboto3()
+    client = boto3.client('cloudformation')
+
     logger.info('Getting Stacks Description')
     data = {}
 

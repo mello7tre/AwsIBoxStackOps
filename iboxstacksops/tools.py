@@ -27,8 +27,8 @@ def _pause():
     if cfg.pause == 0:
         if not show_confirm():
             exit(0)
-    elif args.pause and args.pause > 0:
-        time.sleep(args.pause)
+    elif cfg.pause and cfg.pause > 0:
+        time.sleep(cfg.pause)
 
 
 def concurrent_exec(command, stacks):
@@ -40,6 +40,7 @@ def concurrent_exec(command, stacks):
             if list(stacks)[-1] != s:
                 _pause()
     else:
+        cfg.parallel = True
         jobs = cfg.jobs if cfg.jobs else len(stacks)
 
         with concurrent.futures.ProcessPoolExecutor(
@@ -59,32 +60,11 @@ def concurrent_exec(command, stacks):
     return data
 
 
-def get_aws_clients():
-    kwarg_session = {}
-
-    if cfg.region:
-        kwarg_session['region_name'] = cfg.region
-
-    boto3 = base_boto3.session.Session(**kwarg_session)
-
-    cloudformation = boto3.client('cloudformation')
-    res_cloudformation = boto3.resource('cloudformation')
-    s3 = boto3.client('s3')
-
-    cfg.client = cloudformation
-
-    return {
-        'boto3': boto3,
-        'cloudformation': cloudformation,
-        'res_cloudformation': res_cloudformation,
-        's3': s3,
-    }
-
-
 def get_exports():
     logger.info('Getting CloudFormation Exports')
     exports = {}
-    paginator = cfg.client.get_paginator('list_exports')
+    client = cfg.boto3.client('cloudformation')
+    paginator = client.get_paginator('list_exports')
     response_iterator = paginator.paginate()
     for e in response_iterator:
         for export in e['Exports']:
@@ -106,5 +86,5 @@ def stack_resource_to_dict(stack):
             for w in words:
                 prop += w.capitalize()
             out[prop] = getattr(stack, n)
-                
+
     return out

@@ -1,7 +1,8 @@
-from . import cfg, resources, changeset, events, outputs
+from . import cfg, resources, changeset, events, outputs, dashboard
 from .tags import get_action_tags
 from .tools import IboxErrorECSService
 from .common import *
+
 
 # build all args for action
 def _get_action_args():
@@ -60,7 +61,6 @@ def _update_waiter(timestamp):
 
 def update(obj):
     global istack
-
     istack = obj
 
     # set tags
@@ -72,7 +72,7 @@ def update(obj):
     outputs.show(istack, 'before')
 
     # -if using changeset ...
-    if not cfg.noconfirm or len(cfg.stack) > 1:
+    if not cfg.nochangeset and len(cfg.stack) == 1:
         changeset_ok = changeset.process(istack, us_args)
         if not changeset_ok:
             return
@@ -90,5 +90,8 @@ def update(obj):
 
     # show changed outputs
     outputs.show_changed(istack)
+
+    # update dashboard
+    dashboard.update(self)
 
     return True

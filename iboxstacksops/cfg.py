@@ -1,12 +1,12 @@
 MAX_SINGLE_STACKS = 5
 
-STACK_BASE_DATA = [                                                             
-    'StackName',                                                                
-    'Description',                                                              
-    'StackStatus',                                                              
-    'CreationTime',                                                             
-    'LastUpdatedTime',                                                          
-]   
+STACK_BASE_DATA = [
+    'StackName',
+    'Description',
+    'StackStatus',
+    'CreationTime',
+    'LastUpdatedTime',
+]
 
 RESOURCES_MAP = {
     'AutoScalingGroup': 'AutoScalingGroupName',
@@ -28,13 +28,16 @@ RESOURCES_MAP = {
     'ListenerHttpInternalRules1': 'LoadBalancerInternal',
     'AlarmCPUHigh': None,
     'AlarmCPULow': None,
-    # ScalingPolicyTracking
+}
+SCALING_POLICY_TRACKINGS_NAMES = {
     'ScalingPolicyTrackings1': None,
     'ScalingPolicyTrackingsASCpu': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsASCustom': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsAPPCpu': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsAPPCustom': 'ScalingPolicyTrackings1',
 }
+RESOURCES_MAP.update(SCALING_POLICY_TRACKINGS_NAMES)
+
 
 STACK_COMPLETE_STATUS = [
     'UPDATE_COMPLETE',

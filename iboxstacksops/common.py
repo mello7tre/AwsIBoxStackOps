@@ -22,4 +22,5 @@ def yaml_exclamation_mark(dumper, data):
 
     return value
 
+
 yaml.add_representer(str, yaml_exclamation_mark)

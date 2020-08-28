@@ -1,15 +1,25 @@
 from . import cfg
 
 
-def get(obj, dash=None):
-    global istack
+def set_changed(istack):
+    istack.after['resources'] = get(istack)
 
-    istack = obj
+    before = istack.before['resources']
+    after = istack.after['resources']
 
+    changed = {}
+    for r, v in before.items():
+        if r in after and v != after[r]:
+            changed[r] = after[r]
+
+    istack.changed['resources'] = changed
+
+
+def get(istack, dash=None):
     resources = {}
     res_list = list(cfg.RESOURCES_MAP.keys())
 
-    paginator = cfg.client.get_paginator('list_stack_resources')
+    paginator = istack.client.get_paginator('list_stack_resources')
     response_iterator = paginator.paginate(StackName=istack.name)
 
     for r in response_iterator:

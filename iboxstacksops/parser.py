@@ -1,6 +1,6 @@
 import argparse
 from . import cfg
-from .commands import (create, update, parameters, resolve)
+from .commands import (create, update, parameters, resolve, dash)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -20,12 +20,18 @@ def set_create_parser(subparser, parents=[]):
                         type=str, default='')
 
 
-
 def set_update_parser(subparser, parents=[]):
     parser = subparser.add_parser('update',
                                   parents=parents,
                                   help='Update Stack')
     parser.set_defaults(func=update)
+    # used by dashboard update
+    parser.set_defaults(
+        statistic='Average',
+        statisticresponse='p95',
+        debug=False,
+        silent=True,
+        vertical=False)
 
     parser.add_argument('-P', '--policy',
                         help='Policy during Stack Update',
@@ -48,14 +54,38 @@ def set_update_parser(subparser, parents=[]):
                         help='Do not show extra details in changeset',
                         action='store_true')
 
+
+def set_dash_parser(subparser, parents=[]):
+    parser = subparser.add_parser('dash',
+                                  parents=parents,
+                                  help='Create DashBoard for stacks')
+    parser.set_defaults(func=dash)
+
     parser.add_argument(
-        '-j', '--jobs',
-	help='Max Concurrent jobs - default to number of stacks', type=int)
+        '--statistic',
+        help='Statistic to use for metrics',
+        choices=['Average', 'Maximum', 'Minimum'],
+        default='Average'
+    )
     parser.add_argument(
-        '--pause',
-        help='Pause for seconds between jobs - '
-	     '0 for interactive - valid only for jobs=1',
-        type=int)
+        '--statisticresponse',
+        help='Statistic to use for response time metrics',
+        choices=[
+            'Average', 'p99', 'p95', 'p90',
+            'p50', 'p10', 'Maximum', 'Minimum'],
+        default='p95',
+    )
+    parser.add_argument('--debug', help='Show json Dash', action='store_true')
+    parser.add_argument('--silent', help='Silent mode', action='store_true')
+    parser.add_argument(
+        '--vertical',
+        help='Add vertical annotation at creation time, '
+             'and optionally specify fill mode',
+        nargs='?',
+        choices=['before', 'after'],
+        const=True,
+        default=False,
+    )
 
 
 def get_template_parser(required=True):
@@ -101,17 +131,27 @@ def get_parser():
                         max_retry_ecs_service_running_count=0)
 
     # common parser
-    parser.add_argument('--region',
-                        help='Region', type=str)
-    parser.add_argument('--compact',
-                        help='Show Output in compact form',
-                        action='store_true')
+    parser.add_argument(
+        '--region',
+        help='Region', type=str)
+    parser.add_argument(
+        '--compact',
+        help='Show Output in compact form',
+        action='store_true')
+    parser.add_argument(
+        '-j', '--jobs',
+        help='Max Concurrent jobs - default to number of stacks', type=int)
+    parser.add_argument(
+        '--pause',
+        help='Pause for seconds between jobs - '
+             '0 for interactive - valid only for jobs=1',
+        type=int)
 
     # action parser
     action_parser = argparse.ArgumentParser(add_help=False)
 
-    action_parser.add_argument('-N', '--noconfirm',
-                               help='No confirmation - (No ChangeSet)',
+    action_parser.add_argument('-N', '--nochangeset',
+                               help='No ChangeSet - (No confirmation)',
                                required=False, action='store_true')
     action_parser.add_argument('-W', '--nowait',
                                help='Do not Wait for action to end',
@@ -211,7 +251,6 @@ def get_parser():
         help='Show Available Stack Parameters')
     parser_parameters.set_defaults(func=parameters)
 
-
     # resolve parser
     parser_resolve = command_subparser.add_parser(
         'resolve', parents=[
@@ -230,6 +269,12 @@ def get_parser():
         '-d', '--timedelta',
         help='How many seconds go back in time from stack last event - '
              'use 0 for realtime - if < 30 assume days', default=300)
+
+    # dashboard parser
+    set_dash_parser(
+        command_subparser, [
+            stack_selection_parser,
+        ])
 
     return parser
 

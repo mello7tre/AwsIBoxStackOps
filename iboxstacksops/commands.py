@@ -1,4 +1,4 @@
-from . import cfg, istack
+from . import cfg, istack, dashboard
 from .tools import concurrent_exec, get_exports
 from .common import *
 
@@ -29,3 +29,10 @@ def resolve():
     stacks = istack.get_stacks()
     cfg.exports = get_exports()
     result = concurrent_exec('resolve', stacks)
+
+
+def dash():
+    stacks = istack.get_stacks()
+    cfg.dash_name = '_' + '_'.join(cfg.stack)
+    cfg.jobs = 1
+    result = concurrent_exec('dash', stacks)

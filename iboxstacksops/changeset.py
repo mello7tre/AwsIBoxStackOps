@@ -3,6 +3,7 @@ from . import cfg
 from .tools import show_confirm
 from .common import *
 
+
 # create changeset
 def _do_changeset(us_args):
     if not cfg.showtags:
@@ -16,13 +17,13 @@ def _do_changeset(us_args):
     )
     us_args.pop('StackPolicyDuringUpdateBody', None)
 
-    response = cfg.client.create_change_set(**us_args)
+    response = istack.client.create_change_set(**us_args)
 
     return response['Id']
 
 
 def _get_changeset(changeset_id):
-    changeset = cfg.client.describe_change_set(
+    changeset = istack.client.describe_change_set(
         ChangeSetName=changeset_id,
         StackName=istack.name
     )
@@ -92,7 +93,7 @@ def _show_changeset_changes(changes):
 
 
 def _delete_changeset(changeset_id):
-    response = cfg.client.delete_change_set(
+    response = istack.client.delete_change_set(
         ChangeSetName=changeset_id,
         StackName=istack.name
     )
@@ -101,7 +102,7 @@ def _delete_changeset(changeset_id):
 
 
 def _execute_changeset(changeset_id):
-    response = cfg.client.execute_change_set(
+    response = istack.client.execute_change_set(
         ChangeSetName=changeset_id,
         StackName=istack.name
     )

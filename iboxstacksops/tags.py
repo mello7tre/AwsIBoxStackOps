@@ -1,5 +1,6 @@
 from .common import *
 
+
 def get_action_tags(istack):
     stack_tags = [
         {'Key': 'Env', 'Value': cfg.Env},
@@ -63,9 +64,11 @@ def get_action_tags(istack):
 
     if len(tags_default) > 0:
         istack.mylog(
-            'DEFAULT - STACK TAGS\n%s\n' % pformat(tags_default, width=1000000))
+            'DEFAULT - STACK TAGS\n%s\n' % pformat(
+                tags_default, width=1000000))
     if len(tags_changed) > 0:
         istack.mylog(
-            'CHANGED - STACK TAGS\n%s\n' % pformat(tags_changed, width=1000000))
+            'CHANGED - STACK TAGS\n%s\n' % pformat(
+                tags_changed, width=1000000))
 
     return final_tags

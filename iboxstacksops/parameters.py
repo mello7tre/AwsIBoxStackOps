@@ -7,7 +7,7 @@ from .common import *
 # set final parameters values to use for exectuing commands -
 # istack.action_parameters and istack.r_parameters
 def _set_action_parameters(params_default, params_changed,
-                          params_added, params_forced_default):
+                           params_added, params_forced_default):
     for key in sorted(istack.parameters):
         v = istack.parameters[key]
 
@@ -111,7 +111,6 @@ def _do_envstackversion_from_s3_template():
     cfg.EnvStackVersion = cfg.version
 
 
-
 def get_stack_parameter_parser(istack):
     parser = argparse.ArgumentParser(
         description='',
@@ -159,19 +158,19 @@ def _add_stack_params_as_args(parser):
             setattr(cfg, n, v)
 
 
-def get(stack):                                                     
-    try:                                                                        
-        s_parameters = stack['Parameters']                                      
-    except Exception as e:                                                      
-        pass                                                                    
-    else:                                                                       
-        parameters = {}                                                         
-        for parameter in s_parameters:                                          
-            key = parameter['ParameterKey']                                     
-            value = parameter.get(                                              
-                'ResolvedValue', parameter.get('ParameterValue'))               
-            parameters[key] = value                                             
-                                                                                
+def get(stack):
+    try:
+        s_parameters = stack['Parameters']
+    except Exception as e:
+        pass
+    else:
+        parameters = {}
+        for parameter in s_parameters:
+            key = parameter['ParameterKey']
+            value = parameter.get(
+                'ResolvedValue', parameter.get('ParameterValue'))
+            parameters[key] = value
+
         return parameters
 
 
@@ -220,7 +219,7 @@ def process(obj):
     # set final parameters values to use for exectuing action -
     # istack.action_parameters and istack.r_parameters
     _set_action_parameters(params_default, params_changed,
-                          params_added, params_forced_default)
+                           params_added, params_forced_default)
 
     # show changes to output
     print('\n')
