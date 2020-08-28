@@ -174,6 +174,36 @@ def get(stack):
         return parameters
 
 
+def show_override(istack):
+    params = {}
+
+    template_parameters = istack.client.get_template_summary(
+        StackName=istack.name)['Parameters']
+
+    for p in istack.stack.parameters:
+        name = p['ParameterKey']
+        value = p['ParameterValue']
+        if (
+            not name.startswith('Env')
+            and any(name not in n for n in ['UpdateMode'])
+            and any(
+                name == s['ParameterKey']
+                and (value != s['DefaultValue'] if 'DefaultValue' in s else '')
+                for s in template_parameters
+            )
+        ):
+            params[name] = value
+
+    istack.mylog(
+        'CURRENT NOT DEFAULT - STACK PARAMETERS\n%s\n' %
+        pformat(
+            params,
+            width=80 if (
+                cfg.command == 'info' and not cfg.compact) else 1000000
+        )
+    )
+
+
 def process(obj):
     global istack
 

@@ -25,6 +25,11 @@ def parameters():
     result = concurrent_exec('parameters', stacks)
 
 
+def info():
+    stacks = istack.get_stacks()
+    result = concurrent_exec('info', stacks)
+
+
 def resolve():
     stacks = istack.get_stacks()
     cfg.exports = get_exports()

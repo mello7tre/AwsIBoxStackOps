@@ -1,6 +1,7 @@
 import argparse
 from . import cfg
-from .commands import (create, update, parameters, resolve, dash)
+from .commands import (create, update, parameters, resolve, dash,
+                       info)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -128,7 +129,8 @@ def get_parser():
         epilog='Note: options for Stack Params must be put at the end!'
     )
     parser.set_defaults(role=None, type=None, jobs=None, pause=None,
-                        max_retry_ecs_service_running_count=0)
+                        max_retry_ecs_service_running_count=0,
+                        version=None, template=None)
 
     # common parser
     parser.add_argument(
@@ -238,10 +240,11 @@ def get_parser():
         help='Resource to Skip',
         default=[], nargs='+')
 
-    # show parser
-    parser_show = command_subparser.add_parser(
+    # info parser
+    parser_info = command_subparser.add_parser(
         'info', parents=[stack_selection_parser],
         help='Show Stack Info')
+    parser_info.set_defaults(func=info)
 
     # parameters parser
     parser_parameters = command_subparser.add_parser(
