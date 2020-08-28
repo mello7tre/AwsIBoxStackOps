@@ -95,3 +95,20 @@ def update(obj):
     dashboard.update(self)
 
     return True
+
+
+def log(obj):
+    global istack
+    istack = obj
+
+    last_timestamp = events.get_last_timestamp(istack)
+    time_delta = int(cfg.timedelta)
+
+    if time_delta == 0:
+        time_event = last_timestamp - timedelta(seconds=1)
+        _update_waiter(time_event)
+    else:
+        if time_delta < 30:
+            time_delta = time_delta * 86400
+        time_event = last_timestamp - timedelta(seconds=time_delta)
+        events.show(istack, time_event, time_delta)

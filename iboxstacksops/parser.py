@@ -1,7 +1,7 @@
 import argparse
 from . import cfg
 from .commands import (create, update, parameters, resolve, dash,
-                       info)
+                       info, log)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -130,7 +130,7 @@ def get_parser():
     )
     parser.set_defaults(role=None, type=None, jobs=None, pause=None,
                         max_retry_ecs_service_running_count=0,
-                        version=None, template=None)
+                        version=None, template=None, nowait=None)
 
     # common parser
     parser.add_argument(
@@ -268,6 +268,7 @@ def get_parser():
         parents=[
             stack_single_parser],
         help='Show Stack Log')
+    parser_log.set_defaults(func=log)
     parser_log.add_argument(
         '-d', '--timedelta',
         help='How many seconds go back in time from stack last event - '

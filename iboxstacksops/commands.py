@@ -1,4 +1,4 @@
-from . import cfg, istack, dashboard
+from . import cfg, istack, events
 from .tools import concurrent_exec, get_exports
 from .common import *
 
@@ -28,6 +28,12 @@ def parameters():
 def info():
     stacks = istack.get_stacks()
     result = concurrent_exec('info', stacks)
+
+
+def log():
+    name = cfg.stack[0]
+    stack = istack.ibox_stack(name, {})
+    stack.log()
 
 
 def resolve():

@@ -46,6 +46,10 @@ class ibox_stack(object):
         outputs.show(self, 'before')
         parameters.show_override(self)
 
+    def log(self):
+        self.stack = self.cloudformation.Stack(self.name)
+        actions.log(self)
+
     def resolve(self):
         self.exports = cfg.exports
         self.template = template.get_template(self)
