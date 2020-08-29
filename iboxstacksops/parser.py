@@ -128,9 +128,6 @@ def get_parser():
         description='Stacks Operations',
         epilog='Note: options for Stack Params must be put at the end!'
     )
-    parser.set_defaults(role=None, type=None, jobs=None, pause=None,
-                        max_retry_ecs_service_running_count=0,
-                        version=None, template=None, nowait=None)
 
     # common parser
     parser.add_argument(
@@ -288,7 +285,6 @@ def set_cfg(argv):
     args = parser.parse_known_args(argv)
 
     for n, v in vars(args[0]).items():
-        if not hasattr(cfg, n):
-            setattr(cfg, n, v)
+        setattr(cfg, n, v)
 
     cfg.stack_args = args[1]

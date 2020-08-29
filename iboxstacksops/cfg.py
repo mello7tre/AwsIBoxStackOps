@@ -1,3 +1,8 @@
+# parser default cfg
+role = type = jobs = pause = version = template = nowait = None
+max_retry_ecs_service_running_count = 0
+#
+
 MAX_SINGLE_STACKS = 5
 
 STACK_BASE_DATA = [
