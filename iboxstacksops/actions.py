@@ -92,7 +92,7 @@ def update(obj):
     outputs.show_changed(istack)
 
     # update dashboard
-    dashboard.update(self)
+    dashboard.update(istack)
 
     return True
 

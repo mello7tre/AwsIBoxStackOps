@@ -967,4 +967,4 @@ def update(obj):
 
     for dash in response_dash['DashboardEntries']:
         if istack.name in dash['DashboardName']:
-            pass
+            add_stack(istack)

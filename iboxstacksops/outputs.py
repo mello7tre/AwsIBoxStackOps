@@ -10,7 +10,7 @@ def show_changed(istack):
     changed = {}
     for o, v in after.items():
         if o in before and v != before[o]:
-            changed[o] = before[o] + ' => ' + v
+            changed[o] = f'{before[o]} => {v}'
 
     istack.changed['outputs'] = changed
     show(istack, 'changed')
