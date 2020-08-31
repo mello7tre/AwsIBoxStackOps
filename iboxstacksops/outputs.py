@@ -48,13 +48,9 @@ def get(stack):
             outputs[key] = value
 
     for d in cfg.STACK_BASE_DATA:
-        outputs[d] = stack.get(d, None)
-
-    try:
-        outputs['LastUpdatedTime'] = outputs['LastUpdatedTime'].strftime(
-            '%Y-%m-%d %X %Z')
-        # outputs['LastUpdatedTime'] = outputs['LastUpdatedTime'][0:19]
-    except Exception:
-        pass
+        value = stack.get(d, None)
+        if isinstance(value, datetime):
+            value = value.strftime('%Y-%m-%d %X %Z')
+        outputs[d] = value
 
     return outputs
