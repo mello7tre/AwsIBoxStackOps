@@ -953,15 +953,15 @@ def update(obj):
 
     resources.set_changed(istack)
     if cfg.dashboard == 'OnChange':
-        resources = istack.changed['resources']
+        res_changed = istack.changed['resources']
         mode = ''
     elif cfg.dashboard in ['Always', 'Generic']:
-        resources = istack.after['resources']
+        res_changed = istack.after['resources']
         mode = cfg.dashboard
     else:
         return
 
-    if (not resources and
+    if (not res_changed and
             'ScalingPolicyTrackings' not in istack.changed['outputs']):
         return
 
