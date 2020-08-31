@@ -5,7 +5,7 @@ from .log import logger, get_msg_client
 from .common import *
 
 
-def _update_template_param():
+def _update_template_param(istack):
     # try to get role from cfg or use current stack parameter value
     try:
         role = cfg.EnvRole
