@@ -58,7 +58,10 @@ class ibox_stack(object):
 
     def mylog(self, msg, chat=True):
         message = f'{self.name} # {msg}'
-        print(message)
+        try:
+            print(message)
+        except IOError:
+            pass
         # logger.info(message)
         client = get_msg_client()
         if client and chat:
