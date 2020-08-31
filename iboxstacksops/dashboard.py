@@ -948,7 +948,7 @@ def update(obj):
     global istack
     istack = obj
 
-    cw_client = istack.istack.boto3.client('cloudwatch')
+    cw_client = istack.boto3.client('cloudwatch')
     response_dash = cw_client.list_dashboards(DashboardNamePrefix='_')
 
     resources.set_changed(istack)
