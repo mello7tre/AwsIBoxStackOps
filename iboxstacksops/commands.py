@@ -1,5 +1,5 @@
 from . import cfg, istack, events
-from .tools import concurrent_exec, get_exports
+from .tools import concurrent_exec, get_exports, show_confirm
 from .common import *
 
 
@@ -18,6 +18,27 @@ def update():
     result = concurrent_exec('update', stacks)
     if not cfg.dryrun:
         print(result)
+
+
+def delete():
+    stacks = istack.get_stacks()
+    cfg.exports = get_exports()
+    result = concurrent_exec('delete', stacks)
+    print(result)
+
+
+def cancel_update():
+    stacks = istack.get_stacks()
+    cfg.exports = get_exports()
+    result = concurrent_exec('cancel_update', stacks)
+    print(result)
+
+
+def continue_update():
+    stacks = istack.get_stacks()
+    cfg.exports = get_exports()
+    result = concurrent_exec('continue_update', stacks)
+    print(result)
 
 
 def parameters():

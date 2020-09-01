@@ -77,15 +77,15 @@ def create(obj):
     us_args = _get_action_args()
 
     if show_confirm():
-        response = istack.client.update_stack(**us_args)
+        response = istack.client.create_stack(**us_args)
         istack.mylog(f'{json.dumps(response)}\n')
         time.sleep(1)
-        
-        istack.stack = cloudformation.Stack(istack.name)
+
+        istack.stack = istack.cloudformation.Stack(istack.name)
         istack.last_event_timestamp = events.get_last_timestamp(istack)
         _update_waiter(istack.last_event_timestamp)
 
-        return {istack.name: istack.stack.stack_status}
+        return True
 
 
 def update(obj):
@@ -124,6 +124,41 @@ def update(obj):
     dashboard.update(istack)
 
     return True
+
+
+def delete(istack):
+    if show_confirm:
+        istack.last_event_timestamp = events.get_last_timestamp(istack)
+        response = istack.stack.delete()
+        istack.mylog(f'{json.dumps(response)}\n')
+        # -show update status until complete
+        _update_waiter(istack.last_event_timestamp)
+
+        return True
+
+
+def cancel_update(istack):
+    if show_confirm:
+        istack.last_event_timestamp = events.get_last_timestamp(istack)
+        response = istack.stack.cancel_update()
+        istack.mylog(f'{json.dumps(response)}\n')
+        # -show update status until complete
+        _update_waiter(istack.last_event_timestamp)
+
+        return True
+
+
+def continue_update(istack):
+    if show_confirm:
+        istack.last_event_timestamp = events.get_last_timestamp(istack)
+        response = istack.client.continue_update_rollback(
+            StackName=istack.name,
+            ResourcesToSkip=cfg.resources_to_skip)
+        istack.mylog(f'{json.dumps(response)}\n')
+        # -show update status until complete
+        _update_waiter(istack.last_event_timestamp)
+
+        return True
 
 
 def log(obj):

@@ -30,8 +30,7 @@ class ibox_stack(object):
         result = actions.create(self)
 
         if result:
-            self.stack.reload()
-            return self.stack.stack_status
+            return {istack.name: istack.stack.stack_status}
 
     def update(self):
         self.stack = self.cloudformation.Stack(self.name)
@@ -40,6 +39,26 @@ class ibox_stack(object):
         parameters.process(self)
         resolve.process(self)
         result = actions.update(self)
+
+        if result:
+            self.stack.reload()
+            return self.stack.stack_status
+
+    def delete(self):
+        self.stack = self.cloudformation.Stack(self.name)
+        result = actions.delete(self)
+
+    def cancel_update(self):
+        self.stack = self.cloudformation.Stack(self.name)
+        result = actions.cancel_update(self)
+
+        if result:
+            self.stack.reload()
+            return self.stack.stack_status
+
+    def continue_update(self):
+        self.stack = self.cloudformation.Stack(self.name)
+        result = actions.continue_update(self)
 
         if result:
             self.stack.reload()

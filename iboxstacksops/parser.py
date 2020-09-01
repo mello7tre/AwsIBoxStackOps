@@ -1,7 +1,7 @@
 import argparse
 from . import cfg
-from .commands import (create, update, parameters, resolve, dash,
-                       info, log)
+from .commands import (create, update, delete, cancel_update, continue_update,
+                       info, parameters, resolve, log, dash)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -152,8 +152,8 @@ def get_parser():
     # action parser
     action_parser = argparse.ArgumentParser(add_help=False)
 
-    action_parser.add_argument('-y', '--noconfirm',
-                               help='No Confirm',
+    action_parser.add_argument('-y', '--answer_yes',
+                               help='Answer YES (No Confirm)',
                                required=False, action='store_true')
     action_parser.add_argument('-w', '--nowait',
                                help='Do not Wait for action to end',
@@ -212,14 +212,6 @@ def get_parser():
             updcrt_parser,
         ])
 
-    # cancel_update parser
-    parser_cancel = command_subparser.add_parser(
-        'cancel',
-        parents=[
-            action_parser,
-            stack_selection_parser],
-        help='Cancel Update Stack')
-
     # delete parser
     parser_delete = command_subparser.add_parser(
         'delete',
@@ -227,6 +219,16 @@ def get_parser():
             action_parser,
             stack_single_parser],
         help='Delete Stack (WARNING)')
+    parser_delete.set_defaults(func=delete)
+
+    # cancel_update parser
+    parser_cancel = command_subparser.add_parser(
+        'cancel',
+        parents=[
+            action_parser,
+            stack_selection_parser],
+        help='Cancel Update Stack')
+    parser_cancel.set_defaults(func=cancel_update)
 
     # continue_update parser
     parser_continue = command_subparser.add_parser(
@@ -235,8 +237,9 @@ def get_parser():
             action_parser,
             stack_selection_parser],
         help='Continue Update RollBack')
+    parser_continue.set_defaults(func=continue_update)
     parser_continue.add_argument(
-        '--resources_to_Skip', '-R',
+        '--resources_to_skip', '-R',
         help='Resource to Skip',
         default=[], nargs='+')
 
