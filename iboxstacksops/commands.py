@@ -8,7 +8,8 @@ def create():
     stack = istack.ibox_stack(name, {})
     cfg.exports = get_exports()
     result = stack.create()
-    print(r)
+    if result:
+        print(result)
 
 
 def update():
