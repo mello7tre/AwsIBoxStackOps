@@ -1,6 +1,6 @@
 from . import cfg, resources, changeset, events, outputs, dashboard
 from .tags import get_action_tags
-from .tools import IboxErrorECSService
+from .tools import IboxErrorECSService, show_confirm
 from .common import *
 
 
@@ -59,12 +59,41 @@ def _update_waiter(timestamp):
         istack.stack.reload()
 
 
+def create(obj):
+    global istack
+    istack = obj
+
+    stack_tags = [
+        {'Key': 'Env', 'Value': cfg.Env},
+        {'Key': 'EnvRole', 'Value': cfg.EnvRole},
+        {'Key': 'EnvStackVersion', 'Value': cfg.version},
+        {'Key': 'EnvApp1Version', 'Value': cfg.EnvApp1Version},
+    ]
+
+    # set tags
+    istack.action_tags = get_action_tags(istack, stack_tags)
+
+    # get final args for update
+    us_args = _get_action_args()
+
+    if show_confirm():
+        response = istack.client.update_stack(**us_args)
+        istack.mylog(f'{json.dumps(response)}\n')
+        time.sleep(1)
+        
+        istack.stack = cloudformation.Stack(istack.name)
+        istack.last_event_timestamp = events.get_last_timestamp(istack)
+        _update_waiter(istack.last_event_timestamp)
+
+        return {istack.name: istack.stack.stack_status}
+
+
 def update(obj):
     global istack
     istack = obj
 
     # set tags
-    istack.action_tags = get_action_tags(istack)
+    istack.action_tags = get_action_tags(istack, istack.stack.tags)
 
     # get final args for update
     us_args = _get_action_args()

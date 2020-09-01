@@ -40,6 +40,9 @@ def set_update_parser(subparser, parents=[]):
                             '*', 'Modify', 'Delete', 'Replace',
                             'Modify,Delete', 'Modify,Replace',
                             'Delete,Replace'])
+    parser.add_argument('-n', '--nochangeset',
+                        help='No ChangeSet',
+                        required=False, action='store_true')
     parser.add_argument('--dryrun',
                         help='Show changeset and exit',
                         action='store_true')
@@ -149,13 +152,13 @@ def get_parser():
     # action parser
     action_parser = argparse.ArgumentParser(add_help=False)
 
-    action_parser.add_argument('-N', '--nochangeset',
-                               help='No ChangeSet - (No confirmation)',
+    action_parser.add_argument('-y', '--noconfirm',
+                               help='No Confirm',
                                required=False, action='store_true')
-    action_parser.add_argument('-W', '--nowait',
+    action_parser.add_argument('-w', '--nowait',
                                help='Do not Wait for action to end',
                                required=False, action='store_true')
-    action_parser.add_argument('-C', '--slack_channel',
+    action_parser.add_argument('-c', '--slack_channel',
                                help='Slack Channel [_cf_deploy]', nargs='?',
                                const='_cf_deploy', default=False)
 

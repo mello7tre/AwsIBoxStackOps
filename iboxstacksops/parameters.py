@@ -71,11 +71,11 @@ def _set_action_parameters(params_default, params_changed,
             {
                 'ParameterKey': key,
                 'ParameterValue': value,
-            } if istack.create else
+                'UsePreviousValue': use_previous_value,
+            } if istack.stack else
             {
                 'ParameterKey': key,
                 'ParameterValue': value,
-                'UsePreviousValue': use_previous_value,
             }
         )
 
@@ -253,7 +253,7 @@ def process(obj):
 
     # show changes to output
     print('\n')
-    if istack.create and params_default:
+    if not istack.stack and params_default:
         print('DEFAULT - STACK PARAMETERS\n%s\n' % pformat(
             params_default, width=1000000))
 
@@ -261,7 +261,7 @@ def process(obj):
         istack.mylog('CHANGED - STACK PARAMETERS\n%s\n' % pformat(
             params_changed, width=1000000))
 
-    if not istack.create and params_added:
+    if istack.stack and params_added:
         istack.mylog('ADDED - STACK PARAMETERS\n%s\n' % pformat(
             params_added, width=1000000))
 

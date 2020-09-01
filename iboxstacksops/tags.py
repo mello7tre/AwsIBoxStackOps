@@ -1,14 +1,7 @@
 from .common import *
 
 
-def get_action_tags(istack):
-    stack_tags = [
-        {'Key': 'Env', 'Value': cfg.Env},
-        {'Key': 'EnvRole', 'Value': cfg.EnvRole},
-        {'Key': 'EnvStackVersion', 'Value': cfg.version},
-        {'Key': 'EnvApp1Version', 'Value': cfg.EnvApp1Version},
-    ] if istack.create else istack.stack.tags
-
+def get_action_tags(istack, stack_tags):
     # unchanged tags
     tags_default = {}
 

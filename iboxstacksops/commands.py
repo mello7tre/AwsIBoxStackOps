@@ -4,9 +4,10 @@ from .common import *
 
 
 def create():
-    stacks = istack.get_stacks()
+    name = cfg.stack[0]
+    stack = istack.ibox_stack(name, {})
     cfg.exports = get_exports()
-    result = concurrent_exec('create', stacks)
+    result = stack.create()
     print(result)
 
 

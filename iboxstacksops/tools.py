@@ -15,6 +15,8 @@ class IboxErrorECSService(Exception):
 
 
 def show_confirm():
+    if cfg.noconfirm:
+        return True
     print('')
     answer = input('Enter [y] to continue or any other key to exit: ')
     if not answer or answer[0].lower() != 'y':

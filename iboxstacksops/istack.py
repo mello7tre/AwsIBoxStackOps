@@ -17,10 +17,21 @@ class ibox_stack(object):
         # set property
         self.name = name
         self.bdata = base_data
-        self.create = None
+        self.stack = None
 
         for n, v in base_data.items():
             setattr(self, n, v)
+
+    def create(self):
+        self.exports = cfg.exports
+        self.template = template.get_template(self)
+        self.c_parameters = {}
+        parameters.process(self)
+        result = actions.create(self)
+
+        if result:
+            self.stack.reload()
+            return self.stack.stack_status
 
     def update(self):
         self.stack = self.cloudformation.Stack(self.name)
@@ -96,14 +107,6 @@ def get_base_data(stack):
     stack_parameters = parameters.get(stack)
     if stack_parameters:
         data['c_parameters'] = stack_parameters
-
-    # ugly fix
-    try:
-        data['LastUpdatedTime'] = data['LastUpdatedTime'].strftime(
-            '%Y-%m-%d %X %Z')
-        # data['LastUpdatedTime'] = data['LastUpdatedTime'][0:19]
-    except Exception:
-        pass
 
     return data
 
