@@ -316,6 +316,8 @@ def show(obj):
 
     _process_conditions()
     _process_resources()
+    print('')
+    logger.info(f'Resolved: {istack.name}')
     print(yaml.dump(istack.r_resources))
 
 
