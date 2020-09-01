@@ -121,38 +121,35 @@ def update(istack):
 
 
 def delete(istack):
-    if show_confirm:
-        istack.last_event_timestamp = events.get_last_timestamp(istack)
-        response = istack.stack.delete()
-        istack.mylog(f'{json.dumps(response)}\n')
-        # -show update status until complete
-        _update_waiter(istack)
+    istack.last_event_timestamp = events.get_last_timestamp(istack)
+    response = istack.stack.delete()
+    istack.mylog(f'{json.dumps(response)}\n')
+    # -show update status until complete
+    _update_waiter(istack)
 
-        return True
+    return True
 
 
 def cancel_update(istack):
-    if show_confirm:
-        istack.last_event_timestamp = events.get_last_timestamp(istack)
-        response = istack.stack.cancel_update()
-        istack.mylog(f'{json.dumps(response)}\n')
-        # -show update status until complete
-        _update_waiter(istack)
+    istack.last_event_timestamp = events.get_last_timestamp(istack)
+    response = istack.stack.cancel_update()
+    istack.mylog(f'{json.dumps(response)}\n')
+    # -show update status until complete
+    _update_waiter(istack)
 
-        return True
+    return True
 
 
 def continue_update(istack):
-    if show_confirm:
-        istack.last_event_timestamp = events.get_last_timestamp(istack)
-        response = istack.client.continue_update_rollback(
-            StackName=istack.name,
-            ResourcesToSkip=cfg.resources_to_skip)
-        istack.mylog(f'{json.dumps(response)}\n')
-        # -show update status until complete
-        _update_waiter(istack)
+    istack.last_event_timestamp = events.get_last_timestamp(istack)
+    response = istack.client.continue_update_rollback(
+        StackName=istack.name,
+        ResourcesToSkip=cfg.resources_to_skip)
+    istack.mylog(f'{json.dumps(response)}\n')
+    # -show update status until complete
+    _update_waiter(istack)
 
-        return True
+    return True
 
 
 def log(istack):
