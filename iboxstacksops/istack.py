@@ -1,7 +1,7 @@
 from . import (cfg, template, parameters, resolve, actions, events,
                outputs, dashboard)
 from .aws import myboto3
-from .tools import IboxError, get_exports, show_confirm
+from .tools import IboxError, get_exports
 from .log import logger, get_msg_client
 from .common import *
 
@@ -27,11 +27,9 @@ class ibox_stack(object):
         self.template = template.get_template(self)
         self.c_parameters = {}
         parameters.process(self)
-        if show_confirm():
-            result = actions.create(self)
-
-            if result:
-                return {self.name: self.stack.stack_status}
+        result = actions.create(self)
+        if result:
+            return {self.name: self.stack.stack_status}
 
     def update(self):
         self.stack = self.cloudformation.Stack(self.name)

@@ -73,6 +73,9 @@ def create(istack):
     # set tags
     istack.action_tags = get_action_tags(istack, stack_tags)
 
+    if not show_confirm():
+        return
+
     # get final args for update
     us_args = _get_action_args(istack)
 
