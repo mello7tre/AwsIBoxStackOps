@@ -1,7 +1,7 @@
 from . import (cfg, template, parameters, resolve, actions, events,
                outputs, dashboard)
 from .aws import myboto3
-from .tools import IboxError, get_exports
+from .tools import IboxError, get_exports, show_confirm
 from .log import logger, get_msg_client
 from .common import *
 
