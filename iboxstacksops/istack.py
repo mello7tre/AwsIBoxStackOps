@@ -27,7 +27,7 @@ class ibox_stack(object):
         self.template = template.get_template(self)
         self.c_parameters = {}
         parameters.process(self)
-        if show_confirm:
+        if show_confirm():
             result = actions.create(self)
 
             if result:
