@@ -30,7 +30,7 @@ class ibox_stack(object):
         result = actions.create(self)
 
         if result:
-            return {istack.name: istack.stack.stack_status}
+            return {self.name: self.stack.stack_status}
 
     def update(self):
         self.stack = self.cloudformation.Stack(self.name)

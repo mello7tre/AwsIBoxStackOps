@@ -5,7 +5,7 @@ from .common import *
 
 
 # build all args for action
-def _get_action_args():
+def _get_action_args(istack):
     us_args = {}
     us_args['StackName'] = istack.name
     us_args['Parameters'] = istack.action_parameters
@@ -38,8 +38,8 @@ def _get_action_args():
 
 
 # wait update until complete showing events status
-def _update_waiter(timestamp):
-    last_timestamp = timestamp
+def _update_waiter(istack, timestamp=None):
+    last_timestamp = timestamp if timestamp else istack.last_event_timestamp
     istack.stack.reload()
 
     # return without waiting
@@ -59,10 +59,7 @@ def _update_waiter(timestamp):
         istack.stack.reload()
 
 
-def create(obj):
-    global istack
-    istack = obj
-
+def create(istack):
     stack_tags = [
         {'Key': 'Env', 'Value': cfg.Env},
         {'Key': 'EnvRole', 'Value': cfg.EnvRole},
@@ -74,7 +71,7 @@ def create(obj):
     istack.action_tags = get_action_tags(istack, stack_tags)
 
     # get final args for update
-    us_args = _get_action_args()
+    us_args = _get_action_args(istack)
 
     if show_confirm():
         response = istack.client.create_stack(**us_args)
@@ -83,20 +80,17 @@ def create(obj):
 
         istack.stack = istack.cloudformation.Stack(istack.name)
         istack.last_event_timestamp = events.get_last_timestamp(istack)
-        _update_waiter(istack.last_event_timestamp)
+        _update_waiter(istack)
 
         return True
 
 
-def update(obj):
-    global istack
-    istack = obj
-
+def update(istack):
     # set tags
     istack.action_tags = get_action_tags(istack, istack.stack.tags)
 
     # get final args for update
-    us_args = _get_action_args()
+    us_args = _get_action_args(istack)
 
     outputs.show(istack, 'before')
 
@@ -115,7 +109,7 @@ def update(obj):
     time.sleep(1)
 
     # -show update status until complete
-    _update_waiter(istack.last_event_timestamp)
+    _update_waiter(istack)
 
     # show changed outputs
     outputs.show_changed(istack)
@@ -132,7 +126,7 @@ def delete(istack):
         response = istack.stack.delete()
         istack.mylog(f'{json.dumps(response)}\n')
         # -show update status until complete
-        _update_waiter(istack.last_event_timestamp)
+        _update_waiter(istack)
 
         return True
 
@@ -143,7 +137,7 @@ def cancel_update(istack):
         response = istack.stack.cancel_update()
         istack.mylog(f'{json.dumps(response)}\n')
         # -show update status until complete
-        _update_waiter(istack.last_event_timestamp)
+        _update_waiter(istack)
 
         return True
 
@@ -156,21 +150,18 @@ def continue_update(istack):
             ResourcesToSkip=cfg.resources_to_skip)
         istack.mylog(f'{json.dumps(response)}\n')
         # -show update status until complete
-        _update_waiter(istack.last_event_timestamp)
+        _update_waiter(istack)
 
         return True
 
 
-def log(obj):
-    global istack
-    istack = obj
-
+def log(istack):
     last_timestamp = events.get_last_timestamp(istack)
     time_delta = int(cfg.timedelta)
 
     if time_delta == 0:
         time_event = last_timestamp - timedelta(seconds=1)
-        _update_waiter(time_event)
+        _update_waiter(istack, time_event)
     else:
         if time_delta < 30:
             time_delta = time_delta * 86400
