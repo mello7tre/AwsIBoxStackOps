@@ -76,16 +76,15 @@ def create(istack):
     # get final args for update
     us_args = _get_action_args(istack)
 
-    if show_confirm():
-        response = istack.client.create_stack(**us_args)
-        istack.mylog(f'{json.dumps(response)}\n')
-        time.sleep(1)
+    response = istack.client.create_stack(**us_args)
+    istack.mylog(f'{json.dumps(response)}\n')
+    time.sleep(1)
 
-        istack.stack = istack.cloudformation.Stack(istack.name)
-        istack.last_event_timestamp = events.get_last_timestamp(istack)
-        _update_waiter(istack)
+    istack.stack = istack.cloudformation.Stack(istack.name)
+    istack.last_event_timestamp = events.get_last_timestamp(istack)
+    _update_waiter(istack)
 
-        return True
+    return True
 
 
 def update(istack):

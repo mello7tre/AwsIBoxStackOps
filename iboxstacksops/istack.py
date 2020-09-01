@@ -27,10 +27,11 @@ class ibox_stack(object):
         self.template = template.get_template(self)
         self.c_parameters = {}
         parameters.process(self)
-        result = actions.create(self)
+        if show_confirm:
+            result = actions.create(self)
 
-        if result:
-            return {self.name: self.stack.stack_status}
+            if result:
+                return {self.name: self.stack.stack_status}
 
     def update(self):
         self.stack = self.cloudformation.Stack(self.name)
