@@ -204,7 +204,7 @@ def show_override(istack):
     )
 
 
-def process(obj):
+def process(obj, show=True):
     global istack
 
     istack = obj
@@ -250,6 +250,9 @@ def process(obj):
     # istack.action_parameters and istack.r_parameters
     _set_action_parameters(params_default, params_changed,
                            params_added, params_forced_default)
+
+    if not show:
+        return
 
     # show changes to output
     print('\n')

@@ -82,7 +82,7 @@ class ibox_stack(object):
     def resolve(self):
         self.exports = cfg.exports
         self.template = template.get_template(self)
-        parameters.process(self)
+        parameters.process(self, show=None)
         resolve.show(self)
 
     def mylog(self, msg, chat=True):
