@@ -2,6 +2,7 @@ import os
 import yaml
 import json
 import time
+import botocore
 from datetime import datetime, timedelta, tzinfo
 from pprint import pprint, pformat
 

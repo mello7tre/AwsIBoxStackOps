@@ -1,4 +1,3 @@
-import botocore
 from collections import OrderedDict
 from . import cfg
 from .log import logger

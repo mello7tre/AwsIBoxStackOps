@@ -56,7 +56,10 @@ def _update_waiter(istack, timestamp=None):
             do_action_cancel()
 
         time.sleep(5)
-        istack.stack.reload()
+        try:
+            istack.stack.reload()
+        except botocore.exceptions.ClientError as e:
+            print(e)
 
 
 def create(istack):
