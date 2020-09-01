@@ -23,7 +23,8 @@ def update():
 
 def delete():
     stacks = istack.get_stacks()
-    print(f'You are going to DELETE the following stacks:\n{list(stacks.keys)}')
+    print('You are going to DELETE the following stacks:')
+    print(list(stacks.keys()))
     if show_confirm():
         result = concurrent_exec('delete', stacks)
         print(result)
