@@ -253,9 +253,10 @@ def process(obj):
 
     # show changes to output
     print('\n')
-    if not istack.stack and params_default:
-        print('DEFAULT - STACK PARAMETERS\n%s\n' % pformat(
-            params_default, width=1000000))
+    # disabled for now - it make no sense to display them
+    # if not istack.stack and params_default:
+    #     print('DEFAULT - STACK PARAMETERS\n%s\n' % pformat(
+    #         params_default, width=1000000))
 
     if params_changed:
         istack.mylog('CHANGED - STACK PARAMETERS\n%s\n' % pformat(
