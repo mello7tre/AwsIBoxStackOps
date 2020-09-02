@@ -43,7 +43,6 @@ SCALING_POLICY_TRACKINGS_NAMES = {
 }
 RESOURCES_MAP.update(SCALING_POLICY_TRACKINGS_NAMES)
 
-
 STACK_COMPLETE_STATUS = [
     'UPDATE_COMPLETE',
     'CREATE_COMPLETE',
@@ -52,4 +51,14 @@ STACK_COMPLETE_STATUS = [
     'UPDATE_ROLLBACK_FAILED',
     'DELETE_COMPLETE',
     'DELETE_FAILED',
+]
+
+SHOW_TABLE_FIELDS = [
+    'EnvStackVersion',
+    'EnvRole',
+    'StackName',
+    'StackType',
+    'UpdateMode',
+    'EnvApp1Version',
+    'LastUpdatedTime',
 ]

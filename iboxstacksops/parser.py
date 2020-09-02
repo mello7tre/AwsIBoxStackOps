@@ -1,7 +1,7 @@
 import argparse
 from . import cfg
 from .commands import (create, update, delete, cancel_update, continue_update,
-                       info, parameters, resolve, log, dash)
+                       info, parameters, resolve, show_table, log, dash)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -92,6 +92,18 @@ def set_dash_parser(subparser, parents=[]):
     )
 
 
+def set_show_parser(subparser, parents=[]):
+    parser = subparser.add_parser('show',
+                                  parents=parents,
+                                  help='Show Stacks table')
+    parser.set_defaults(func=show_table)
+    parser.add_argument('-F', '--fields', nargs='+',
+                        type=str, default=cfg.SHOW_TABLE_FIELDS)
+    parser.add_argument('-O', '--output',
+                        type=str, default='text',
+                             choices=['text', 'html', 'bare'])
+
+
 def get_template_parser(required=True):
     parser = argparse.ArgumentParser(add_help=False)
 
@@ -138,7 +150,7 @@ def get_parser():
         help='Region', type=str)
     parser.add_argument(
         '--compact',
-        help='Show Output in compact form',
+        help='Display Stacks-Output in compact form',
         action='store_true')
     parser.add_argument(
         '-j', '--jobs',
@@ -279,6 +291,13 @@ def get_parser():
 
     # dashboard parser
     set_dash_parser(
+        command_subparser, [
+            stack_selection_parser,
+        ])
+
+
+    # show parser
+    set_show_parser(
         command_subparser, [
             stack_selection_parser,
         ])

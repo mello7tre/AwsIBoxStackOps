@@ -1,4 +1,4 @@
-from . import cfg, istack, events
+from . import cfg, istack, events, show
 from .tools import concurrent_exec, get_exports, show_confirm
 from .common import *
 
@@ -79,3 +79,9 @@ def dash():
     cfg.dash_name = '_' + '_'.join(cfg.stack)
     cfg.jobs = 1
     result = concurrent_exec('dash', stacks)
+
+
+def show_table():
+    stacks = istack.get_stacks()
+    table = show.table(list(stacks.values()))
+    print(table)
