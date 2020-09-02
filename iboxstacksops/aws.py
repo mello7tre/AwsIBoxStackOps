@@ -3,7 +3,7 @@ from . import cfg
 
 
 class myboto3(object):
-    def __init__(self, istack=None):
+    def __init__(self, istack=None, region=None):
         self.istack = istack
 
         try:
@@ -13,8 +13,9 @@ class myboto3(object):
             self.parallel = None
 
         kwarg_session = {}
-        if cfg.region:
-            kwarg_session['region_name'] = cfg.region
+        region_name = region if region else cfg.region
+        if region_name:
+            kwarg_session['region_name'] = region_name
 
         if not self.parallel:
             try:
@@ -28,29 +29,33 @@ class myboto3(object):
         self.region_name = self.boto3.region_name
 
     def client(self, name):
+        attr_name = f'cli_{self.region_name}_{name}'
+
         if self.parallel:
             obj = self.istack
         else:
             obj = cfg
 
         try:
-            client = getattr(obj, f'cli_{name}')
+            client = getattr(obj, attr_name)
         except Exception:
             client = self.boto3.client(name)
-            setattr(obj, f'cli_{name}', client)
+            setattr(obj, attr_name, client)
 
         return client
 
     def resource(self, name):
+        attr_name = f'res_{self.region_name}_{name}'
+
         if self.parallel:
             obj = self.istack
         else:
             obj = cfg
 
         try:
-            resource = getattr(obj, f'res_{name}')
+            resource = getattr(obj, attr_name)
         except Exception:
             resource = self.boto3.resource(name)
-            setattr(obj, f'res_{name}', resource)
+            setattr(obj, attr_name, resource)
 
         return resource

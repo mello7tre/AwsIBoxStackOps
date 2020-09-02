@@ -39,7 +39,6 @@ def concurrent_exec(command, stacks, cls=istack):
 
     if cfg.jobs == 1 or len(stacks) == 1:
         for s, v in stacks.items():
-            #data[s] = istack.exec_command(s, v, command)
             data[s] = func(s, v, command)
             if list(stacks)[-1] != s:
                 _pause()

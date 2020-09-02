@@ -1,4 +1,4 @@
-from . import cfg, istack, events, show
+from . import cfg, istack, iregion, events, show
 from .tools import concurrent_exec, get_exports, show_confirm
 from .common import *
 
@@ -87,5 +87,18 @@ def show_table():
     print(table)
 
 
-def ssm():
+def ssm_setup():
     stacks = istack.get_stacks()
+    result = concurrent_exec(
+        'ssm_setup', {k: stacks for k in cfg.regions}, iregion)
+    print(result)
+
+
+def ssm_put():
+    stacks = istack.get_stacks()
+    result = concurrent_exec('ssm_put', stacks, iregion)
+
+
+def ssm_show():
+    stacks = istack.get_stacks()
+    result = concurrent_exec('ssm_show', stacks, iregion)

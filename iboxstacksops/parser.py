@@ -1,7 +1,8 @@
 import argparse
 from . import cfg
 from .commands import (create, update, delete, cancel_update, continue_update,
-                       info, parameters, resolve, show_table, log, dash, ssm)
+                       info, parameters, resolve, show_table, log, dash,
+                       ssm_setup, ssm_put, ssm_show)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -109,7 +110,6 @@ def set_ssm_parser(subparser, parents=[]):
         'ssm',
         parents=[],
         help='SSM Parameters override for Stack Replicator')
-    parser.set_defaults(func=ssm)
 
     regions_parser = argparse.ArgumentParser(add_help=False)
     regions_parser.add_argument('-R', '--regions',
@@ -118,15 +118,21 @@ def set_ssm_parser(subparser, parents=[]):
 
     ssm_parser = parser.add_subparsers(title='SSM Command',
                                        required=True, dest='command_ssm')
+
     setup_parser = ssm_parser.add_parser(
         'setup', help='Setup Regions',
         parents=parents + [regions_parser])
+    setup_parser.set_defaults(func=ssm_setup)
+
     put_parser = ssm_parser.add_parser(
         'put', help='Put Parameters',
         parents=parents + [regions_parser])
+    put_parser.set_defaults(func=ssm_put)
+
     show_parser = ssm_parser.add_parser(
         'show', help='Show Regions Distribution',
         parents=parents)
+    show_parser.set_defaults(func=ssm_show)
 
 
 def get_template_parser(required=True):

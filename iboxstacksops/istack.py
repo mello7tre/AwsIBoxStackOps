@@ -7,9 +7,9 @@ from .common import *
 
 
 class ibox_stack(object):
-    def __init__(self, name, base_data):
+    def __init__(self, name, base_data, region=None):
         # aws clients/resource
-        self.boto3 = myboto3(self)
+        self.boto3 = myboto3(self, region)
         self.cloudformation = self.boto3.resource('cloudformation')
         self.s3 = self.boto3.client('s3')
         self.client = self.boto3.client('cloudformation')
@@ -84,6 +84,10 @@ class ibox_stack(object):
         self.template = template.get_template(self)
         parameters.process(self, show=None)
         resolve.show(self)
+
+    def ssm(self, func, param):
+        self.ssm = self.boto3.client('ssm')
+        func(self, param)
 
     def mylog(self, msg, chat=True):
         message = f'{self.name} # {msg}'

@@ -1,7 +1,10 @@
-#!/usr/bin/env python3
+from . import cfg, istack
+from .log import logger
+from .common import *
+
 SSM_PATH = '/ibox'
 
-
+"""
 def get_args():
     parser = argparse.ArgumentParser(
         description='SSM Parameters override for Stack Replicator',
@@ -104,22 +107,34 @@ def set_region(region):
     myboto3 = boto3.session.Session(**kwarg_session)
     ssm = myboto3.client('ssm')
 
+"""
+def put_ssm_parameter(iobj, param):
+    resp = iobj.ssm.put_parameter(
+        Name=param['name'], Description=param['desc'],
+        Value=param['value'], Type='String',
+        Overwrite=True, Tier='Standard')
 
-def do_action_setup():
-    param = {}
-    if fargs.stack:
-        param['name'] = f'{SSM_PATH}/{fargs.stack}/regions'
-    else:
-        param['name'] = f'{SSM_PATH}/regions'
-
-    param['desc'] = 'Regions where to replicate'
-    param['value'] = ' '.join(fargs.regions)
-
-    for r in fargs.regions:
-        set_region(r)
-        put_ssm_parameter(param)
+    #logger.info(f'{iregion.name} replicate in:\n{cfg.regions}')
 
 
+def setup(iregion):
+    param = {
+        'name': f'{SSM_PATH}/regions',
+        'desc': 'Regions where to replicate',
+        'value': ' '.join(cfg.regions)
+    }
+    param['name'] = f'{SSM_PATH}/regions'
+
+    put_ssm_parameter(iregion, param)
+
+    for n,_ in iregion.bdata.items():
+        param['name'] = f'{SSM_PATH}/{n}/regions'
+        stack = istack.ibox_stack(n, {}, iregion.name)
+        stack.ssm(put_ssm_parameter, param)
+
+    return cfg.regions
+
+"""
 def get_setupped_regions():
     set_region(current_region)
     try:
@@ -190,3 +205,6 @@ def do_action_show():
 
     table.align['Parameter'] = 'l'
     print(table)
+
+
+"""
