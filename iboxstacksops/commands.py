@@ -15,7 +15,7 @@ def create():
 def update():
     stacks = istack.get_stacks()
     cfg.exports = get_exports()
-    if len(stacks) > 1 and (cfg.role or cfg.type):
+    if len(stacks) > 1 and (cfg.role or cfg.type) and not cfg.dryrun:
         print('You are going to UPDATE the following stacks:')
         print(list(stacks.keys()))
         if not show_confirm():
