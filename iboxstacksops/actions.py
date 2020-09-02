@@ -100,7 +100,7 @@ def update(istack):
     outputs.show(istack, 'before')
 
     # -if using changeset ...
-    if not cfg.nochangeset and len(cfg.stack) == 1:
+    if not cfg.nochangeset and len(cfg.stacks) == 1:
         changeset_ok = changeset.process(istack, us_args)
         if not changeset_ok:
             return
