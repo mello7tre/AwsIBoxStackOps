@@ -1,7 +1,7 @@
 import argparse
 from . import cfg
 from .commands import (create, update, delete, cancel_update, continue_update,
-                       info, parameters, resolve, show_table, log, dash)
+                       info, parameters, resolve, show_table, log, dash, ssm)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -101,7 +101,32 @@ def set_show_parser(subparser, parents=[]):
                         type=str, default=cfg.SHOW_TABLE_FIELDS)
     parser.add_argument('-O', '--output',
                         type=str, default='text',
-                             choices=['text', 'html', 'bare'])
+                        choices=['text', 'html', 'bare'])
+
+
+def set_ssm_parser(subparser, parents=[]):
+    parser = subparser.add_parser(
+        'ssm',
+        parents=[],
+        help='SSM Parameters override for Stack Replicator')
+    parser.set_defaults(func=ssm)
+
+    regions_parser = argparse.ArgumentParser(add_help=False)
+    regions_parser.add_argument('-R', '--regions',
+                                help='Regions', type=str,
+                                required=True, default=[], nargs='+')
+
+    ssm_parser = parser.add_subparsers(title='SSM Command',
+                                       required=True, dest='command_ssm')
+    setup_parser = ssm_parser.add_parser(
+        'setup', help='Setup Regions',
+        parents=parents + [regions_parser])
+    put_parser = ssm_parser.add_parser(
+        'put', help='Put Parameters',
+        parents=parents + [regions_parser])
+    show_parser = ssm_parser.add_parser(
+        'show', help='Show Regions Distribution',
+        parents=parents)
 
 
 def get_template_parser(required=True):
@@ -187,7 +212,6 @@ def get_parser():
         '-s', '--stack', nargs=1,
         help='Stack Names space separated',
         required=True, type=str, default=[])
-
     # update create parser
     updcrt_parser = argparse.ArgumentParser(add_help=False)
 
@@ -295,9 +319,14 @@ def get_parser():
             stack_selection_parser,
         ])
 
-
     # show parser
     set_show_parser(
+        command_subparser, [
+            stack_selection_parser,
+        ])
+
+    # ssm parser
+    set_ssm_parser(
         command_subparser, [
             stack_selection_parser,
         ])

@@ -85,3 +85,7 @@ def show_table():
     stacks = istack.get_stacks()
     table = show.table(list(stacks.values()))
     print(table)
+
+
+def ssm():
+    stacks = istack.get_stacks()
