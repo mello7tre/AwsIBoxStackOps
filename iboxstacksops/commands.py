@@ -15,7 +15,11 @@ def create():
 def update():
     stacks = istack.get_stacks()
     cfg.exports = get_exports()
-    # pprint(stacks)
+    if len(stacks) > 1 and (cfg.role or cfg.type):
+        print('You are going to UPDATE the following stacks:')
+        print(list(stacks.keys()))
+        if not show_confirm():
+            return
     result = concurrent_exec('update', stacks)
     if not cfg.dryrun:
         print(result)
@@ -25,9 +29,10 @@ def delete():
     stacks = istack.get_stacks()
     print('You are going to DELETE the following stacks:')
     print(list(stacks.keys()))
-    if show_confirm():
-        result = concurrent_exec('delete', stacks)
-        print(result)
+    if not show_confirm():
+        return
+    result = concurrent_exec('delete', stacks)
+    print(result)
 
 
 def cancel_update():
