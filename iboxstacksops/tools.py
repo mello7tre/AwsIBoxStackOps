@@ -33,12 +33,14 @@ def _pause():
         time.sleep(cfg.pause)
 
 
-def concurrent_exec(command, stacks):
+def concurrent_exec(command, stacks, cls=istack):
     data = {}
+    func = getattr(cls, 'exec_command')
 
     if cfg.jobs == 1 or len(stacks) == 1:
         for s, v in stacks.items():
-            data[s] = istack.exec_command(s, v, command)
+            #data[s] = istack.exec_command(s, v, command)
+            data[s] = func(s, v, command)
             if list(stacks)[-1] != s:
                 _pause()
     else:
@@ -48,7 +50,7 @@ def concurrent_exec(command, stacks):
         with concurrent.futures.ProcessPoolExecutor(
                 max_workers=jobs) as executor:
             future_to_stack = {
-                executor.submit(istack.exec_command, s, v, command): s
+                executor.submit(func, s, v, command): s
                 for s, v in stacks.items()}
             for future in concurrent.futures.as_completed(future_to_stack):
                 stack = future_to_stack[future]
