@@ -9,9 +9,7 @@ class ibox_region(object):
     def __init__(self, name, base_data):
         # aws clients/resource
         self.boto3 = myboto3(self, name)
-        self.cloudformation = self.boto3.resource('cloudformation')
-        self.s3 = self.boto3.client('s3')
-        self.client = self.boto3.client('cloudformation')
+        self.ssm = self.boto3.client('ssm')
 
         # set property
         self.name = name
@@ -21,8 +19,11 @@ class ibox_region(object):
             setattr(self, n, v)
 
     def ssm_setup(self):
-        self.ssm = self.boto3.client('ssm')
         result = ssm.setup(self)
+        return result
+
+    def ssm_get(self):
+        result = ssm.get(self)
         return result
 
     def mylog(self, msg):
