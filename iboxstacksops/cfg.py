@@ -62,3 +62,5 @@ SHOW_TABLE_FIELDS = [
     'EnvApp1Version',
     'LastUpdatedTime',
 ]
+
+SSM_BASE_PATH = '/ibox'

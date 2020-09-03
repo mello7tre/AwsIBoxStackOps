@@ -1,10 +1,9 @@
 from prettytable import PrettyTable, ALL as ptALL
 from . import cfg, istack
 from .aws import myboto3
+from .tools import concurrent_exec
 from .log import logger
 from .common import *
-
-SSM_PATH = '/ibox'
 
 
 def _get_ssm_parameter(ssm, param):
@@ -18,14 +17,14 @@ def get_setupped_regions(stack=None):
     ssm = boto3.client('ssm')
     
     try:
-        rgs = _get_ssm_parameter(ssm, f'{SSM_PATH}/{stack}/regions')
+        rgs = _get_ssm_parameter(ssm, f'{cfg.SSM_BASE_PATH}/{stack}/regions')
     except Exception as e:
-        rgs = _get_ssm_parameter(ssm, f'{SSM_PATH}/regions')
+        rgs = _get_ssm_parameter(ssm, f'{cfg.SSM_BASE_PATH}/regions')
 
     return rgs.split()
 
 
-def get_ssm_parameters_by_path(iregion, path):
+def get_by_path(iregion, path):
     params = {}
     paginator = iregion.ssm.get_paginator('get_parameters_by_path')
     response_iterator = paginator.paginate(Path=path)
@@ -41,44 +40,57 @@ def get_ssm_parameters_by_path(iregion, path):
     return params
 
 
-def put_ssm_parameter(iobj, param):
+def put_parameter(iobj, param):
     resp = iobj.ssm.put_parameter(
         Name=param['name'], Description=param['desc'],
         Value=param['value'], Type='String',
         Overwrite=True, Tier='Standard')
 
-    #logger.info(f'{iregion.name} replicate in:\n{cfg.regions}')
-
 
 def setup(iregion):
     param = {
-        'name': f'{SSM_PATH}/regions',
+        'name': f'{cfg.SSM_BASE_PATH}/regions',
         'desc': 'Regions where to replicate',
         'value': ' '.join(cfg.regions)
     }
 
+    result = {}
     if len(iregion.bdata) == 0:
-        put_ssm_parameter(iregion, param)
-        resp = cfg.regions
+        put_parameter(iregion, param)
+        result = cfg.regions
     else:
-        resp = {}
+        stack_data = {}
         for n,_ in iregion.bdata.items():
-            param['name'] = f'{SSM_PATH}/{n}/regions'
-            stack = istack.ibox_stack(n, {}, iregion.name)
+            s_param = dict(param)
+            s_param['name'] = f'{cfg.SSM_BASE_PATH}/{n}/regions'
+            stack_data[n] = s_param
+        
+        result = concurrent_exec('ssm', stack_data, istack, iregion.name)
+
+    return result
+
+
+def put(iregion, stacks):
+    for n, _ in iregion.bdata.items():
+        stack = istack.ibox_stack(n, {}, iregion.name)
+
+        for p, v in vars(cfg.stack_args).items():
+            if not v:
+                continue
+            param = {}
+            param['name'] = f'{cfg.SSM_BASE_PATH}/{n}/{p}'
+            param['desc'] = getattr(cfg, p).help
+            param['value'] = v
+
+            logger.info(
+                f'Inserting SSM Parameter: {p} '
+                f'for stack: {n} in region:  {iregion.name}')
             stack.ssm(put_ssm_parameter, param)
-            resp[n] = cfg.regions
-
-    return resp
-
-
-def get(iregion):
-    return get_ssm_parameters_by_path(iregion, SSM_PATH)
 
 
 def show(data):
     params_map = {}
     params_keys = []
-    first_column = None
     table = PrettyTable()
     table.padding_width = 1
 
@@ -113,7 +125,7 @@ def do_action_put():
         if not v:
             continue
         param = {}
-        param['name'] = f'{SSM_PATH}/{fargs.stack}/{n}'
+        param['name'] = f'{cfg.SSM_BASE_PATH}/{fargs.stack}/{n}'
         param['desc'] = istack.parameters[n]['Description']
         param['value'] = v
 

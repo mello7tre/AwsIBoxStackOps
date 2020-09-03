@@ -23,7 +23,11 @@ class ibox_region(object):
         return result
 
     def ssm_get(self):
-        result = ssm.get(self)
+        result = ssm.get_by_path(self, cfg.SSM_BASE_PATH)
+        return result
+
+    def ssm_put(self):
+        result = ssm.put(self)
         return result
 
     def mylog(self, msg):
@@ -34,7 +38,7 @@ class ibox_region(object):
             pass
 
 
-def exec_command(name, data, command):
+def exec_command(name, data, command, region=None):
     iregion = ibox_region(name, data)
 
     return getattr(iregion, command)()

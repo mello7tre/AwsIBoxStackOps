@@ -1,5 +1,5 @@
 from . import (cfg, template, parameters, resolve, actions, events,
-               outputs, dashboard)
+               outputs, dashboard, ssm)
 from .aws import myboto3
 from .tools import IboxError, get_exports
 from .log import logger, get_msg_client
@@ -85,9 +85,9 @@ class ibox_stack(object):
         parameters.process(self, show=None)
         resolve.show(self)
 
-    def ssm(self, func, param):
+    def ssm(self):
         self.ssm = self.boto3.client('ssm')
-        func(self, param)
+        ssm.put_parameter(self, self.bdata)
 
     def mylog(self, msg, chat=True):
         message = f'{self.name} # {msg}'
@@ -108,8 +108,8 @@ class ibox_stack(object):
         dashboard.add_stack(self)
 
 
-def exec_command(name, data, command):
-    istack = ibox_stack(name, data)
+def exec_command(name, data, command, region=None):
+    istack = ibox_stack(name, data, region)
 
     return getattr(istack, command)()
 

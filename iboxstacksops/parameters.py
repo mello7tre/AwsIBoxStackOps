@@ -150,7 +150,7 @@ def get_stack_parameter_parser(istack):
     return parser
 
 
-def _add_stack_params_as_args(parser):
+def add_stack_params_as_args(parser):
     args = parser.parse_args(cfg.stack_args)
 
     for n, v in vars(args).items():
@@ -215,7 +215,7 @@ def process(obj, show=True):
     parser = get_stack_parameter_parser(istack)
 
     # add stack parameters as argparse args and update cfg
-    _add_stack_params_as_args(parser)
+    add_stack_params_as_args(parser)
 
     # if template include EnvShort params force its value based on the Env one
     if 'EnvShort' in istack.parameters:
