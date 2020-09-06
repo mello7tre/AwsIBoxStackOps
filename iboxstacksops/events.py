@@ -1,6 +1,5 @@
 from calendar import timegm
 from . import cfg
-from .tools import IboxErrorECSService
 from .common import *
 
 

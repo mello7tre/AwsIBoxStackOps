@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from iboxstacksops.parser import set_cfg
-from iboxstacksops.tools import IboxError
+from iboxstacksops.common import IboxError
 from iboxstacksops.log import logger
 from iboxstacksops import cfg
 

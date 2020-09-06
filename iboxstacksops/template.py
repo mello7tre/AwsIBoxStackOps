@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from . import cfg
-from .tools import IboxError
 from .log import logger, get_msg_client
 from .common import *
 

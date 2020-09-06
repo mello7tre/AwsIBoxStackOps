@@ -152,7 +152,6 @@ def get_stack_parameter_parser(istack):
 
 def add_stack_params_as_args(parser):
     args = parser.parse_args(cfg.stack_args)
-    cfg.stack_parsed_args = args
 
     for n, v in vars(args).items():
         if not hasattr(cfg, n):

@@ -7,6 +7,14 @@ from datetime import datetime, timedelta, tzinfo
 from pprint import pprint, pformat
 
 
+class IboxError(Exception):                                                     
+    pass                                                                        
+                                                                                    
+                                                                                    
+class IboxErrorECSService(Exception):                                           
+    pass
+
+
 CLF_YAML_FUNC = (
     '!Ref',
     '!GetAtt',

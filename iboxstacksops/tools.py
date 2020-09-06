@@ -2,16 +2,9 @@ import time
 import concurrent.futures
 from traceback import print_exc
 import boto3 as base_boto3
-from . import cfg, i_stack
+from . import cfg
 from .log import logger
-
-
-class IboxError(Exception):
-    pass
-
-
-class IboxErrorECSService(Exception):
-    pass
+from .common import *
 
 
 def show_confirm():
@@ -33,8 +26,7 @@ def _pause():
         time.sleep(cfg.pause)
 
 
-def concurrent_exec(command, stacks, smodule=i_stack,
-                    region=None, **kwargs):
+def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
     data = {}
     func = getattr(smodule, 'exec_command')
 
@@ -92,3 +84,10 @@ def stack_resource_to_dict(stack):
             out[prop] = getattr(stack, n)
 
     return out
+
+
+def smodule_to_class(smodule, cls):
+    for n in dir(smodule):
+        if not n.startswith('_'):
+            value = getattr(smodule, n)
+            setattr(cls, n, value)
