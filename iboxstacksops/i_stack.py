@@ -63,12 +63,15 @@ class ibox_stack(object):
             self.stack.reload()
             return self.stack.stack_status
 
-    def parameters(self):
+    def parameters(self, check=None):
         self.exports = cfg.exports
         self.template = template.get_template(self)
         parser = parameters.get_stack_parameter_parser(self)
-        logger.info(f'{self.name} Parameters:')
-        parser.print_help()
+        if check:
+            parameters.add_stack_params_as_args(parser)
+        else:
+            logger.info(f'{self.name} Parameters:')
+            parser.print_help()
 
     def info(self):
         self.stack = self.cloudformation.Stack(self.name)
@@ -108,10 +111,10 @@ class ibox_stack(object):
         dashboard.add_stack(self)
 
 
-def exec_command(name, data, command, region=None):
+def exec_command(name, data, command, region=None, **kwargs):
     istack = ibox_stack(name, data, region)
 
-    return getattr(istack, command)()
+    return getattr(istack, command)(**kwargs)
 
 
 def get_base_data(stack):

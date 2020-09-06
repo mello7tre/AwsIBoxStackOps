@@ -38,7 +38,7 @@ class ibox_region(object):
             pass
 
 
-def exec_command(name, data, command, region=None):
+def exec_command(name, data, command, region=None, **kwargs):
     iregion = ibox_region(name, data)
 
-    return getattr(iregion, command)()
+    return getattr(iregion, command)(**kwargs)

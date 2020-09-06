@@ -2,7 +2,7 @@ import time
 import concurrent.futures
 from traceback import print_exc
 import boto3 as base_boto3
-from . import cfg, istack
+from . import cfg, i_stack
 from .log import logger
 
 
@@ -33,13 +33,14 @@ def _pause():
         time.sleep(cfg.pause)
 
 
-def concurrent_exec(command, stacks, cls=istack, region=None):
+def concurrent_exec(command, stacks, smodule=i_stack,
+                    region=None, **kwargs):
     data = {}
-    func = getattr(cls, 'exec_command')
+    func = getattr(smodule, 'exec_command')
 
     if cfg.jobs == 1 or len(stacks) == 1:
         for s, v in stacks.items():
-            data[s] = func(s, v, command, region)
+            data[s] = func(s, v, command, region, **kwargs)
             if list(stacks)[-1] != s:
                 _pause()
     else:
@@ -49,7 +50,7 @@ def concurrent_exec(command, stacks, cls=istack, region=None):
         with concurrent.futures.ProcessPoolExecutor(
                 max_workers=jobs) as executor:
             future_to_stack = {
-                executor.submit(func, s, v, command, region): s
+                executor.submit(func, s, v, command, region, **kwargs): s
                 for s, v in stacks.items()}
             for future in concurrent.futures.as_completed(future_to_stack):
                 stack = future_to_stack[future]

@@ -1,5 +1,5 @@
 from prettytable import PrettyTable, ALL as ptALL
-from . import cfg, istack
+from . import cfg, i_stack
 from .aws import myboto3
 from .tools import concurrent_exec
 from .log import logger
@@ -27,7 +27,7 @@ def get_setupped_regions(stack=None):
 def get_by_path(iregion, path):
     params = {}
     paginator = iregion.ssm.get_paginator('get_parameters_by_path')
-    response_iterator = paginator.paginate(Path=path)
+    response_iterator = paginator.paginate(Path=path, Recursive=True)
 
     for page in response_iterator:
         for p in page['Parameters']:
@@ -65,14 +65,14 @@ def setup(iregion):
             s_param['name'] = f'{cfg.SSM_BASE_PATH}/{n}/regions'
             stack_data[n] = s_param
         
-        result = concurrent_exec('ssm', stack_data, istack, iregion.name)
+        result = concurrent_exec('ssm', stack_data, region=iregion.name)
 
     return result
 
 
 def put(iregion, stacks):
     for n, _ in iregion.bdata.items():
-        stack = istack.ibox_stack(n, {}, iregion.name)
+        stack = i_stack.ibox_stack(n, {}, iregion.name)
 
         for p, v in vars(cfg.stack_args).items():
             if not v:

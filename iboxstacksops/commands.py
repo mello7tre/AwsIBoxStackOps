@@ -1,11 +1,11 @@
-from . import cfg, istack, iregion, events, show, ssm
+from . import cfg, i_stack, i_region, events, show, ssm
 from .tools import concurrent_exec, get_exports, show_confirm
 from .common import *
 
 
 def create():
     name = cfg.stack[0]
-    stack = istack.ibox_stack(name, {})
+    stack = i_stack.ibox_stack(name, {})
     cfg.exports = get_exports()
     result = stack.create()
     if result:
@@ -13,7 +13,7 @@ def create():
 
 
 def update():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     cfg.stacks = list(stacks.keys())
     cfg.exports = get_exports()
     if len(stacks) > 1 and (cfg.role or cfg.type) and not cfg.dryrun:
@@ -27,7 +27,7 @@ def update():
 
 
 def delete():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     cfg.stacks = list(stacks.keys())
     print('You are going to DELETE the following stacks:')
     print(cfg.stacks)
@@ -38,74 +38,77 @@ def delete():
 
 
 def cancel_update():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     cfg.exports = get_exports()
     result = concurrent_exec('cancel_update', stacks)
     print(result)
 
 
 def continue_update():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     cfg.exports = get_exports()
     result = concurrent_exec('continue_update', stacks)
     print(result)
 
 
 def parameters():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     cfg.exports = get_exports()
     result = concurrent_exec('parameters', stacks)
 
 
 def info():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     result = concurrent_exec('info', stacks)
 
 
 def log():
     name = cfg.stack[0]
-    stack = istack.ibox_stack(name, {})
+    stack = i_stack.ibox_stack(name, {})
     stack.log()
 
 
 def resolve():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     cfg.exports = get_exports()
     result = concurrent_exec('resolve', stacks)
 
 
 def dash():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     cfg.dash_name = '_' + '_'.join(cfg.stack)
     cfg.jobs = 1
     result = concurrent_exec('dash', stacks)
 
 
 def show_table():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     table = show.table(list(stacks.values()))
     print(table)
 
 
 def ssm_setup():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     result = concurrent_exec(
-        'ssm_setup', {k: stacks for k in cfg.regions}, iregion)
+        'ssm_setup', {k: stacks for k in cfg.regions}, smodule=i_region)
     pprint(result)
 
 
 def ssm_put():
-    stacks = istack.get_stacks()
+    stacks = i_stack.get_stacks()
     cfg.exports = get_exports()
+    concurrent_exec('parameters', stacks, **{'check': True})
     regions = ssm.get_setupped_regions()
     w_regions = cfg.regions if cfg.regions else regions
+    return
     result = concurrent_exec(
-        'ssm_put', {k: stacks for k in w_regions if k in regions}, iregion)
+        'ssm_put', {k: stacks for k in w_regions if k in regions},
+        smodule=i_region)
 
 
 def ssm_show():
     regions = ssm.get_setupped_regions()
     result = concurrent_exec(
-        'ssm_get', {k: {} for k in regions}, iregion)
+        'ssm_get', {k: {} for k in regions}, smodule=i_region)
     result = ssm.show(result)
     print(result)
