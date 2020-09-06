@@ -6,10 +6,6 @@ from .tools import smodule_to_class
 from .common import *
 
 
-class stack_cfg(object):
-    pass
-
-
 class ibox_stack(object):
     def __init__(self, name, base_data, region=None):
         # aws clients/resource
@@ -29,8 +25,7 @@ class ibox_stack(object):
         # self.cfg should contains parsed args
         # inside method processed by istack (in a parallel way)
         # i need to set attr to self.cfg and not to the common cfg
-        self.cfg = stack_cfg()
-        smodule_to_class(cfg, self.cfg)
+        self.cfg = smodule_to_class(cfg)
 
     def create(self):
         self.exports = cfg.exports

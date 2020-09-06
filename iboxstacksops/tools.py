@@ -86,8 +86,14 @@ def stack_resource_to_dict(stack):
     return out
 
 
-def smodule_to_class(smodule, cls):
+def smodule_to_class(smodule):
+    class obj(object):
+        pass
+
+    cls = obj()
     for n in dir(smodule):
         if not n.startswith('_'):
             value = getattr(smodule, n)
             setattr(cls, n, value)
+
+    return cls
