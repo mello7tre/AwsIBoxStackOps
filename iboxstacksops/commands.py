@@ -100,7 +100,6 @@ def ssm_put():
     concurrent_exec('parameters', stacks, **{'check': True})
     regions = ssm.get_setupped_regions()
     w_regions = cfg.regions if cfg.regions else regions
-    return
     result = concurrent_exec(
         'ssm_put', {k: stacks for k in w_regions if k in regions},
         smodule=i_region)

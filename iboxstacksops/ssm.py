@@ -70,22 +70,20 @@ def setup(iregion):
     return result
 
 
-def put(iregion, stacks):
-    for n, _ in iregion.bdata.items():
-        stack = i_stack.ibox_stack(n, {}, iregion.name)
+def put(iregion):
+    for p, v in vars(cfg.stack_parsed_args).items():
+        if not v:
+            continue
+        stack_data = {}
+        for n,_ in iregion.bdata.items():
+            s_param = {
+                'name': f'{cfg.SSM_BASE_PATH}/{n}/{p}',
+                'desc': getattr(cfg, p).help,
+                'value': v,
+            }
+            stack_data[n] = s_param
 
-        for p, v in vars(cfg.stack_args).items():
-            if not v:
-                continue
-            param = {}
-            param['name'] = f'{cfg.SSM_BASE_PATH}/{n}/{p}'
-            param['desc'] = getattr(cfg, p).help
-            param['value'] = v
-
-            logger.info(
-                f'Inserting SSM Parameter: {p} '
-                f'for stack: {n} in region:  {iregion.name}')
-            stack.ssm(put_ssm_parameter, param)
+        result = concurrent_exec('ssm', stack_data, region=iregion.name)
 
 
 def show(data):

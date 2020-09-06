@@ -721,6 +721,8 @@ def set_vars_for_metrics(res):
                 }
             ])
 
+        return
+
     # EC2
     if all(n in res for n in ['AutoScalingGroupName']):
         # CPU
