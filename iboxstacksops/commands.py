@@ -97,11 +97,12 @@ def ssm_setup():
 def ssm_put():
     w_stacks = stacks.get()
     cfg.exports = get_exports()
-    concurrent_exec('parameters', w_stacks, istack, **{'check': True})
+    stacks_params = concurrent_exec(
+        'parameters', w_stacks, i_stack, **{'check': True})
     regions = ssm.get_setupped_regions()
     w_regions = cfg.regions if cfg.regions else regions
     result = concurrent_exec(
-        'ssm_put', {k: w_stacks for k in w_regions if k in regions},
+        'ssm_put', {k: stacks_params for k in w_regions if k in regions},
         i_region)
 
 

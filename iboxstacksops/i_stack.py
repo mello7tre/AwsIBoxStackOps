@@ -19,8 +19,9 @@ class ibox_stack(object):
         self.bdata = base_data
         self.stack = None
 
-        for n, v in base_data.items():
-            setattr(self, n, v)
+        if isinstance(base_data, dict):
+            for n, v in base_data.items():
+                setattr(self, n, v)
 
         # self.cfg should contains parsed args
         # inside method processed by istack (in a parallel way)
@@ -74,6 +75,7 @@ class ibox_stack(object):
         parser = parameters.get_stack_parameter_parser(self)
         if check:
             parameters.add_stack_params_as_args(self, parser)
+            return self.stack_parsed_args, self.parameters
         else:
             logger.info(f'{self.name} Parameters:')
             parser.print_help()
@@ -95,7 +97,7 @@ class ibox_stack(object):
 
     def ssm(self):
         self.ssm = self.boto3.client('ssm')
-        ssm.put_parameter(self, self.bdata)
+        ssm.put_parameters(self, self.bdata)
 
     def mylog(self, msg, chat=True):
         message = f'{self.name} # {msg}'

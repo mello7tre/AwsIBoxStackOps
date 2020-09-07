@@ -40,11 +40,11 @@ def get_by_path(iregion, path):
     return params
 
 
-def put_parameter(iobj, param):
-    resp = iobj.ssm.put_parameter(
-        Name=param['name'], Description=param['desc'],
-        Value=param['value'], Type='String',
-        Overwrite=True, Tier='Standard')
+def put_parameters(iobj, params):
+    for p in params:
+        resp = iobj.ssm.put_parameter(
+            Name=p['name'], Description=p['desc'], Value=p['value'],
+            Type='String', Overwrite=True, Tier='Standard')
 
 
 def setup(iregion):
@@ -56,34 +56,41 @@ def setup(iregion):
 
     result = {}
     if len(iregion.bdata) == 0:
-        put_parameter(iregion, param)
+        put_parameters(iregion, [param])
         result = cfg.regions
     else:
         stack_data = {}
         for n, _ in iregion.bdata.items():
             s_param = dict(param)
             s_param['name'] = f'{cfg.SSM_BASE_PATH}/{n}/regions'
-            stack_data[n] = s_param
+            stack_data[n] = [s_param]
 
-        result = concurrent_exec('ssm', stack_data, region=iregion.name)
+        result = concurrent_exec(
+            'ssm', stack_data, i_stack, region=iregion.name)
 
     return result
 
 
 def put(iregion):
-    for p, v in vars(cfg.stack_parsed_args).items():
-        if not v:
-            continue
-        stack_data = {}
-        for n, _ in iregion.bdata.items():
+    stacks_data = {}
+    for s, v in iregion.bdata.items():
+        stack = s
+        args = v[0]
+        parameters = v[1]
+        ssm_params = []
+        for p, v in vars(args).items():
+            if not v:
+                continue
             s_param = {
-                'name': f'{cfg.SSM_BASE_PATH}/{n}/{p}',
-                'desc': getattr(cfg, p).help,
+                'name': f'{cfg.SSM_BASE_PATH}/{s}/{p}',
+                'desc': parameters[p]['Description'],
                 'value': v,
             }
-            stack_data[n] = s_param
+            ssm_params.append(s_param)
+        stacks_data[s] = ssm_params
 
-        result = concurrent_exec('ssm', stack_data, region=iregion.name)
+    result = concurrent_exec(
+        'ssm', stacks_data, i_stack, region=iregion.name)
 
 
 def show(data):

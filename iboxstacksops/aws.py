@@ -31,7 +31,7 @@ class myboto3(object):
     def client(self, name):
         attr_name = f'cli_{self.region_name}_{name}'
 
-        if self.parallel:
+        if self.parallel and self.istack:
             obj = self.istack
         else:
             obj = cfg
