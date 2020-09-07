@@ -73,7 +73,7 @@ class ibox_stack(object):
         self.template = template.get_template(self)
         parser = parameters.get_stack_parameter_parser(self)
         if check:
-            parameters.add_stack_params_as_args(parser)
+            parameters.add_stack_params_as_args(self, parser)
         else:
             logger.info(f'{self.name} Parameters:')
             parser.print_help()

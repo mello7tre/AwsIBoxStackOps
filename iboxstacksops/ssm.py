@@ -15,7 +15,7 @@ def _get_ssm_parameter(ssm, param):
 def get_setupped_regions(stack=None):
     boto3 = myboto3()
     ssm = boto3.client('ssm')
-    
+
     try:
         rgs = _get_ssm_parameter(ssm, f'{cfg.SSM_BASE_PATH}/{stack}/regions')
     except Exception as e:
@@ -60,11 +60,11 @@ def setup(iregion):
         result = cfg.regions
     else:
         stack_data = {}
-        for n,_ in iregion.bdata.items():
+        for n, _ in iregion.bdata.items():
             s_param = dict(param)
             s_param['name'] = f'{cfg.SSM_BASE_PATH}/{n}/regions'
             stack_data[n] = s_param
-        
+
         result = concurrent_exec('ssm', stack_data, region=iregion.name)
 
     return result
@@ -75,7 +75,7 @@ def put(iregion):
         if not v:
             continue
         stack_data = {}
-        for n,_ in iregion.bdata.items():
+        for n, _ in iregion.bdata.items():
             s_param = {
                 'name': f'{cfg.SSM_BASE_PATH}/{n}/{p}',
                 'desc': getattr(cfg, p).help,
@@ -109,42 +109,5 @@ def show(data):
         table.add_column(r, params_values)
 
     table.align['Parameter'] = 'l'
-    
+
     return table
-
-
-"""
-def do_action_put():
-    get_parameters_from_template()
-    regions = get_setupped_regions()
-    params = []
-
-    for n, v in vars(istack.p_args).items():
-        if not v:
-            continue
-        param = {}
-        param['name'] = f'{cfg.SSM_BASE_PATH}/{fargs.stack}/{n}'
-        param['desc'] = istack.parameters[n]['Description']
-        param['value'] = v
-
-        params.append(param)
-
-    # check if is passed as param a list of regions
-    # and use them, but only for regions that do alredy exist
-    # in ssm regions parameter.
-    if fargs.regions:
-        rgs = []
-        for r in fargs.regions:
-            if r in regions:
-                rgs.append(r)
-        regions = rgs
-
-    for r in regions:
-        logger.info(f'Inserting SSM Parameters in {r}')
-        set_region(r)
-        for p in params:
-            put_ssm_parameter(p)
-"""
-
-
-

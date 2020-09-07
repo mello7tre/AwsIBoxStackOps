@@ -1,4 +1,4 @@
-from . import cfg, resources, changeset, events, outputs, dashboard
+from . import resources, changeset, events, outputs, dashboard
 from .tags import get_action_tags
 from .tools import show_confirm
 from .common import *
@@ -17,11 +17,11 @@ def _get_action_args(istack):
     ]
 
     # sns topic
-    us_args['NotificationARNs'] = cfg.topics
+    us_args['NotificationARNs'] = istack.cfg.topics
 
     # Handle policy during update
-    if hasattr(cfg, 'policy') and cfg.policy:
-        action = ['"Update:%s"' % a for a in cfg.policy.split(',')]
+    if hasattr(istack.cfg, 'policy') and istack.cfg.policy:
+        action = ['"Update:%s"' % a for a in istack.cfg.policy.split(',')]
         action = '[%s]' % ','.join(action)
         us_args['StackPolicyDuringUpdateBody'] = (
             '{"Statement" : [{"Effect" : "Allow",'
@@ -30,7 +30,7 @@ def _get_action_args(istack):
     if istack.template_from == 'Current':
         us_args['UsePreviousTemplate'] = True
     if istack.template_from == 'S3':
-        us_args['TemplateURL'] = cfg.template
+        us_args['TemplateURL'] = istack.cfg.template
     if istack.template_from == 'File':
         us_args['TemplateBody'] = json.dumps(istack.template)
 
@@ -43,10 +43,10 @@ def _update_waiter(istack, timestamp=None):
     istack.stack.reload()
 
     # return without waiting
-    if cfg.nowait:
+    if istack.cfg.nowait:
         return
 
-    while istack.stack.stack_status not in cfg.STACK_COMPLETE_STATUS:
+    while istack.stack.stack_status not in istack.cfg.STACK_COMPLETE_STATUS:
         try:
             last_timestamp = events.show(istack, last_timestamp)
 
@@ -64,10 +64,10 @@ def _update_waiter(istack, timestamp=None):
 
 def create(istack):
     stack_tags = [
-        {'Key': 'Env', 'Value': cfg.Env},
-        {'Key': 'EnvRole', 'Value': cfg.EnvRole},
-        {'Key': 'EnvStackVersion', 'Value': cfg.version},
-        {'Key': 'EnvApp1Version', 'Value': cfg.EnvApp1Version},
+        {'Key': 'Env', 'Value': istack.cfg.Env},
+        {'Key': 'EnvRole', 'Value': istack.cfg.EnvRole},
+        {'Key': 'EnvStackVersion', 'Value': istack.cfg.version},
+        {'Key': 'EnvApp1Version', 'Value': istack.cfg.EnvApp1Version},
     ]
 
     # set tags
@@ -100,7 +100,7 @@ def update(istack):
     outputs.show(istack, 'before')
 
     # -if using changeset ...
-    if not cfg.nochangeset and len(cfg.stacks) == 1:
+    if not istack.cfg.nochangeset and len(istack.cfg.stacks) == 1:
         changeset_ok = changeset.process(istack, us_args)
         if not changeset_ok:
             return
@@ -149,7 +149,7 @@ def continue_update(istack):
     istack.last_event_timestamp = events.get_last_timestamp(istack)
     response = istack.client.continue_update_rollback(
         StackName=istack.name,
-        ResourcesToSkip=cfg.resources_to_skip)
+        ResourcesToSkip=istack.cfg.resources_to_skip)
     istack.mylog(f'{json.dumps(response)}\n')
     # -show update status until complete
     _update_waiter(istack)
@@ -159,7 +159,7 @@ def continue_update(istack):
 
 def log(istack):
     last_timestamp = events.get_last_timestamp(istack)
-    time_delta = int(cfg.timedelta)
+    time_delta = int(istack.cfg.timedelta)
 
     if time_delta == 0:
         time_event = last_timestamp - timedelta(seconds=1)

@@ -20,13 +20,11 @@ def show_changed(istack):
 def show(istack, when):
     outputs = getattr(istack, when)['outputs']
 
-    istack.mylog(
-        '%s - STACK OUTPUTS\n%s\n' % (when.upper(), pformat(
-            outputs,
-            width=80 if (
-                cfg.command == 'info' and not cfg.compact) else 1000000
-        ))
-    )
+    out_with = 80 if (istack.cfg.command == 'info'
+                      and not istack.cfg.compact) else 1000000
+    out_output = pformat(outputs, width=out_with)
+
+    istack.mylog(f'{when.upper()} - STACK OUTPUTS\n{out_output}\n')
 
 
 def get(stack):

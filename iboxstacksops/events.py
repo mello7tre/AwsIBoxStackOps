@@ -1,5 +1,4 @@
 from calendar import timegm
-from . import cfg
 from .common import *
 
 
@@ -70,7 +69,7 @@ def _show_service_update(event, timedelta):
             )
 
             # is update stuck ?
-            max_retry = cfg.max_retry_ecs_service_running_count
+            max_retry = istack.cfg.max_retry_ecs_service_running_count
             if max_retry > 0 and stuck_n > max_retry:
                 istack.last_event_timestamp = event.timestamp
                 raise IboxErrorECSService(
@@ -115,7 +114,8 @@ def show(obj, timestamp, timedelta='0'):
             event.logical_resource_id == 'Service'
             and event.resource_status == 'UPDATE_IN_PROGRESS'
             and event.resource_status_reason is None
-            and istack.stack.stack_status not in cfg.STACK_COMPLETE_STATUS
+            and istack.stack.stack_status not in
+                istack.cfg.STACK_COMPLETE_STATUS
         ):
             _show_service_update(event, timedelta)
 

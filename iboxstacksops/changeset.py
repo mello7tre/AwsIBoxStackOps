@@ -1,12 +1,11 @@
 from prettytable import PrettyTable, ALL as ptALL
-from . import cfg
 from .tools import show_confirm
 from .common import *
 
 
 # create changeset
 def _do_changeset(us_args):
-    if not cfg.showtags:
+    if not istack.cfg.showtags:
         # keep existing stack.tags so that they are excluded from changeset
         # (not the new prepared ones)
         us_args['Tags'] = istack.stack.tags
@@ -76,7 +75,7 @@ def _show_changeset_changes(changes):
     fileds_ex = ['Replacement', 'Scope', 'Target', 'CausingEntity']
     fields.extend(fileds_ex)
     table = PrettyTable()
-    if cfg.nodetails:
+    if istack.cfg.nodetails:
         fields.remove('Target')
         fields.remove('CausingEntity')
     table.field_names = fields
@@ -146,7 +145,7 @@ def process(obj, us_args):
     # -delete changeset
     _delete_changeset(changeset_id)
 
-    if not cfg.dryrun and show_confirm():
+    if not istack.cfg.dryrun and show_confirm():
         # _execute_changeset(changeset_id)
         return True
     else:

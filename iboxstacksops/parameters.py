@@ -1,12 +1,11 @@
 import argparse
-from . import cfg
 from .log import logger
 from .common import *
 
 
 # set final parameters values to use for exectuing commands -
 # istack.action_parameters and istack.r_parameters
-def _set_action_parameters(params_default, params_changed,
+def _set_action_parameters(istack, params_default, params_changed,
                            params_added, params_forced_default):
     for key in sorted(istack.parameters):
         v = istack.parameters[key]
@@ -20,9 +19,9 @@ def _set_action_parameters(params_default, params_changed,
         # get list of AllowedValues
         allowed_values = v['AllowedValues'] if 'AllowedValues' in v else []
 
-        # check if key exist as cfg param/attr too
+        # check if key exist as istack.cfg param/attr too
         try:
-            cfg_value = getattr(cfg, key)
+            cfg_value = getattr(istack.cfg, key)
             in_cfg = True if cfg_value is not None else None
         except Exception:
             in_cfg = None
@@ -85,9 +84,9 @@ def _set_action_parameters(params_default, params_changed,
 
 
 # force EnvShort param value based on Env one
-def _force_envshort():
+def _force_envshort(istack):
     # use arg if exist or use current value
-    env = cfg.Env if cfg.Env else istack.c_parameters['Env']
+    env = istack.cfg.Env if istack.cfg.Env else istack.c_parameters['Env']
 
     env_envshort_dict = {
         'dev': 'dev',
@@ -96,7 +95,7 @@ def _force_envshort():
         'prod': 'prd',
     }
 
-    cfg.EnvShort = env_envshort_dict[env]
+    istack.cfg.EnvShort = env_envshort_dict[env]
 
 
 # if template in s3, force version to the one in his url part
@@ -104,11 +103,11 @@ def _force_envshort():
 # Ex for version=master-2ed25d5:
 # https://eu-west-1-ibox-app-repository.s3.amazonaws.com
 # /ibox/master-2ed25d5/templates/cache-portal.json
-def _do_envstackversion_from_s3_template():
-    template = cfg.template
-    cfg.version = template.split("/")[4] if str(
+def _do_envstackversion_from_s3_template(istack):
+    template = istack.cfg.template
+    istack.cfg.version = template.split("/")[4] if str(
         template).startswith('https') else '1'
-    cfg.EnvStackVersion = cfg.version
+    istack.cfg.EnvStackVersion = istack.cfg.version
 
 
 def get_stack_parameter_parser(istack):
@@ -150,28 +149,12 @@ def get_stack_parameter_parser(istack):
     return parser
 
 
-def add_stack_params_as_args(parser):
-    args = parser.parse_args(cfg.stack_args)
+def add_stack_params_as_args(istack, parser):
+    args = parser.parse_args(istack.cfg.stack_args)
 
     for n, v in vars(args).items():
-        if not hasattr(cfg, n):
-            setattr(cfg, n, v)
-
-
-def get(stack):
-    try:
-        s_parameters = stack['Parameters']
-    except Exception as e:
-        pass
-    else:
-        parameters = {}
-        for parameter in s_parameters:
-            key = parameter['ParameterKey']
-            value = parameter.get(
-                'ResolvedValue', parameter.get('ParameterValue'))
-            parameters[key] = value
-
-        return parameters
+        if not hasattr(istack.cfg, n):
+            setattr(istack.cfg, n, v)
 
 
 def show_override(istack):
@@ -194,36 +177,29 @@ def show_override(istack):
         ):
             params[name] = value
 
-    istack.mylog(
-        'CURRENT NOT DEFAULT - STACK PARAMETERS\n%s\n' %
-        pformat(
-            params,
-            width=80 if (
-                cfg.command == 'info' and not cfg.compact) else 1000000
-        )
-    )
+    out_with = 80 if (istack.cfg.command == 'info'
+                      and not istack.cfg.compact) else 1000000
+    out_params = pformat(params, width=out_with)
+
+    istack.mylog(f'CURRENT NOT DEFAULT - STACK PARAMETERS\n{out_params}\n')
 
 
-def process(obj, show=True):
-    global istack
-
-    istack = obj
-
+def process(istack, show=True):
     logger.info('Processing Parameters')
 
     # get stack parameter parser
     parser = get_stack_parameter_parser(istack)
 
-    # add stack parameters as argparse args and update cfg
-    add_stack_params_as_args(parser)
+    # add stack parameters as argparse args and update istack.cfg
+    add_stack_params_as_args(istack, parser)
 
     # if template include EnvShort params force its value based on the Env one
     if 'EnvShort' in istack.parameters:
-        _force_envshort()
+        _force_envshort(istack)
 
     # if using template option set/force EnvStackVersion
-    if cfg.template:
-        _do_envstackversion_from_s3_template()
+    if istack.cfg.template:
+        _do_envstackversion_from_s3_template(istack)
 
     # unchanged stack params
     params_default = {}
@@ -248,7 +224,7 @@ def process(obj, show=True):
 
     # set final parameters values to use for exectuing action -
     # istack.action_parameters and istack.r_parameters
-    _set_action_parameters(params_default, params_changed,
+    _set_action_parameters(istack, params_default, params_changed,
                            params_added, params_forced_default)
 
     if not show:
@@ -272,3 +248,19 @@ def process(obj, show=True):
     if params_forced_default:
         istack.mylog('FORCED TO DEFAULT - STACK PARAMETERS\n%s\n' % pformat(
             params_forced_default, width=1000000))
+
+
+def get(stack):
+    try:
+        s_parameters = stack['Parameters']
+    except Exception as e:
+        pass
+    else:
+        parameters = {}
+        for parameter in s_parameters:
+            key = parameter['ParameterKey']
+            value = parameter.get(
+                'ResolvedValue', parameter.get('ParameterValue'))
+            parameters[key] = value
+
+        return parameters

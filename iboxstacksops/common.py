@@ -7,11 +7,11 @@ from datetime import datetime, timedelta, tzinfo
 from pprint import pprint, pformat
 
 
-class IboxError(Exception):                                                     
-    pass                                                                        
-                                                                                    
-                                                                                    
-class IboxErrorECSService(Exception):                                           
+class IboxError(Exception):
+    pass
+
+
+class IboxErrorECSService(Exception):
     pass
 
 

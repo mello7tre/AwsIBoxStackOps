@@ -1,6 +1,3 @@
-from . import cfg
-
-
 def set_changed(istack):
     istack.after['resources'] = get(istack)
 
@@ -17,7 +14,7 @@ def set_changed(istack):
 
 def get(istack, dash=None):
     resources = {}
-    res_list = list(cfg.RESOURCES_MAP.keys())
+    res_list = list(istack.cfg.RESOURCES_MAP.keys())
 
     paginator = istack.client.get_paginator('list_stack_resources')
     response_iterator = paginator.paginate(StackName=istack.name)
@@ -48,8 +45,8 @@ def get(istack, dash=None):
                         'LoadBalancerApplicationInternal']:
                     res_pid = '/'.join(res_pid.split('/')[1:4])
 
-                if dash and cfg.RESOURCES_MAP[res_lid]:
-                    res_lid = cfg.RESOURCES_MAP[res_lid]
+                if dash and istack.cfg.RESOURCES_MAP[res_lid]:
+                    res_lid = istack.cfg.RESOURCES_MAP[res_lid]
 
                 resources[res_lid] = res_pid
 
