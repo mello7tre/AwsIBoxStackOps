@@ -104,11 +104,13 @@ def ssm_put():
     result = concurrent_exec(
         'ssm_put', {k: stacks_params for k in w_regions if k in regions},
         i_region)
+    pprint(result)
 
 
 def ssm_show():
+    w_stacks = stacks.get()
     regions = ssm.get_setupped_regions()
     result = concurrent_exec(
-        'ssm_get', {k: {} for k in regions}, i_region)
+        'ssm_get', {k: w_stacks for k in regions}, i_region)
     result = ssm.show(result)
     print(result)

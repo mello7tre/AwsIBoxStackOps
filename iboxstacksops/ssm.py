@@ -35,7 +35,9 @@ def get_by_path(iregion, path):
             name = '/'.join(name.split('/')[-2:])
             value = p['Value']
 
-            params[name] = value
+            stacks_list = tuple(iregion.bdata.keys())
+            if not stacks_list or name.startswith(stacks_list):
+                params[name] = value
 
     return params
 
@@ -92,6 +94,7 @@ def put(iregion):
     result = concurrent_exec(
         'ssm', stacks_data, i_stack, region=iregion.name)
 
+    return result
 
 def show(data):
     params_map = {}
