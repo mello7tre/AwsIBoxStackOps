@@ -1,53 +1,11 @@
-#!/usr/bin/env python3
-import json
-import logging
-import boto3
-import botocore
-import argparse
-import time
-import os
-import sys
-from pprint import pprint, pformat
-from datetime import datetime
+from . import resources
+from .common import *
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 AlarmCPUHighThreshold = 60
 AlarmCPULowThreshold = 30
 ScalingPolicyTrackingsCpuBaseLabel = 'ScalingPolicyTrackingsCpu'
 ScalingPolicyTrackingsCpuValue = 80
-
-ScalingPolicyTrackingsNames = {
-    'ScalingPolicyTrackings1': None,
-    'ScalingPolicyTrackingsASCpu': 'ScalingPolicyTrackings1',
-    'ScalingPolicyTrackingsASCustom': 'ScalingPolicyTrackings1',
-    'ScalingPolicyTrackingsAPPCpu': 'ScalingPolicyTrackings1',
-    'ScalingPolicyTrackingsAPPCustom': 'ScalingPolicyTrackings1',
-}
-
-map_resources_on_dashboard = {
-    'AutoScalingGroup': 'AutoScalingGroupName',
-    'AutoScalingGroupSpot': 'AutoScalingGroupSpotName',
-    'TargetGroup': 'TargetGroup',
-    'TargetGroupExternal': 'TargetGroupExternal',
-    'TargetGroupInternal': 'TargetGroupInternal',
-    'Service': 'ServiceName',
-    'ServiceExternal': 'ServiceName',
-    'ServiceInternal': 'ServiceName',
-    'LoadBalancerClassicExternal': 'LoadBalancerNameExternal',
-    'LoadBalancerClassicInternal': 'LoadBalancerNameInternal',
-    'LoadBalancerApplicationExternal': 'LoadBalancerExternal',
-    'LoadBalancerApplicationInternal': 'LoadBalancerInternal',
-    'ScalableTarget': 'ClusterName',
-    'ListenerHttpsExternalRules1': 'LoadBalancerExternal',
-    'ListenerHttpsExternalRules2': 'LoadBalancerExternal',
-    'ListenerHttpInternalRules1': 'LoadBalancerInternal',
-    'AlarmCPUHigh': None,
-    'AlarmCPULow': None,
-}
-
-map_resources_on_dashboard.update(ScalingPolicyTrackingsNames)
 
 widget_width = {
     'stack': 12,
@@ -81,73 +39,9 @@ widget_annotations_type = 'tracking'
 widget_label = {}
 
 
-# parse main argumets
-def get_parser():
-    parser = argparse.ArgumentParser(description='ADD STACK TO DASHBOARD')
-    parser.add_argument('--stack', nargs='+',
-                        help='Stack Names space separated',
-                        required=True, type=str)
-    parser.add_argument(
-        '--statistic',
-        help='Statistic to use for metrics',
-        choices=['Average', 'Maximum', 'Minimum'],
-        default='Average'
-    )
-    parser.add_argument(
-        '--statisticresponse',
-        help='Statistic to use for response time metrics',
-        choices=[
-            'Average', 'p99', 'p95', 'p90',
-            'p50', 'p10', 'Maximum', 'Minimum'],
-        default='p95',
-    )
-    parser.add_argument('--debug', help='Show json Dash', action='store_true')
-    parser.add_argument('--silent', help='Silent mode', action='store_true')
-    parser.add_argument(
-        '--vertical',
-        help='Add vertical annotation at creation time, '
-             'and optionally specify fill mode',
-        nargs='?',
-        choices=['before', 'after'],
-        const=True,
-        default=False,
-    )
-    return parser
-
-
-# get current stack EnvRole
-def get_stack_role(stack):
-    role = ''
-    for p in stack.parameters:
-        if p['ParameterKey'] == 'EnvRole':
-            role = p['ParameterValue']
-    return role
-
-
-# get stack outputs as dict
-def get_stack_outputs(stack):
-    stack_outputs = stack.outputs
-    outputs_current = {}
-    for output in stack_outputs:
-        key = output['OutputKey']
-        value = output['OutputValue']
-        outputs_current[key] = value
-
-    return outputs_current
-
-
-# build dict(key: value) from argparse arg objects
-def do_args(args):
-    myargs = {}
-    for property, value in vars(args).items():
-        if value is not None:
-            myargs[property] = value
-    return myargs
-
-
 def get_alarm(res):
     alarms = {}
-    cloudwatch = boto3.resource('cloudwatch')
+    cloudwatch = istack.boto3.resource('cloudwatch')
     for a in ['AlarmCPUHigh', 'AlarmCPULow']:
         alarm = cloudwatch.Alarm(res[a])
         alarms[a] = alarm.threshold
@@ -160,7 +54,7 @@ def get_policy_ec2(res):
     AutoScalingGroupName = ('AutoScalingGroupSpotName' if
                             'AutoScalingGroupSpotName' in res else
                             'AutoScalingGroupName')
-    client = boto3.client('autoscaling')
+    client = istack.boto3.client('autoscaling')
     response = client.describe_policies(
         AutoScalingGroupName=res[AutoScalingGroupName],
         PolicyNames=[polname],
@@ -172,9 +66,9 @@ def get_policy_ec2(res):
 def get_policy_ecs(res):
     resname = '/'.join(
         res['ScalingPolicyTrackings1'].split('/')[2:5]).split(':')[0]
-    client = boto3.client('application-autoscaling')
+    client = istack.boto3.client('application-autoscaling')
     response = client.describe_scaling_policies(
-        PolicyNames=list(ScalingPolicyTrackingsNames.keys()),
+        PolicyNames=list(istack.cfg.SCALING_POLICY_TRACKINGS_NAMES.keys()),
         ResourceId=resname,
         ServiceNamespace='ecs',
     )
@@ -220,7 +114,7 @@ def set_widget_annotations(res):
     if 'AlarmCPUHigh' and 'AlarmCPULow' in res:
         AlarmCPUHighThreshold, AlarmCPULowThreshold = get_alarm(res)
         widget_annotations_type = 'step'
-    if any(k in res for k in ScalingPolicyTrackingsNames):
+    if any(k in res for k in istack.cfg.SCALING_POLICY_TRACKINGS_NAMES):
         ScalingPolicyTrackingsCpuValue, ScalingPolicyTrackingsCpuLabel = (
             get_policy(res))
         widget_annotations_type = 'tracking'
@@ -250,43 +144,6 @@ def set_widget_annotations(res):
     }
 
 
-def get_resources(client, stack, dash=True):
-    resources = {}
-    res_list = list(map_resources_on_dashboard.keys())
-    stack_resources = client.describe_stack_resources(
-        StackName=stack.stack_name)['StackResources']
-    for res in stack_resources:
-        res_lid = res['LogicalResourceId']
-        if res_lid in res_list:
-            res_pid = res['PhysicalResourceId']
-            if res_pid.startswith('arn'):
-                res_pid = res_pid.split(':', 5)[5]
-            if res_lid in [
-                'ListenerHttpsExternalRules1',
-                'ListenerHttpsExternalRules2',
-                'ListenerHttpInternalRules1'
-            ]:
-                res_pid = '/'.join(res_pid.split('/')[1:4])
-            if res_lid == 'ScalableTarget':
-                res_pid = res_pid.split('/')[1]
-            if res_lid == 'Service':
-                res_pid_arr = res_pid.split('/')
-                if len(res_pid_arr) == 3:
-                    res_pid = res_pid_arr[2]
-                else:
-                    res_pid = res_pid_arr[1]
-            if res_lid in [
-                    'LoadBalancerApplicationExternal',
-                    'LoadBalancerApplicationInternal']:
-                res_pid = '/'.join(res_pid.split('/')[1:4])
-
-            if dash and map_resources_on_dashboard[res_lid]:
-                res_lid = map_resources_on_dashboard[res_lid]
-            resources[res_lid] = res_pid
-
-    return resources
-
-
 def do_label_exist(w_label, w_metrics):
     for index, metric in enumerate(w_metrics):
         if isinstance(metric, dict) and w_label in list(metric.values()):
@@ -308,7 +165,7 @@ def do_insert_metrics(label, metric, widget, msg):
         else:
             widget_metrics[label_index] = metric
             out_msg = '-- Updated'
-        if not args_dict['silent']:
+        if not istack.cfg.silent:
             print(f'\tMetrics: {msg} {out_msg}')
 
 
@@ -337,8 +194,8 @@ def add_annotations(w, atype):
             'label': '',
             'value': value_now,
         }
-        if args_dict['vertical'] in ['after', 'before']:
-            w_ann_vertical['fill'] = args_dict['vertical']
+        if istack.cfg.vertical in ['after', 'before']:
+            w_ann_vertical['fill'] = istack.cfg.vertical
 
         # vertical annotation not present
         if 'vertical' not in annotations:
@@ -372,7 +229,7 @@ def get_widget_base(wtype, wlist, windex, title, w):
             'view': 'timeSeries',
             'stacked': False,
             'metrics': [],
-            'region': region,
+            'region': istack.boto3.region_name,
             'title': title,
             'period': 300,
         }
@@ -390,11 +247,11 @@ def get_widget_base(wtype, wlist, windex, title, w):
     else:
         out_msg = 'Added'
 
-    if args_dict['vertical']:
+    if istack.cfg.vertical:
         add_annotations(widget, 'vertical')
 
     w.insert(windex, widget)
-    if not args_dict['silent']:
+    if not istack.cfg.silent:
         print(f'Widget:{title} {out_msg}')
 
     return widget
@@ -413,7 +270,7 @@ def update_widget_stack_properties(widget, res):
         do_insert_metrics(
             widget_label['response_internal'], m, widget, 'Response Internal')
 
-    add_annotations(widget, stack_type)
+    add_annotations(widget, istack.StackType)
 
 
 def update_widget_5xx_properties(widget, res):
@@ -489,10 +346,10 @@ def update_widget_network_properties(widget, res):
         do_insert_metrics(widget_label['netout'], m, widget, 'NetworkOUT')
 
 
-def update_dashboard(stack, res, dashboard_name):
-    cw = boto3.client('cloudwatch')
+def update_dashboard(res, dashboard_name):
+    cw = istack.boto3.client('cloudwatch')
 
-    if not args_dict['silent']:
+    if not istack.cfg.silent:
         print(dashboard_name)
 
     try:
@@ -574,7 +431,7 @@ def update_dashboard(stack, res, dashboard_name):
 
     # END Widgets
 
-    if args_dict['debug']:
+    if istack.cfg.debug:
         print(json.dumps(dash, indent=4))
         return
 
@@ -594,7 +451,7 @@ def update_dashboard(stack, res, dashboard_name):
 
 
 def mylog(string):
-    print(stack_name + ' # ' + string)
+    print(istack.name + ' # ' + string)
 
 
 def set_vars_for_metrics(res):
@@ -610,15 +467,15 @@ def set_vars_for_metrics(res):
     global metrics
 
     # update widget_title and widget_label
-    widget_title['role'] = f'{role}.{stack_name}'
+    widget_title['role'] = f'{istack.EnvRole}.{istack.name}'
     title_role = widget_title['role']
 
-    widget_label['cpu'] = 'Cpu - %s' % args_dict['statistic']
-    widget_label['response'] = 'Response - %s' % args_dict['statisticresponse']
-    widget_label['response_external'] = 'Response External - %s' % (
-        args_dict['statisticresponse'])
-    widget_label['response_internal'] = 'Response Internal - %s' % (
-        args_dict['statisticresponse'])
+    widget_label['cpu'] = f'Cpu - {istack.cfg.statistic}'
+    widget_label['response'] = f'Response - {istack.cfg.statisticresponse}'
+    widget_label['response_external'] = (
+        f'Response External - {istack.cfg.statisticresponse}')
+    widget_label['response_internal'] = (
+        f'Response Internal - {istack.cfg.statisticresponse}')
     widget_label['5xx'] = f'{title_role} 5xx'
     widget_label['4xx'] = f'{title_role} 4xx'
     widget_label['500_elb'] = f'{title_role} 500'
@@ -701,7 +558,7 @@ def set_vars_for_metrics(res):
             res['ClusterName'],
             {
                 'period': 300,
-                'stat': args_dict['statistic'],
+                'stat': istack.cfg.statistic,
                 'label': widget_label['cpu']
             }
         ])
@@ -732,7 +589,7 @@ def set_vars_for_metrics(res):
                 res['LoadBalancerExternal'],
                 {
                     'period': 300,
-                    'stat': args_dict['statisticresponse'],
+                    'stat': istack.cfg.statisticresponse,
                     'yAxis': 'right',
                     'label': widget_label['response_external']
                 }
@@ -747,7 +604,7 @@ def set_vars_for_metrics(res):
                 res['LoadBalancerExternal'],
                 {
                     'label': widget_label['healthy'],
-                    'stat': args_dict['statistic'],
+                    'stat': istack.cfg.statistic,
                     'yAxis': 'right'
                 }
             ])
@@ -804,7 +661,7 @@ def set_vars_for_metrics(res):
                 res['LoadBalancerInternal'],
                 {
                     'period': 300,
-                    'stat': args_dict['statisticresponse'],
+                    'stat': istack.cfg.statisticresponse,
                     'yAxis': 'right',
                     'label': widget_label['response_internal']
                 }
@@ -819,7 +676,7 @@ def set_vars_for_metrics(res):
                 res['LoadBalancerInternal'],
                 {
                     'label': widget_label['healthy'],
-                    'stat': args_dict['statistic'],
+                    'stat': istack.cfg.statistic,
                     'yAxis': 'right'
                 }
             ])
@@ -864,6 +721,8 @@ def set_vars_for_metrics(res):
                 }
             ])
 
+        return
+
     # EC2
     if all(n in res for n in ['AutoScalingGroupName']):
         # CPU
@@ -874,7 +733,7 @@ def set_vars_for_metrics(res):
             res['AutoScalingGroupName'],
             {
                 'period': 300,
-                'stat': args_dict['statistic'],
+                'stat': istack.cfg.statistic,
                 'label': widget_label['cpu']
             }
         ])
@@ -899,7 +758,7 @@ def set_vars_for_metrics(res):
                 res['AutoScalingGroupSpotName'],
                 {
                     'period': 300,
-                    'stat': args_dict['statistic'],
+                    'stat': istack.cfg.statistic,
                     'label': widget_label['cpu'] + 'Spot'
                 }
             ])
@@ -911,7 +770,7 @@ def set_vars_for_metrics(res):
             res['AutoScalingGroupName'],
             {
                 'label': widget_label['healthy'],
-                'stat': args_dict['statistic'],
+                'stat': istack.cfg.statistic,
                 'yAxis': 'right'
             }
         ])
@@ -954,7 +813,7 @@ def set_vars_for_metrics(res):
                 res[res_name],
                 {
                     'period': 300,
-                    'stat': args_dict['statisticresponse'],
+                    'stat': istack.cfg.statisticresponse,
                     'yAxis': 'right',
                     'label': widget_label[f'response_{label}']
                 }
@@ -1069,54 +928,45 @@ def set_vars_for_metrics(res):
                 ])
 
 
-# main program function
-def add_stack(cloudformation, client, dash_stack, dashboard):
-    global stack_name
-    global role
-    global stack_type
+def add_stack(obj):
+    global istack
+    istack = obj
 
-    # -set global var stack_name used for logging with stack name prepended
-    stack_name = dash_stack
-    # -get stack to update
-    stack = cloudformation.Stack(stack_name)
-    # -get current EnvRole for stack
-    role = get_stack_role(stack)
-    # get stack outputs before update
-    stack_outputs_before = get_stack_outputs(stack)
-    stack_type = stack_outputs_before['StackType']
-    # get stack resources before update
-    resources = get_resources(client, stack)
+    # get stack resources
+    res = resources.get(istack, dash=True)
     # set widget annotations for alarms threshold
     # or policy tracking target value
-    set_widget_annotations(resources)
-    if not args_dict['silent']:
-        pprint(resources)
+    set_widget_annotations(res)
+    if not istack.cfg.silent:
+        pprint(res)
     # set global vars used later for metrics
-    set_vars_for_metrics(resources)
+    set_vars_for_metrics(res)
     print('')
     # update dashboards
-    update_dashboard(stack, resources, dashboard)
+    update_dashboard(res, istack.cfg.dash_name)
 
 
-def main(args):
-    global region
-    global args_dict
+def update(obj):
+    global istack
+    istack = obj
 
-    session = boto3.session.Session()
-    region = session.region_name
-    cloudformation = boto3.resource('cloudformation')
-    client = boto3.client('cloudformation')
-    # -build dict of main program args/options
-    args_dict = do_args(args)
-    stacks = args_dict['stack']
-    dashboard = '_' + '_'.join(stacks)
+    cw_client = istack.boto3.client('cloudwatch')
+    response_dash = cw_client.list_dashboards(DashboardNamePrefix='_')
 
-    for stack in stacks:
-        add_stack(cloudformation, client, stack, dashboard)
+    resources.set_changed(istack)
+    if istack.cfg.dashboard == 'OnChange':
+        res_changed = istack.changed['resources']
+        mode = ''
+    elif istack.cfg.dashboard in ['Always', 'Generic']:
+        res_changed = istack.after['resources']
+        mode = istack.cfg.dashboard
+    else:
+        return
 
+    if (not res_changed and
+            'ScalingPolicyTrackings' not in istack.changed['outputs']):
+        return
 
-if __name__ == "__main__":
-    parser = get_parser()
-    # -get cmd args as argparse objects
-    args = parser.parse_args(sys.argv[1:])
-    main(args)
+    for dash in response_dash['DashboardEntries']:
+        if istack.name in dash['DashboardName']:
+            add_stack(istack)
