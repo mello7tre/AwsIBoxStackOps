@@ -3,7 +3,7 @@ from .common import *
 
 
 # show old and new service tasks during an update
-def _show_service_update(event, timedelta):
+def _show_service_update(istack, event, timedelta):
     # avoid showing current service log if is requested a stack past event
     if timedelta != '0':
         return
@@ -91,10 +91,7 @@ def get_last_timestamp(istack):
 
 
 # show all events after specific timestamp and return last event timestamp
-def show(obj, timestamp, timedelta='0'):
-    global istack
-    istack = obj
-
+def show(istack, timestamp, timedelta='0'):
     event_iterator = istack.stack.events.all()
     event_list = []
     for event in event_iterator:
@@ -117,7 +114,7 @@ def show(obj, timestamp, timedelta='0'):
             and istack.stack.stack_status not in
                 istack.cfg.STACK_COMPLETE_STATUS
         ):
-            _show_service_update(event, timedelta)
+            _show_service_update(istack, event, timedelta)
 
     if len(event_list) > 0:
         return(event_list.pop().timestamp)

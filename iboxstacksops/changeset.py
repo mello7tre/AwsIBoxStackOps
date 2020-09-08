@@ -4,7 +4,7 @@ from .common import *
 
 
 # create changeset
-def _do_changeset(us_args):
+def _do_changeset(istack, us_args):
     if not istack.cfg.showtags:
         # keep existing stack.tags so that they are excluded from changeset
         # (not the new prepared ones)
@@ -21,24 +21,14 @@ def _do_changeset(us_args):
     return response['Id']
 
 
-def _get_changeset(changeset_id):
-    changeset = istack.client.describe_change_set(
-        ChangeSetName=changeset_id,
-        StackName=istack.name
-    )
-    return changeset
-
-
 # wait until changeset is created
-def _changeset_waiter(changeset_id):
-    changeset = _get_changeset(changeset_id)
-    while changeset['Status'] not in [
-            'CREATE_COMPLETE',
-            'UPDATE_ROLLBACK_FAILED',
-            'FAILED'
-    ]:
+def _changeset_waiter(istack, changeset_id):
+    while True:
         time.sleep(3)
-        changeset = _get_changeset(changeset_id)
+        changeset = istack.client.describe_change_set(
+            ChangeSetName=changeset_id, StackName=istack.name)
+        if changeset['Status'] in istack.cfg.CHANGESET_COMPLETE_STATUS:
+            return changeset
 
 
 # parse changeset changes
@@ -70,7 +60,7 @@ def _parse_changeset(changeset):
     return changes
 
 
-def _show_changeset_changes(changes):
+def _show_changeset_changes(istack, changes):
     fields = ['LogicalResourceId', 'ResourceType', 'Action']
     fileds_ex = ['Replacement', 'Scope', 'Target', 'CausingEntity']
     fields.extend(fileds_ex)
@@ -91,7 +81,7 @@ def _show_changeset_changes(changes):
     print(table.get_string(fields=fields))
 
 
-def _delete_changeset(changeset_id):
+def _delete_changeset(istack, changeset_id):
     response = istack.client.delete_change_set(
         ChangeSetName=changeset_id,
         StackName=istack.name
@@ -100,7 +90,7 @@ def _delete_changeset(changeset_id):
     return response
 
 
-def _execute_changeset(changeset_id):
+def _execute_changeset(istack, changeset_id):
     response = istack.client.execute_change_set(
         ChangeSetName=changeset_id,
         StackName=istack.name
@@ -117,37 +107,31 @@ def list_to_string_list(mylist):
     return mystring
 
 
-def process(obj, us_args):
-    global istack
-    istack = obj
-
+def process(istack, us_args):
     # -create changeset
-    changeset_id = _do_changeset(us_args.copy())
+    changeset_id = _do_changeset(istack, us_args.copy())
     print('\n')
     istack.mylog('ChangeSetId: %s' % changeset_id)
     print('\n')
     time.sleep(1)
     istack.mylog('Waiting ChangeSet Creation..')
 
-    # -wait changeset creation
-    _changeset_waiter(changeset_id)
-
-    # -get changeset
-    changeset = _get_changeset(changeset_id)
+    # -wait changeset creation and return it
+    changeset = _changeset_waiter(istack, changeset_id)
     # pprint(changeset)
 
     # -parse changeset changes
     changeset_changes = _parse_changeset(changeset)
 
     # -show changeset changes
-    _show_changeset_changes(changeset_changes)
+    _show_changeset_changes(istack, changeset_changes)
 
     # -delete changeset
-    _delete_changeset(changeset_id)
+    _delete_changeset(istack, changeset_id)
 
     if not istack.cfg.dryrun and show_confirm():
-        # _execute_changeset(changeset_id)
+        # _execute_changeset(istack, changeset_id)
         return True
     else:
         return None
-        # _delete_changeset(changeset_id)
+        # _delete_changeset(istack, changeset_id)
