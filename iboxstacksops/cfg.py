@@ -1,7 +1,14 @@
 # parser default cfg
-role = type = jobs = pause = version = template = nowait = None
+stack = role = type = stack_args = []
+region = jobs = pause = version = template = nowait = compact = dryrun = None
 max_retry_ecs_service_running_count = 0
+timedelta = 300
+dashboard = 'OnChange'
 #
+
+OUT_WIDTH = 1000000
+
+SLACK_CHANNEL = '_cf_deploy'
 
 MAX_SINGLE_STACKS = 5
 

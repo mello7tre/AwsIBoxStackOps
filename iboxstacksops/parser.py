@@ -54,7 +54,7 @@ def set_update_parser(subparser, parents=[]):
                         help='Update CloudWatch DashBoard',
                         choices=[
                             'Always', 'OnChange', 'Generic', 'None'],
-                        default='OnChange')
+                        default=cfg.dashboard)
     parser.add_argument('--nodetails',
                         help='Do not show extra details in changeset',
                         action='store_true')
@@ -202,8 +202,9 @@ def get_parser():
                                help='Do not Wait for action to end',
                                required=False, action='store_true')
     action_parser.add_argument('-c', '--slack_channel',
-                               help='Slack Channel [_cf_deploy]', nargs='?',
-                               const='_cf_deploy', default=False)
+                               help=f'Slack Channel [{cfg.SLACK_CHANNEL}]',
+                               nargs='?', const=cfg.SLACK_CHANNEL,
+                               default=False)
 
     # template parser
     template_parser_create = get_template_parser()
@@ -317,7 +318,8 @@ def get_parser():
     parser_log.add_argument(
         '-d', '--timedelta',
         help='How many seconds go back in time from stack last event - '
-             'use 0 for realtime - if < 30 assume days', default=300)
+             'use 0 for realtime - if < 30 assume days',
+        default=cfg.timedelta)
 
     # dashboard parser
     set_dash_parser(

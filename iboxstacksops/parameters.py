@@ -178,11 +178,9 @@ def show_override(istack):
         ):
             params[name] = value
 
-    out_with = 80 if (istack.cfg.command == 'info'
-                      and not istack.cfg.compact) else 1000000
-    out_params = pformat(params, width=out_with)
+    out = pformat(params, width=istack.cfg.OUT_WIDTH)
 
-    istack.mylog(f'CURRENT NOT DEFAULT - STACK PARAMETERS\n{out_params}\n')
+    istack.mylog(f'CURRENT NOT DEFAULT - STACK PARAMETERS\n{out}\n')
 
 
 def process(istack, show=True):

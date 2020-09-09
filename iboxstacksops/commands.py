@@ -68,6 +68,8 @@ def parameters():
 
 
 def info():
+    if not cfg.compact:
+        cfg.OUT_WIDTH = 80
     w_stacks = stacks.get()
     result = concurrent_exec('info', w_stacks, i_stack)
 
