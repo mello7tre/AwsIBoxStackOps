@@ -32,7 +32,13 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
 
     if cfg.jobs == 1 or len(stacks) == 1:
         for s, v in stacks.items():
-            data[s] = func(s, v, command, region, **kwargs)
+            try:
+                data[s] = func(s, v, command, region, **kwargs)
+            except Exception as e:
+                print(f'{stack} generated an exception: {e}')
+                print_exc()
+                raise IboxError(e)
+
             if list(stacks)[-1] != s:
                 _pause()
     else:
