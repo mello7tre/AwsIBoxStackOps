@@ -346,8 +346,6 @@ def set_cfg(argv):
     parser = get_parser()
     args = parser.parse_known_args(argv)
 
-    cfg.cmd_parsed_args = args[0]
-
     for n, v in vars(args[0]).items():
         setattr(cfg, n, v)
 
