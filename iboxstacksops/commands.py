@@ -11,6 +11,8 @@ def create():
     if result:
         print(result)
 
+    return result
+
 
 def update():
     w_stacks = stacks.get()
@@ -25,6 +27,8 @@ def update():
     if not cfg.dryrun:
         print(result)
 
+    return result
+
 
 def delete():
     w_stacks = stacks.get()
@@ -36,6 +40,8 @@ def delete():
     result = concurrent_exec('delete', w_stacks, i_stack)
     print(result)
 
+    return result
+
 
 def cancel_update():
     w_stacks = stacks.get()
@@ -43,12 +49,16 @@ def cancel_update():
     result = concurrent_exec('cancel_update', w_stacks, i_stack)
     print(result)
 
+    return result
+
 
 def continue_update():
     w_stacks = stacks.get()
     cfg.exports = get_exports()
     result = concurrent_exec('continue_update', w_stacks, i_stack)
     print(result)
+
+    return result
 
 
 def parameters():
@@ -73,6 +83,8 @@ def resolve():
     cfg.exports = get_exports()
     result = concurrent_exec('resolve', w_stacks, i_stack)
 
+    return result
+
 
 def dash():
     w_stacks = stacks.get()
@@ -80,11 +92,15 @@ def dash():
     cfg.jobs = 1
     result = concurrent_exec('dash', w_stacks, i_stack)
 
+    return result
+
 
 def show_table():
     w_stacks = stacks.get()
     table = show.table(list(w_stacks.values()))
     print(table)
+
+    return table
 
 
 def ssm_setup():
