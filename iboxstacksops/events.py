@@ -119,5 +119,4 @@ def show(istack, timestamp, timedelta='0'):
     if len(event_list) > 0:
         return(event_list.pop().timestamp)
 
-    print('\n')
     return timestamp

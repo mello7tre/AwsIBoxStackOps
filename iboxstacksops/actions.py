@@ -61,6 +61,8 @@ def _update_waiter(istack, timestamp=None):
         except botocore.exceptions.ClientError as e:
             print(e)
 
+    print('\n')
+
 
 def create(istack):
     stack_tags = [
