@@ -18,52 +18,57 @@ def show_confirm():
         return True
 
 
-def _pause():
+def _pause_or_stop():
     if cfg.pause == 0:
         if not show_confirm():
-            exit(0)
+            return True
     elif cfg.pause and cfg.pause > 0:
         time.sleep(cfg.pause)
 
 
 def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
+    n_failed = 0
+    do_exit = False
     data = {}
     func = getattr(smodule, 'exec_command')
+    jobs = cfg.jobs if cfg.jobs else len(stacks)
+    cfg.parallel = False if jobs == 1 else True
 
-    if cfg.jobs == 1 or len(stacks) == 1:
+    with concurrent.futures.ProcessPoolExecutor(
+            max_workers=jobs) as executor:
+        future_to_stack = {}
         for s, v in stacks.items():
+            ex_sub = executor.submit(
+                func, s, v, command, region, **kwargs)
+
+            future_to_stack[ex_sub] = s
+
+            if cfg.jobs == 1 and list(stacks)[-1] != s:
+                concurrent.futures.wait({ex_sub: s})
+                if _pause_or_stop():
+                    do_exit = True
+                    break
+
+        for future in concurrent.futures.as_completed(future_to_stack):
+            stack = future_to_stack[future]
             try:
-                data[s] = func(s, v, command, region, **kwargs)
+                data[stack] = future.result()
             except IboxError as e:
-                data[s] = e.args[0]
+                data[stack] = e.args[0]
+                n_failed += 1
             except Exception as e:
-                print(f'{s} generated an exception: {e}')
+                print(f'{stack} generated an exception: {e}')
                 print_exc()
                 raise IboxError(e)
 
-            if list(stacks)[-1] != s:
-                _pause()
+    if n_failed == len(stacks):
+        raise IboxError(f'All Stacks failed:\n{data}')
+
+    if do_exit:
+        print(data)
+        exit(0)
     else:
-        cfg.parallel = True
-        jobs = cfg.jobs if cfg.jobs else len(stacks)
-
-        with concurrent.futures.ProcessPoolExecutor(
-                max_workers=jobs) as executor:
-            future_to_stack = {
-                executor.submit(func, s, v, command, region, **kwargs): s
-                for s, v in stacks.items()}
-            for future in concurrent.futures.as_completed(future_to_stack):
-                stack = future_to_stack[future]
-                try:
-                    data[stack] = future.result()
-                except IboxError as e:
-                    data[stack] = e.args[0]
-                except Exception as e:
-                    print(f'{stack} generated an exception: {e}')
-                    print_exc()
-                    raise IboxError(e)
-
-    return data
+        return data
 
 
 def get_exports():

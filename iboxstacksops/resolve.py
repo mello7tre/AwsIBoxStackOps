@@ -232,7 +232,7 @@ def _check_s3_files():
         try:
             istack.s3.head_object(Bucket=bucket, Key=key)
         except botocore.exceptions.ClientError as e:
-            print('%s/%s' % (bucket, key))
+            logger.error(f'Missing: {bucket}/{key}')
             raise IboxError(e)
 
 
@@ -259,7 +259,7 @@ def _check_ecr_images():
                 )
                 images.append(image)
             except botocore.exceptions.ClientError as e:
-                print(image)
+                logger.error(f'Missing: {image}')
                 raise IboxError(e)
 
 

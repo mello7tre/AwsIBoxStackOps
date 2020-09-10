@@ -96,6 +96,7 @@ def put(iregion):
 
     return result
 
+
 def show(data):
     params_map = {}
     params_keys = []
