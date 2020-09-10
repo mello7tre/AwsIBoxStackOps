@@ -34,8 +34,10 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
         for s, v in stacks.items():
             try:
                 data[s] = func(s, v, command, region, **kwargs)
+            except IboxError as e:
+                data[s] = e.args[0]
             except Exception as e:
-                print(f'{stack} generated an exception: {e}')
+                print(f'{s} generated an exception: {e}')
                 print_exc()
                 raise IboxError(e)
 
@@ -54,6 +56,8 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
                 stack = future_to_stack[future]
                 try:
                     data[stack] = future.result()
+                except IboxError as e:
+                    data[stack] = e.args[0]
                 except Exception as e:
                     print(f'{stack} generated an exception: {e}')
                     print_exc()
