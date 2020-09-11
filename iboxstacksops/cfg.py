@@ -2,8 +2,8 @@
 stack = []
 role = []
 type = []
-stack_args = []
 topics = []
+stack_args = []
 region = jobs = pause = version = template = nowait = compact = dryrun = None
 max_retry_ecs_service_running_count = 0
 timedelta = 300
