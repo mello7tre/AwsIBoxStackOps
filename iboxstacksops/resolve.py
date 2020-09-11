@@ -325,7 +325,7 @@ def process(obj):
 
     istack = obj
 
-    logger.info('Processing Template')
+    logger.debug('Processing Template')
 
     try:
         _process_conditions()
