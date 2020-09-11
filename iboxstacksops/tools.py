@@ -10,9 +10,12 @@ from .common import *
 def show_confirm():
     if cfg.answer_yes:
         return True
-    print('')
-    answer = input('Enter [y] to continue or any other key to exit: ')
-    if not answer or answer[0].lower() != 'y':
+
+    print('\nEnter [y] to continue or any other key to exit: ')
+    sys.stdin = open(0)
+    answer = sys.stdin.read(1)
+    
+    if not answer or answer.lower() != 'y':
         return False
     else:
         return True
