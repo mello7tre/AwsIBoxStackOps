@@ -1,9 +1,5 @@
 # parser default cfg
-stack = []
-role = []
-type = []
-topics = []
-stack_args = []
+stack = role = type = topics = stack_args = []
 region = jobs = pause = version = template = nowait = compact = dryrun = None
 max_retry_ecs_service_running_count = 0
 timedelta = 300
