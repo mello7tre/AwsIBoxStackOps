@@ -11,7 +11,7 @@ def show_confirm():
     if cfg.answer_yes:
         return True
 
-    print('\nEnter [y] to continue or any other key to exit: ')
+    print('\nEnter [y] to continue or any other key to exit: ', end='')
     sys.stdin = open(0)
     answer = sys.stdin.read(1)
     
