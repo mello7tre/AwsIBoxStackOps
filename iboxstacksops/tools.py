@@ -14,7 +14,7 @@ def show_confirm():
     print('\nEnter [y] to continue or any other key to exit: ', end='')
     sys.stdin = open(0)
     answer = sys.stdin.read(1)
-    
+
     if not answer or answer.lower() != 'y':
         return False
     else:

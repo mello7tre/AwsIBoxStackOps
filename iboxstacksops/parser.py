@@ -2,7 +2,7 @@ import argparse
 from . import cfg
 from .commands import (create, update, delete, cancel_update, continue_update,
                        info, parameters, resolve, show_table, log, dash,
-                       ssm_setup, ssm_put, ssm_show)
+                       ssm_setup, ssm_put, ssm_show, r53)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -98,6 +98,7 @@ def set_show_parser(subparser, parents=[]):
                                   parents=parents,
                                   help='Show Stacks table')
     parser.set_defaults(func=show_table)
+
     parser.add_argument('-F', '--fields', nargs='+',
                         type=str, default=cfg.SHOW_TABLE_FIELDS)
     parser.add_argument('-O', '--output',
@@ -133,6 +134,22 @@ def set_ssm_parser(subparser, parents=[]):
         'show', help='Show Regions Distribution',
         parents=parents)
     show_parser.set_defaults(func=ssm_show)
+
+
+def set_r53_parser(subparser, parents=[]):
+    parser = subparser.add_parser(
+        'r53', parents=parents,
+        help='Create RecordSet Aliases looking at stack R53 resources')
+    parser.set_defaults(func=r53)
+
+    parser.add_argument('--dryrun', help='Show changes and exit',
+                        action="store_true")
+    parser.add_argument('--noorigin', help='Do not create Origin Record',
+                        action="store_true")
+    parser.add_argument(
+        '--suffix',
+        help='Suffix to add to RecordSet Name, prepended with "-"',
+        default='', type=str)
 
 
 def get_template_parser(required=True):
@@ -219,6 +236,7 @@ def get_parser():
         '-s', '--stack', nargs=1,
         help='Stack Names space separated',
         required=True, type=str, default=[])
+
     # update create parser
     updcrt_parser = argparse.ArgumentParser(add_help=False)
 
@@ -335,6 +353,12 @@ def get_parser():
 
     # ssm parser
     set_ssm_parser(
+        command_subparser, [
+            stack_selection_parser,
+        ])
+
+    # r53 parser
+    set_r53_parser(
         command_subparser, [
             stack_selection_parser,
         ])

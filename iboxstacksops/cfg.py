@@ -51,6 +51,14 @@ SCALING_POLICY_TRACKINGS_NAMES = {
 }
 RESOURCES_MAP.update(SCALING_POLICY_TRACKINGS_NAMES)
 
+RESOURCES_MAP_R53 = {
+    'RecordSetExternal': None,
+    'RecordSetInternal': None,
+    'RecordSetExternalRO': None,
+    'RecordSetInternalRO': None,
+    'RecordSetCloudFront': None,
+}
+
 STACK_COMPLETE_STATUS = [
     'UPDATE_COMPLETE',
     'CREATE_COMPLETE',

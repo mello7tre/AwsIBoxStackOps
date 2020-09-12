@@ -132,3 +132,10 @@ def ssm_show():
         'ssm_get', {k: w_stacks for k in regions}, i_region)
     result = ssm.show(result)
     print(result)
+
+
+def r53():
+    w_stacks = stacks.get()
+    cfg.exports = get_exports()
+    result = concurrent_exec('r53', w_stacks, i_stack)
+    print(result)

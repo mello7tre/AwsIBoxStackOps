@@ -1,5 +1,5 @@
 from . import (cfg, template, parameters, resolve, actions, events,
-               outputs, dashboard, ssm)
+               outputs, dashboard, ssm, route53)
 from .aws import myboto3
 from .log import logger, get_msg_client
 from .tools import smodule_to_class
@@ -116,6 +116,11 @@ class ibox_stack(object):
 
     def dash(self):
         dashboard.add_stack(self)
+
+    def r53(self):
+        self.route53 = self.boto3.client('route53')
+        result = route53.create(self)
+        return result
 
 
 def exec_command(name, data, command, region=None, **kwargs):
