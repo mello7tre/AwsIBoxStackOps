@@ -138,4 +138,4 @@ def r53():
     w_stacks = stacks.get()
     cfg.exports = get_exports()
     result = concurrent_exec('r53', w_stacks, i_stack)
-    print(result)
+    pprint(result)
