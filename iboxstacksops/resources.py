@@ -30,6 +30,7 @@ def get(istack, dash=None):
                 if res_lid in [
                         'ListenerHttpsExternalRules1',
                         'ListenerHttpsExternalRules2',
+                        'ListenerHttpExternalRules1',
                         'ListenerHttpInternalRules1']:
                     res_pid = '/'.join(res_pid.split('/')[1:4])
                 if res_lid == 'ScalableTarget':
