@@ -38,6 +38,7 @@ RESOURCES_MAP = {
     'ScalableTarget': 'ClusterName',
     'ListenerHttpsExternalRules1': 'LoadBalancerExternal',
     'ListenerHttpsExternalRules2': 'LoadBalancerExternal',
+    'ListenerHttpExternalRules1': 'LoadBalancerExternal',
     'ListenerHttpInternalRules1': 'LoadBalancerInternal',
     'AlarmCPUHigh': None,
     'AlarmCPULow': None,
