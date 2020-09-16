@@ -368,10 +368,13 @@ def get_parser():
 
 def set_cfg(argv):
     parser = get_parser()
-    cfg.parser = parser
     args = parser.parse_known_args(argv)
 
     for n, v in vars(args[0]).items():
         setattr(cfg, n, v)
+
+    if not (cfg.stack or cfg.role or cfg.type):
+        parser.print_help()
+        exit(0)
 
     cfg.stack_args = args[1]

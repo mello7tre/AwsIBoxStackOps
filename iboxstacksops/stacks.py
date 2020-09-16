@@ -59,7 +59,7 @@ def get(names=[], exit_if_empty=True):
             _get_stack(r, data)
 
     if not data and exit_if_empty:
-        cfg.parser.print_help()
+        logger.warning('No Stacks found!\n')
         exit(0)
 
     return data
