@@ -368,6 +368,7 @@ def get_parser():
 
 def set_cfg(argv):
     parser = get_parser()
+    cfg.parser = parser
     args = parser.parse_known_args(argv)
 
     for n, v in vars(args[0]).items():

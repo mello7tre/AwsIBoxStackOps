@@ -36,7 +36,7 @@ def _get_stack(r, data):
             data[stack_name] = stack_data
 
 
-def get(names=[]):
+def get(names=[], exit_if_empty=True):
     boto3 = myboto3()
     client = boto3.client('cloudformation')
 
@@ -57,5 +57,9 @@ def get(names=[]):
         response_iterator = paginator.paginate()
         for r in response_iterator:
             _get_stack(r, data)
+
+    if not data and exit_if_empty:
+        cfg.parser.print_help()
+        exit(0)
 
     return data
