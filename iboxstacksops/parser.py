@@ -227,9 +227,6 @@ def get_parser():
     template_parser_create = get_template_parser()
     template_parser_update = get_template_parser(required=False)
 
-    # stack selection parser
-    stack_selection_parser = get_stack_selection_parser()
-
     # stack single parser
     stack_single_parser = argparse.ArgumentParser(add_help=False)
     stack_single_parser.add_argument(
@@ -269,7 +266,7 @@ def get_parser():
         command_subparser, [
             action_parser,
             template_parser_update,
-            stack_selection_parser,
+            get_stack_selection_parser(),
             updcrt_parser,
         ])
 
@@ -287,7 +284,7 @@ def get_parser():
         'cancel',
         parents=[
             action_parser,
-            stack_selection_parser],
+            get_stack_selection_parser()],
         help='Cancel Update Stack')
     parser_cancel.set_defaults(func=cancel_update)
 
@@ -296,7 +293,7 @@ def get_parser():
         'continue',
         parents=[
             action_parser,
-            stack_selection_parser],
+            get_stack_selection_parser()],
         help='Continue Update RollBack')
     parser_continue.set_defaults(func=continue_update)
     parser_continue.add_argument(
@@ -306,7 +303,7 @@ def get_parser():
 
     # info parser
     parser_info = command_subparser.add_parser(
-        'info', parents=[stack_selection_parser],
+        'info', parents=[get_stack_selection_parser()],
         help='Show Stack Info')
     parser_info.set_defaults(func=info)
 
@@ -314,7 +311,7 @@ def get_parser():
     parser_parameters = command_subparser.add_parser(
         'parameters', parents=[
             template_parser_update,
-            stack_selection_parser],
+            get_stack_selection_parser()],
         help='Show Available Stack Parameters')
     parser_parameters.set_defaults(func=parameters)
 
@@ -322,7 +319,7 @@ def get_parser():
     parser_resolve = command_subparser.add_parser(
         'resolve', parents=[
             template_parser_update,
-            stack_selection_parser],
+            get_stack_selection_parser()],
         help='Resolve Stack template - output in yaml short format')
     parser_resolve.set_defaults(func=resolve)
 
@@ -342,25 +339,25 @@ def get_parser():
     # dashboard parser
     set_dash_parser(
         command_subparser, [
-            stack_selection_parser,
+            get_stack_selection_parser(),
         ])
 
     # show parser
     set_show_parser(
         command_subparser, [
-            stack_selection_parser,
+            get_stack_selection_parser(),
         ])
 
     # ssm parser
     set_ssm_parser(
         command_subparser, [
-            stack_selection_parser,
+            get_stack_selection_parser(),
         ])
 
     # r53 parser
     set_r53_parser(
         command_subparser, [
-            stack_selection_parser,
+            get_stack_selection_parser(),
         ])
 
     return parser
