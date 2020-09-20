@@ -373,6 +373,12 @@ def set_cfg(argv):
     for n, v in vars(args[0]).items():
         setattr(cfg, n, v)
 
+    # trick for showing ALL Stacks for show and ssm show command
+    # if nor stack nor role nor type is specified.
+    if ((cfg.func == show_table or cfg.func == ssm_show)
+            and not (cfg.stack or cfg.role or cfg.type)):
+        cfg.type = ['ALL']
+
     if not (cfg.stack or cfg.role or cfg.type):
         parser.print_help()
         exit(0)
