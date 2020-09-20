@@ -139,3 +139,7 @@ def r53():
     cfg.exports = get_exports()
     result = concurrent_exec('r53', w_stacks, i_stack)
     pprint(result)
+
+
+def replicate():
+    w_stacks = {cfg.stack[0]: {}}

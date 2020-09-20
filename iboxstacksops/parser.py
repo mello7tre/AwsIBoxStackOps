@@ -2,7 +2,7 @@ import argparse
 from . import cfg
 from .commands import (create, update, delete, cancel_update, continue_update,
                        info, parameters, resolve, show_table, log, dash,
-                       ssm_setup, ssm_put, ssm_show, r53)
+                       ssm_setup, ssm_put, ssm_show, r53, replicate)
 
 
 def set_create_parser(subparser, parents=[]):
@@ -362,6 +362,18 @@ def get_parser():
         command_subparser, [
             stack_selection_parser,
         ])
+
+    # replicate parser
+    parser_replicate = command_subparser.add_parser(
+        'replicate',
+        parents=[stack_single_parser],
+        help='Replicate in Regions configured by ssm')
+    parser_replicate.set_defaults(func=replicate)
+
+    parser_replicate.add_argument(
+        '-a', '--action',
+        help='Stack Action to Replicate',
+        required=True, type=str)
 
     return parser
 
