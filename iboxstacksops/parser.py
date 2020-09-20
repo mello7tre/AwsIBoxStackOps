@@ -97,7 +97,7 @@ def set_show_parser(subparser, parents=[]):
     parser = subparser.add_parser('show',
                                   parents=parents,
                                   help='Show Stacks table')
-    parser.set_defaults(func=show_table)
+    parser.set_defaults(func=show_table, type=['ALL'])
 
     parser.add_argument('-F', '--fields', nargs='+',
                         type=str, default=cfg.SHOW_TABLE_FIELDS)
@@ -133,7 +133,7 @@ def set_ssm_parser(subparser, parents=[]):
     show_parser = ssm_parser.add_parser(
         'show', help='Show Regions Distribution',
         parents=parents)
-    show_parser.set_defaults(func=ssm_show)
+    show_parser.set_defaults(func=ssm_show, type=['ALL'])
 
 
 def set_r53_parser(subparser, parents=[]):
