@@ -132,7 +132,7 @@ def create(iobj):
             pprint(resp['ChangeInfo']['Status'])
 
             r_out[name] = target
-            
-        out[r] = r_out 
+
+        out[r] = r_out
 
     return out
