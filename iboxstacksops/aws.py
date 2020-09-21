@@ -17,7 +17,7 @@ class myboto3(object):
         if region_name:
             kwarg_session['region_name'] = region_name
 
-        if not self.parallel:
+        if not self.parallel and not region:
             try:
                 self.boto3 = cfg.boto3
             except Exception:

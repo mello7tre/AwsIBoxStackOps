@@ -105,24 +105,30 @@ def set_ssm_parser(subparser, parents=[]):
         parents=[],
         help='SSM Parameters override for Stack Replicator')
 
-    regions_parser = argparse.ArgumentParser(add_help=False)
-    regions_parser.add_argument('-R', '--regions',
-                                help='Regions', type=str,
-                                required=True, default=[], nargs='+')
-
     ssm_parser = parser.add_subparsers(title='SSM Command',
                                        required=True, dest='command_ssm')
 
+    # setup
     setup_parser = ssm_parser.add_parser(
         'setup', help='Setup Regions',
-        parents=parents + [regions_parser])
+        parents=parents)
     setup_parser.set_defaults(func=ssm_setup, no_stacks=True)
 
+    setup_parser.add_argument('-R', '--regions',
+                              help='Regions', type=str,
+                              required=True, default=[], nargs='+')
+
+    # put
     put_parser = ssm_parser.add_parser(
         'put', help='Put Parameters',
-        parents=parents + [regions_parser])
+        parents=parents)
     put_parser.set_defaults(func=ssm_put)
 
+    put_parser.add_argument('-R', '--regions',
+                            help='Regions', type=str,
+                            default=[], nargs='+')
+
+    # show
     show_parser = ssm_parser.add_parser(
         'show', help='Show Regions Distribution',
         parents=parents)

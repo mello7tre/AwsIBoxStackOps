@@ -17,9 +17,16 @@ def get_setupped_regions(stack=None):
     ssm = boto3.client('ssm')
 
     try:
-        rgs = _get_ssm_parameter(ssm, f'{cfg.SSM_BASE_PATH}/{stack}/regions')
-    except Exception as e:
         rgs = _get_ssm_parameter(ssm, f'{cfg.SSM_BASE_PATH}/regions')
+    except Exception:
+        return []
+
+    if stack:
+        try:
+            rgs = _get_ssm_parameter(
+                ssm, f'{cfg.SSM_BASE_PATH}/{stack}/regions')
+        except Exception:
+            return []
 
     return rgs.split()
 
@@ -27,7 +34,7 @@ def get_setupped_regions(stack=None):
 def get_by_path(iregion, path):
     stacks_list = tuple(iregion.bdata.keys())
     params = {}
-   
+
     paginator = iregion.ssm.get_paginator('get_parameters_by_path')
     response_iterator = paginator.paginate(Path=path, Recursive=True)
 
