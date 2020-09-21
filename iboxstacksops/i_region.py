@@ -1,6 +1,7 @@
-from . import cfg, ssm
+from . import cfg, ssm, replica
 from .aws import myboto3
 from .log import logger, get_msg_client
+from .tools import smodule_to_class
 from .common import *
 
 
@@ -14,8 +15,14 @@ class ibox_region(object):
         self.name = name
         self.bdata = base_data
 
-        for n, v in base_data.items():
-            setattr(self, n, v)
+        if isinstance(base_data, dict):
+            for n, v in base_data.items():
+                setattr(self, n, v)
+
+        # self.cfg should contains parsed args
+        # inside method processed by istack (in a parallel way)
+        # i need to set attr to self.cfg and not to the common cfg
+        self.cfg = smodule_to_class(cfg)
 
     def ssm_setup(self):
         result = ssm.setup(self)
@@ -35,6 +42,11 @@ class ibox_region(object):
             print(message)
         except IOError:
             pass
+
+    def replicate(self):
+        action = getattr(replica, cfg.action)
+        result = action(self)
+        return result
 
 
 def exec_command(name, data, command, region=None, **kwargs):

@@ -77,11 +77,13 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
 def get_exports(obj=None):
     logger.info('Getting CloudFormation Exports')
     exports = {}
+
     if not obj:
         client = cfg.boto3.client('cloudformation')
     else:
         boto3 = getattr(obj, 'boto3')
         client = boto3.client('cloudformation')
+
     paginator = client.get_paginator('list_exports')
     response_iterator = paginator.paginate()
     for e in response_iterator:

@@ -1,10 +1,15 @@
 # parser default cfg
 stack = role = type = topics = stack_args = []
 region = jobs = pause = version = template = None
-nowait = compact = dryrun = answer_yes = None
+nowait = compact = dryrun = answer_yes = no_stacks = all_stacks = None
+debug = False
 max_retry_ecs_service_running_count = 0
 timedelta = 300
 dashboard = 'OnChange'
+statistic = 'Average'
+statisticresponse = 'p95'
+silent = True
+vertical = False
 #
 
 OUT_WIDTH = 1000000

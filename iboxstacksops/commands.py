@@ -106,7 +106,7 @@ def show_table():
 
 
 def ssm_setup():
-    w_stacks = stacks.get()
+    w_stacks = stacks.get(exit_if_empty=False)
     result = concurrent_exec(
         'ssm_setup', {k: w_stacks for k in cfg.regions}, i_region)
     pprint(result)
@@ -143,3 +143,14 @@ def r53():
 
 def replicate():
     w_stacks = {cfg.stack[0]: {}}
+    regions = ssm.get_setupped_regions() if not cfg.regions else cfg.regions
+
+    try:
+        regions.remove(cfg.boto3.region_name)
+    except Exception:
+        pass
+
+    result = concurrent_exec(
+        'replicate', {k: w_stacks for k in regions}, i_region)
+
+    return result

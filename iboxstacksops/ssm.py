@@ -25,7 +25,9 @@ def get_setupped_regions(stack=None):
 
 
 def get_by_path(iregion, path):
+    stacks_list = tuple(iregion.bdata.keys())
     params = {}
+   
     paginator = iregion.ssm.get_paginator('get_parameters_by_path')
     response_iterator = paginator.paginate(Path=path, Recursive=True)
 
@@ -35,8 +37,7 @@ def get_by_path(iregion, path):
             name = '/'.join(name.split('/')[-2:])
             value = p['Value']
 
-            stacks_list = tuple(iregion.bdata.keys())
-            if not stacks_list or name.startswith(stacks_list):
+            if 'ALL' in iregion.cfg.type or name.startswith(stacks_list):
                 params[name] = value
 
     return params

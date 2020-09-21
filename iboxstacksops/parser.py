@@ -27,13 +27,6 @@ def set_update_parser(subparser, parents=[]):
                                   parents=parents,
                                   help='Update Stack')
     parser.set_defaults(func=update)
-    # used by dashboard update
-    parser.set_defaults(
-        statistic='Average',
-        statisticresponse='p95',
-        debug=False,
-        silent=True,
-        vertical=False)
 
     parser.add_argument('-P', '--policy',
                         help='Policy during Stack Update',
@@ -97,7 +90,7 @@ def set_show_parser(subparser, parents=[]):
     parser = subparser.add_parser('show',
                                   parents=parents,
                                   help='Show Stacks table')
-    parser.set_defaults(func=show_table)
+    parser.set_defaults(func=show_table, all_stacks=True)
 
     parser.add_argument('-F', '--fields', nargs='+',
                         type=str, default=cfg.SHOW_TABLE_FIELDS)
@@ -123,7 +116,7 @@ def set_ssm_parser(subparser, parents=[]):
     setup_parser = ssm_parser.add_parser(
         'setup', help='Setup Regions',
         parents=parents + [regions_parser])
-    setup_parser.set_defaults(func=ssm_setup)
+    setup_parser.set_defaults(func=ssm_setup, no_stacks=True)
 
     put_parser = ssm_parser.add_parser(
         'put', help='Put Parameters',
@@ -133,7 +126,7 @@ def set_ssm_parser(subparser, parents=[]):
     show_parser = ssm_parser.add_parser(
         'show', help='Show Regions Distribution',
         parents=parents)
-    show_parser.set_defaults(func=ssm_show)
+    show_parser.set_defaults(func=ssm_show, all_stacks=True)
 
 
 def set_r53_parser(subparser, parents=[]):
@@ -374,6 +367,10 @@ def get_parser():
         '-a', '--action',
         help='Stack Action to Replicate',
         required=True, type=str)
+    parser_replicate.add_argument(
+        '-R', '--regions',
+        help='Regions where replicate',
+        type=str)
 
     return parser
 
@@ -385,13 +382,14 @@ def set_cfg(argv):
     for n, v in vars(args[0]).items():
         setattr(cfg, n, v)
 
-    # trick for showing ALL Stacks for "show" and "ssm show" commands
+    # trick for showing ALL Stacks
     # if nor stack nor role nor type are specified.
-    if ((cfg.func == show_table or cfg.func == ssm_show)
+    if (cfg.all_stacks
             and not (cfg.stack or cfg.role or cfg.type)):
         cfg.type = ['ALL']
 
-    if not (cfg.stack or cfg.role or cfg.type):
+    if (not cfg.no_stacks
+            and not (cfg.stack or cfg.role or cfg.type)):
         parser.print_help()
         exit(0)
 
