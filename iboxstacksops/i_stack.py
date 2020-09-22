@@ -99,8 +99,16 @@ class ibox_stack(object):
         self.ssm = self.boto3.client('ssm')
         ssm.put_parameters(self, self.bdata)
 
-    def replicate_update(self, ssm_map):
+    def replicate(self, ssm_map):
         pprint(ssm_map)
+        for n, v in ssm_map.items():
+            if n.startswith(f'{self.name}/'):
+                parameter = n.split('/')[1]
+                setattr(self.cfg, parameter, v)
+
+        result = getattr(self, f'{self.cfg.command_replicate}')()
+
+        return result
 
     def mylog(self, msg, chat=True):
         message = f'{self.name} # {msg}'
