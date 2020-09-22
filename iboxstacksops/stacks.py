@@ -36,9 +36,13 @@ def _get_stack(r, data):
             data[stack_name] = stack_data
 
 
-def get(names=[], exit_if_empty=True):
-    boto3 = myboto3()
-    client = boto3.client('cloudformation')
+def get(names=[], exit_if_empty=True, obj=None):
+    if not obj:
+        boto3 = myboto3()
+        client = boto3.client('cloudformation')
+    else:
+        boto3 = getattr(obj, 'boto3')
+        client = boto3.client('cloudformation')
 
     logger.info('Getting Stacks Description')
     data = {}
