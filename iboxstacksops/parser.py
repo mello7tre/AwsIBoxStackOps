@@ -5,12 +5,10 @@ from .commands import (create, update, delete, cancel_update, continue_update,
                        ssm_setup, ssm_put, ssm_show, r53, replicate)
 
 
-def set_create_parser(subparser, parents=[]):
+def get_create_parser(subparser, parents=[]):
     parser = subparser.add_parser('create',
                                   parents=parents,
                                   help='Create Stack')
-    parser.set_defaults(func=create)
-
     parser.add_argument('--Env',
                         help='Environment to use',
                         type=str, required=True)
@@ -21,13 +19,13 @@ def set_create_parser(subparser, parents=[]):
                         help='App Version',
                         type=str, default='')
 
+    return parser
 
-def set_update_parser(subparser, parents=[]):
+
+def get_update_parser(subparser, parents=[]):
     parser = subparser.add_parser('update',
                                   parents=parents,
                                   help='Update Stack')
-    parser.set_defaults(func=update)
-
     parser.add_argument('-P', '--policy',
                         help='Policy during Stack Update',
                         type=str, choices=[
@@ -51,6 +49,8 @@ def set_update_parser(subparser, parents=[]):
     parser.add_argument('--nodetails',
                         help='Do not show extra details in changeset',
                         action='store_true')
+
+    return parser
 
 
 def set_dash_parser(subparser, parents=[]):
@@ -107,7 +107,6 @@ def set_ssm_parser(subparser, parents=[]):
 
     ssm_parser = parser.add_subparsers(title='SSM Command',
                                        required=True, dest='command_ssm')
-
     # setup
     setup_parser = ssm_parser.add_parser(
         'setup', help='Setup Regions',
@@ -117,7 +116,6 @@ def set_ssm_parser(subparser, parents=[]):
     setup_parser.add_argument('-R', '--regions',
                               help='Regions', type=str,
                               required=True, default=[], nargs='+')
-
     # put
     put_parser = ssm_parser.add_parser(
         'put', help='Put Parameters',
@@ -127,12 +125,51 @@ def set_ssm_parser(subparser, parents=[]):
     put_parser.add_argument('-R', '--regions',
                             help='Regions', type=str,
                             default=[], nargs='+')
-
     # show
     show_parser = ssm_parser.add_parser(
         'show', help='Show Regions Distribution',
         parents=parents)
     show_parser.set_defaults(func=ssm_show, all_stacks=True)
+
+
+def set_replicate_parser(subparser, parents=[]):
+    parser = subparser.add_parser(
+        'replicate',
+        parents=[],
+        help='Replicate in Regions configured by SSM')
+    parser.set_defaults(func=replicate)
+
+    replicate_parser = parser.add_subparsers(title='Replicate Command',
+                                             required=True,
+                                             dest='command_replicate')
+
+    regions_parser = argparse.ArgumentParser(add_help=False)
+    regions_parser.add_argument('-R', '--regions',
+                                help='Regions', type=str,
+                                default=[], nargs='+')
+    # replicate create
+    parser_create = get_create_parser(
+        replicate_parser, parents + [
+            get_template_parser(),
+            get_stack_single_parser(),
+            get_create_update_parser(),
+            regions_parser,
+        ])
+    # update parser
+    parser_update = get_update_parser(
+        replicate_parser, parents + [
+            get_template_parser(required=False),
+            get_stack_selection_parser(),
+            get_create_update_parser(),
+            regions_parser,
+        ])
+    # delete parser
+    parser_delete = replicate_parser.add_parser(
+        'delete',
+        parents=parents + [
+            get_stack_single_parser(),
+            regions_parser],
+        help='Delete Stack (WARNING)')
 
 
 def set_r53_parser(subparser, parents=[]):
@@ -184,6 +221,31 @@ def get_stack_selection_parser():
     return parser
 
 
+def get_stack_single_parser():
+    parser = argparse.ArgumentParser(add_help=False)
+
+    parser.add_argument(
+        '-s', '--stack', nargs=1,
+        help='Stack Names space separated',
+        required=True, type=str, default=[])
+
+    return parser
+
+
+def get_create_update_parser():
+    parser = argparse.ArgumentParser(add_help=False)
+
+    parser.add_argument('--topics', nargs='+',
+                        help='SNS Topics Arn for notification',
+                        type=str, default=[])
+    parser.add_argument('-M', '--max_retry_ecs_service_running_count',
+                        help='Max retry numbers when updating ECS '
+                             'service and runningCount is stuck to zero',
+                        type=int, default=0)
+
+    return parser
+
+
 # parse main argumets
 def get_parser():
     parser = argparse.ArgumentParser(
@@ -230,23 +292,10 @@ def get_parser():
     stack_selection_parser = get_stack_selection_parser()
 
     # stack single parser
-    stack_single_parser = argparse.ArgumentParser(add_help=False)
-    stack_single_parser.add_argument(
-        '-s', '--stack', nargs=1,
-        help='Stack Names space separated',
-        required=True, type=str, default=[])
+    stack_single_parser = get_stack_single_parser()
 
-    # update create parser
-    updcrt_parser = argparse.ArgumentParser(add_help=False)
-
-    updcrt_parser.add_argument('--topics', nargs='+',
-                               help='SNS Topics Arn for notification',
-                               type=str, default=[])
-    updcrt_parser.add_argument('-M', '--max_retry_ecs_service_running_count',
-                               help='Max retry numbers when updating ECS '
-                                    'service and runningCount is stuck to '
-                                    'zero',
-                               type=int, default=0)
+    # create update parser
+    create_update_parser = get_create_update_parser()
 
     # command subparser
     command_subparser = parser.add_subparsers(
@@ -255,22 +304,24 @@ def get_parser():
         dest='command')
 
     # create parser
-    set_create_parser(
+    parser_create = get_create_parser(
         command_subparser, [
             action_parser,
             template_parser_create,
             stack_single_parser,
-            updcrt_parser,
+            create_update_parser,
         ])
+    parser_create.set_defaults(func=create)
 
     # update parser
-    set_update_parser(
+    parser_update = get_update_parser(
         command_subparser, [
             action_parser,
             template_parser_update,
             stack_selection_parser,
-            updcrt_parser,
+            create_update_parser,
         ])
+    parser_update.set_defaults(func=update)
 
     # delete parser
     parser_delete = command_subparser.add_parser(
@@ -299,7 +350,7 @@ def get_parser():
         help='Continue Update RollBack')
     parser_continue.set_defaults(func=continue_update)
     parser_continue.add_argument(
-        '--resources_to_skip', '-R',
+        '--resources_to_skip',
         help='Resource to Skip',
         default=[], nargs='+')
 
@@ -356,27 +407,17 @@ def get_parser():
             stack_selection_parser,
         ])
 
+    # replicate parser
+    set_replicate_parser(
+        command_subparser, [
+            action_parser,
+        ])
+
     # r53 parser
     set_r53_parser(
         command_subparser, [
             stack_selection_parser,
         ])
-
-    # replicate parser
-    parser_replicate = command_subparser.add_parser(
-        'replicate',
-        parents=[stack_single_parser],
-        help='Replicate in Regions configured by ssm')
-    parser_replicate.set_defaults(func=replicate)
-
-    parser_replicate.add_argument(
-        '-a', '--action',
-        help='Stack Action to Replicate',
-        required=True, type=str)
-    parser_replicate.add_argument(
-        '-R', '--regions',
-        help='Regions where replicate',
-        type=str)
 
     return parser
 

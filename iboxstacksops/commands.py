@@ -145,11 +145,6 @@ def replicate():
     w_stacks = {cfg.stack[0]: {}}
     regions = ssm.get_setupped_regions() if not cfg.regions else cfg.regions
 
-    try:
-        regions.remove(cfg.boto3.region_name)
-    except Exception:
-        pass
-
     result = concurrent_exec(
         'replicate', {k: w_stacks for k in regions}, i_region)
 

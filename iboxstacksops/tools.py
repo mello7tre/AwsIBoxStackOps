@@ -8,7 +8,7 @@ from .common import *
 
 
 def show_confirm():
-    if cfg.answer_yes:
+    if cfg.parallel or cfg.answer_yes:
         return True
 
     print('\nEnter [y] to continue or any other key to exit: ', end='')
@@ -46,7 +46,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
 
             future_to_stack[ex_sub] = s
 
-            if cfg.jobs == 1 and list(stacks)[-1] != s:
+            if not cfg.parallel and list(stacks)[-1] != s:
                 concurrent.futures.wait({ex_sub: s})
                 if _pause_or_stop():
                     do_exit = True

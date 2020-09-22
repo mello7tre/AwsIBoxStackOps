@@ -44,7 +44,7 @@ class ibox_region(object):
             pass
 
     def replicate(self):
-        action = getattr(replica, cfg.action)
+        action = getattr(replica, cfg.command_replicate)
         result = action(self)
         return result
 
