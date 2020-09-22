@@ -99,6 +99,9 @@ class ibox_stack(object):
         self.ssm = self.boto3.client('ssm')
         ssm.put_parameters(self, self.bdata)
 
+    def replicate_update(self, ssm_map):
+        pprint(ssm_map)
+
     def mylog(self, msg, chat=True):
         message = f'{self.name} # {msg}'
         try:

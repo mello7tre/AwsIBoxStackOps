@@ -44,6 +44,7 @@ class ibox_region(object):
             pass
 
     def replicate(self):
+        self.ssm_map = ssm.get_by_path(self, cfg.SSM_BASE_PATH)
         action = getattr(replica, cfg.command_replicate)
         result = action(self)
         return result

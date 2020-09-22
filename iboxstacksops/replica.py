@@ -20,8 +20,9 @@ def update(iregion):
     w_stacks = stacks.get(obj=iregion)
     iregion.cfg.stacks = list(w_stacks.keys())
     iregion.cfg.exports = get_exports(obj=iregion)
-    return
-    result = concurrent_exec('update', w_stacks, i_stack, iregion.name)
+    result = concurrent_exec('replicate_update',
+        w_stacks, i_stack, region=iregion.name,
+        **{'ssm_map': iregion.ssm_map})
     print(result)
 
     return result
@@ -30,8 +31,9 @@ def update(iregion):
 def delete(iregion):
     w_stacks = stacks.get()
     iregion.cfg.stacks = list(w_stacks.keys())
-    return
-    result = concurrent_exec('delete', w_stacks, i_stack, iregion.name)
+    result = concurrent_exec('replicate_delete',
+        w_stacks, i_stack, region=iregion.name,
+        **{'ssm_map': iregion.ssm_map})
     print(result)
 
     return result
