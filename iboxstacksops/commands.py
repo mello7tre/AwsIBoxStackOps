@@ -143,6 +143,7 @@ def r53():
 
 def replicate():
     w_stacks = {cfg.stack[0]: {}}
+    cfg.stacks = list(w_stacks.keys())
     regions = ssm.get_setupped_regions() if not cfg.regions else cfg.regions
 
     result = concurrent_exec(
