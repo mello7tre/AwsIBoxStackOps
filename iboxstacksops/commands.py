@@ -107,13 +107,8 @@ def show_table():
 
 def ssm_setup():
     w_stacks = stacks.get(exit_if_empty=False)
-    regions = cfg.regions
-
-    if w_stacks:
-        regions = ssm.get_setupped_regions()
-
     result = concurrent_exec(
-        'ssm_setup', {k: w_stacks for k in regions}, i_region)
+        'ssm_setup', {k: w_stacks for k in cfg.regions}, i_region)
     pprint(result)
 
 

@@ -12,7 +12,7 @@ def _get_ssm_parameter(ssm, param):
     return resp['Parameter']['Value']
 
 
-def get_setupped_regions(stack=None):
+def get_setupped_regions():
     boto3 = myboto3()
     ssm = boto3.client('ssm')
 
@@ -20,13 +20,6 @@ def get_setupped_regions(stack=None):
         rgs = _get_ssm_parameter(ssm, f'{cfg.SSM_BASE_PATH}/regions')
     except Exception:
         return []
-
-    if stack:
-        try:
-            rgs = _get_ssm_parameter(
-                ssm, f'{cfg.SSM_BASE_PATH}/{stack}/regions')
-        except Exception:
-            return []
 
     return rgs.split()
 

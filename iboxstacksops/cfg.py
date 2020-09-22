@@ -1,6 +1,6 @@
 # parser default cfg
 stack = role = type = topics = stack_args = []
-region = jobs = pause = version = template = None
+parallel = region = jobs = pause = version = template = None
 nowait = compact = dryrun = answer_yes = no_stacks = all_stacks = None
 debug = False
 max_retry_ecs_service_running_count = 0
