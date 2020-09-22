@@ -29,7 +29,7 @@ class ibox_stack(object):
         self.cfg = smodule_to_class(cfg)
 
     def create(self):
-        self.exports = cfg.exports
+        self.exports = self.cfg.exports
         self.template = template.get_template(self)
         self.c_parameters = {}
         parameters.process(self)
@@ -39,7 +39,7 @@ class ibox_stack(object):
 
     def update(self):
         self.stack = self.cloudformation.Stack(self.name)
-        self.exports = cfg.exports
+        self.exports = self.cfg.exports
         self.template = template.get_template(self)
         parameters.process(self)
         resolve.process(self)
@@ -70,7 +70,7 @@ class ibox_stack(object):
             return self.stack.stack_status
 
     def parameters(self, check=None):
-        self.exports = cfg.exports
+        self.exports = self.cfg.exports
         self.template = template.get_template(self)
         parser = parameters.get_stack_parameter_parser(self)
         if check:
@@ -90,7 +90,7 @@ class ibox_stack(object):
         actions.log(self)
 
     def resolve(self):
-        self.exports = cfg.exports
+        self.exports = self.cfg.exports
         self.template = template.get_template(self)
         parameters.process(self, show=None)
         resolve.show(self)
@@ -99,7 +99,8 @@ class ibox_stack(object):
         self.ssm = self.boto3.client('ssm')
         ssm.put_parameters(self, self.bdata)
 
-    def replicate(self, ssm_map):
+    def replicate(self, ssm_map, iregion):
+        self.cfg.exports = iregion.cfg.exports
         pprint(ssm_map)
         for n, v in ssm_map.items():
             if n.startswith(f'{self.name}/'):

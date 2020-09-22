@@ -22,7 +22,7 @@ def update(iregion):
     iregion.cfg.exports = get_exports(obj=iregion)
     result = concurrent_exec('replicate',
         w_stacks, i_stack, region=iregion.name,
-        **{'ssm_map': iregion.ssm_map})
+        **{'ssm_map': iregion.ssm_map, 'iregion': iregion})
     print(result)
 
     return result
