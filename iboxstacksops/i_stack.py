@@ -101,7 +101,8 @@ class ibox_stack(object):
 
     def replicate(self, ssm_map, iregion):
         self.cfg.exports = iregion.cfg.exports
-        pprint(ssm_map)
+        self.cfg.stacks = iregion.cfg.stacks
+        # pprint(ssm_map)
         for n, v in ssm_map.items():
             if n.startswith(f'{self.name}/'):
                 parameter = n.split('/')[1]

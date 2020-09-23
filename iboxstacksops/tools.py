@@ -34,7 +34,11 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
     do_exit = False
     data = {}
     func = getattr(smodule, 'exec_command')
+
     jobs = cfg.jobs if cfg.jobs else len(stacks)
+    if jobs == 0:
+        return
+
     cfg.parallel = False if not cfg.parallel and jobs == 1 else True
 
     with concurrent.futures.ThreadPoolExecutor(

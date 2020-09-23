@@ -7,7 +7,7 @@ from .log import logger
 from .common import *
 
 
-def table(data):
+def get(data):
     fields = cfg.fields
     table = PrettyTable()
     table.padding_width = 1

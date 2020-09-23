@@ -1,4 +1,4 @@
-from . import cfg, stacks, i_stack, i_region, events, show, ssm
+from . import cfg, stacks, i_stack, i_region, events, table, ssm
 from .tools import concurrent_exec, get_exports, show_confirm
 from .common import *
 
@@ -99,10 +99,10 @@ def dash():
 
 def show_table():
     w_stacks = stacks.get()
-    table = show.table(list(w_stacks.values()))
-    print(table)
+    s_table = table.get(list(w_stacks.values()))
+    print(s_table)
 
-    return table
+    return s_table
 
 
 def ssm_setup():
@@ -142,11 +142,15 @@ def r53():
 
 
 def replicate():
-    w_stacks = {cfg.stack[0]: {}}
-    cfg.stacks = list(w_stacks.keys())
     regions = ssm.get_setupped_regions() if not cfg.regions else cfg.regions
 
+    if cfg.no_replicate_current:
+        try:
+            regions.remove(cfg.boto3.region_name)
+        except Exception as e:
+            pass
+
     result = concurrent_exec(
-        'replicate', {k: w_stacks for k in regions}, i_region)
+        'replicate', {k: {} for k in regions}, i_region)
 
     return result

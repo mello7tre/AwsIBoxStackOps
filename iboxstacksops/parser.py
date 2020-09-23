@@ -86,17 +86,18 @@ def set_dash_parser(subparser, parents=[]):
     )
 
 
-def set_show_parser(subparser, parents=[]):
+def get_show_parser(subparser, parents=[]):
     parser = subparser.add_parser('show',
                                   parents=parents,
                                   help='Show Stacks table')
-    parser.set_defaults(func=show_table, all_stacks=True)
 
     parser.add_argument('-F', '--fields', nargs='+',
                         type=str, default=cfg.SHOW_TABLE_FIELDS)
     parser.add_argument('-O', '--output',
                         type=str, default='text',
                         choices=['text', 'html', 'bare'])
+
+    return parser
 
 
 def set_ssm_parser(subparser, parents=[]):
@@ -147,29 +148,39 @@ def set_replicate_parser(subparser, parents=[]):
     regions_parser.add_argument('-R', '--regions',
                                 help='Regions', type=str,
                                 default=[], nargs='+')
+    regions_parser.add_argument('--no_replicate_current',
+                                help='No replication in current Region',
+                                action='store_true')
+
     # replicate create
     parser_create = get_create_parser(
         replicate_parser, parents + [
             get_template_parser(),
             get_stack_single_parser(),
             get_create_update_parser(),
-            regions_parser,
-        ])
-    # update parser
+            regions_parser])
+
+    # replicate update
     parser_update = get_update_parser(
         replicate_parser, parents + [
             get_template_parser(required=False),
             get_stack_selection_parser(),
             get_create_update_parser(),
-            regions_parser,
-        ])
-    # delete parser
+            regions_parser])
+
+    # replicate delete
     parser_delete = replicate_parser.add_parser(
         'delete',
         parents=parents + [
             get_stack_single_parser(),
             regions_parser],
         help='Delete Stack (WARNING)')
+
+    # replicate show
+    parser_show = get_show_parser(
+        replicate_parser, [
+            get_stack_selection_parser(),
+            regions_parser])
 
 
 def set_r53_parser(subparser, parents=[]):
@@ -396,10 +407,11 @@ def get_parser():
         ])
 
     # show parser
-    set_show_parser(
+    parser_show = get_show_parser(
         command_subparser, [
             stack_selection_parser,
         ])
+    parser_show.set_defaults(func=show_table, all_stacks=True)
 
     # ssm parser
     set_ssm_parser(
