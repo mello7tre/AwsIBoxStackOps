@@ -152,5 +152,6 @@ def replicate():
 
     result = concurrent_exec(
         'replicate', {k: {} for k in regions}, i_region)
+    print(result)
 
     return result
