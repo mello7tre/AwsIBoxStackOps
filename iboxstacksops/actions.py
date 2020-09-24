@@ -53,6 +53,7 @@ def _update_waiter(istack, timestamp=None):
             print(e)
 
         if istack.stack.stack_status in istack.cfg.STACK_COMPLETE_STATUS:
+            events.show(istack, last_timestamp)
             break
 
         time.sleep(5)
