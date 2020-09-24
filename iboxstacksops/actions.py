@@ -40,26 +40,29 @@ def _get_action_args(istack):
 # wait update until complete showing events status
 def _update_waiter(istack, timestamp=None):
     last_timestamp = timestamp if timestamp else istack.last_event_timestamp
-    istack.stack.reload()
 
     # return without waiting
     if istack.cfg.nowait:
+        istack.stack.reload()
         return
 
-    while istack.stack.stack_status not in istack.cfg.STACK_COMPLETE_STATUS:
-        try:
-            last_timestamp = events.show(istack, last_timestamp)
-
-        # ECS Service did not stabilize, cancel update [ROLLBACK]
-        except IboxErrorECSService as e:
-            logger.warning(e.args[0])
-            do_action_cancel()
-
-        time.sleep(5)
+    while True:
         try:
             istack.stack.reload()
         except botocore.exceptions.ClientError as e:
             print(e)
+
+        if istack.stack.stack_status in istack.cfg.STACK_COMPLETE_STATUS:
+            break
+
+        time.sleep(5)
+
+        try:
+            last_timestamp = events.show(istack, last_timestamp)
+        except IboxErrorECSService as e:
+            # ECS Service did not stabilize, cancel update [ROLLBACK]
+            logger.warning(e.args[0])
+            do_action_cancel()
 
     print('\n')
 
