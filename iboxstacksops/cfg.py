@@ -18,6 +18,8 @@ SLACK_CHANNEL = '_cf_deploy'
 
 MAX_SINGLE_STACKS = 5
 
+ACTION_WAITER_SLEEP_TIME = 3
+
 STACK_BASE_DATA = [
     'StackName',
     'Description',

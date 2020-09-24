@@ -56,7 +56,7 @@ def _update_waiter(istack, timestamp=None):
             events.show(istack, last_timestamp)
             break
 
-        time.sleep(5)
+        time.sleep(istack.cfg.ACTION_WAITER_SLEEP_TIME)
 
         try:
             last_timestamp = events.show(istack, last_timestamp)
