@@ -13,6 +13,7 @@ def show_changed(istack):
             changed[o] = f'{before[o]} => {v}'
 
     istack.changed['outputs'] = changed
+    istack.cfg.OUT_WIDTH = 80
     show(istack, 'changed')
 
 
