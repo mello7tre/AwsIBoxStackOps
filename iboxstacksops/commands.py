@@ -9,7 +9,7 @@ def create():
     cfg.exports = get_exports()
     result = stack.create()
     if result:
-        print(result)
+        pprint(result)
 
     return result
 
@@ -25,7 +25,7 @@ def update():
             return
     result = concurrent_exec('update', w_stacks, i_stack)
     if not cfg.dryrun:
-        print(result)
+        pprint(result)
 
     return result
 
@@ -38,7 +38,7 @@ def delete():
     if not show_confirm():
         return
     result = concurrent_exec('delete', w_stacks, i_stack)
-    print(result)
+    pprint(result)
 
     return result
 
@@ -47,7 +47,7 @@ def cancel_update():
     w_stacks = stacks.get()
     cfg.exports = get_exports()
     result = concurrent_exec('cancel_update', w_stacks, i_stack)
-    print(result)
+    pprint(result)
 
     return result
 
@@ -56,7 +56,7 @@ def continue_update():
     w_stacks = stacks.get()
     cfg.exports = get_exports()
     result = concurrent_exec('continue_update', w_stacks, i_stack)
-    print(result)
+    pprint(result)
 
     return result
 
@@ -152,6 +152,6 @@ def replicate():
 
     result = concurrent_exec(
         'replicate', {k: {} for k in regions}, i_region)
-    print(result)
+    pprint(result)
 
     return result
