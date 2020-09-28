@@ -11,6 +11,8 @@ def show_changed(istack):
     for o, v in after.items():
         if o in before and v != before[o]:
             changed[o] = f'{before[o]} => {v}'
+        elif o not in before:
+            changed[o] = v
 
     istack.changed['outputs'] = changed
     istack.cfg.OUT_WIDTH = 80
