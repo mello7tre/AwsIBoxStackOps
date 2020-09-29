@@ -138,7 +138,7 @@ def _resolve_findinmap(name, v):
 def _resolve_join(name, v):
     j_list = []
     for n in v[1]:
-        j_list.append(_recursive_resolve(name, n))
+        j_list.append(str(_recursive_resolve(name, n)))
 
     return v[0].join(j_list)
 
