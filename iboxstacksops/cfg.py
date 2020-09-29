@@ -90,6 +90,7 @@ SHOW_TABLE_FIELDS = [
     'StackType',
     'UpdateMode',
     'EnvApp1Version',
+    'StackStatus',
     'LastUpdatedTime',
 ]
 
