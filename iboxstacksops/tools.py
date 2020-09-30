@@ -1,7 +1,7 @@
 import time
 import concurrent.futures
 from traceback import print_exc
-import boto3 as base_boto3
+from .aws import myboto3
 from . import cfg
 from .log import logger
 from .common import *
@@ -83,7 +83,8 @@ def get_exports(obj=None):
     exports = {}
 
     if not obj:
-        client = cfg.boto3.client('cloudformation')
+        boto3 = myboto3()
+        client = boto3.client('cloudformation')
     else:
         boto3 = getattr(obj, 'boto3')
         client = boto3.client('cloudformation')

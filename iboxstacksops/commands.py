@@ -5,8 +5,8 @@ from .common import *
 
 def create():
     name = cfg.stack[0]
-    stack = i_stack.ibox_stack(name, {})
     cfg.exports = get_exports()
+    stack = i_stack.ibox_stack(name, {})
     result = stack.create()
     if result:
         pprint(result)
