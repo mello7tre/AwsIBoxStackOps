@@ -121,11 +121,14 @@ class ibox_stack(object):
         # logger.info(message)
         client = get_msg_client()
         if client and chat:
-            client.chat_postMessage(
-                channel=f'#{cfg.slack_channel}',
-                text=message,
-                username=os.environ['IBOX_SLACK_USER'],
-                icon_emoji=':robot_face:')
+            try:
+                client.chat_postMessage(
+                    channel=f'#{cfg.slack_channel}',
+                    text=message,
+                    username=os.environ['IBOX_SLACK_USER'],
+                    icon_emoji=':robot_face:')
+            except Exception as e:
+                logger.warning(f'Error sending message to channel: {e}')
 
     def dash(self):
         dashboard.add_stack(self)
