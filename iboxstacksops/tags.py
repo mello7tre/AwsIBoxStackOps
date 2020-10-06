@@ -15,7 +15,7 @@ def get_action_tags(istack, stack_tags):
 
         # check if key exist as cfg param/attr too
         try:
-            cfg_value = getattr(cfg, key)
+            cfg_value = getattr(istack.cfg, key)
             in_cfg = True if cfg_value is not None else None
         except Exception:
             in_cfg = None
