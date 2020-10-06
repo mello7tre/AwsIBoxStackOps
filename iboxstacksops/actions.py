@@ -1,6 +1,7 @@
 from . import resources, changeset, events, outputs, dashboard
 from .tags import get_action_tags
 from .tools import show_confirm
+from .log import logger
 from .common import *
 
 
