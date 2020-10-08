@@ -64,7 +64,7 @@ def _update_waiter(istack, timestamp=None):
         except IboxErrorECSService as e:
             # ECS Service did not stabilize, cancel update [ROLLBACK]
             logger.warning(e.args[0])
-            cancel_update()
+            cancel_update(istack)
 
     print('\n')
 
