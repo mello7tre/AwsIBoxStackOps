@@ -85,6 +85,9 @@ def _resolve_sub(name, value):
             replace_to = istack.r_parameters[key]
         elif key == 'AWS::Region':
             replace_to = istack.boto3.region_name
+        elif key == 'AWS::AccountId':
+            replace_to = istack.boto3.client(
+                'sts').get_caller_identity()['Account']
         else:
             replace_to = key
 
