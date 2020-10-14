@@ -2,78 +2,72 @@ from . import resources
 from .common import *
 
 
-def _get_rec_info(record, rtype):
-    r = {}
-    param = record.split('.')
-    r['stack'] = param[0]
-    r['role'] = param[1]
-    r['type'] = rtype
-    if rtype == 'external':
-        r['region'] = param[2]
-        r['domain'] = '.'.join(param[3:6])
-    if rtype == 'internal':
-        r['domain'] = '.'.join(param[2:5])
-    if rtype == 'cf':
-        del r['stack']
-        r['role'] = param[0]
-        r['domain'] = '.'.join(param[2:5])
+def create(istack):
 
-    if istack.cfg.suffix and rtype != 'cf':
-        r['role'] = r['role'] + '-' + istack.cfg.suffix
+    def _get_rec_info(record, rtype):
+        r = {}
+        param = record.split('.')
+        r['stack'] = param[0]
+        r['role'] = param[1]
+        r['type'] = rtype
+        if rtype == 'external':
+            r['region'] = param[2]
+            r['domain'] = '.'.join(param[3:6])
+        if rtype == 'internal':
+            r['domain'] = '.'.join(param[2:5])
+        if rtype == 'cf':
+            del r['stack']
+            r['role'] = param[0]
+            r['domain'] = '.'.join(param[2:5])
 
-    return r
+        if istack.cfg.suffix and rtype != 'cf':
+            r['role'] = r['role'] + '-' + istack.cfg.suffix
 
+        return r
 
-def _get_record_type(zoneid, name):
-    resp = istack.route53.list_resource_record_sets(
-        HostedZoneId=zoneid,
-        StartRecordName=name,
-        MaxItems='1',
-    )
+    def _get_record_type(zoneid, name):
+        resp = istack.route53.list_resource_record_sets(
+            HostedZoneId=zoneid,
+            StartRecordName=name,
+            MaxItems='1',
+        )
 
-    if resp['ResourceRecordSets']:
-        return resp['ResourceRecordSets'][0]['Type']
-    else:
-        return 'A'
+        if resp['ResourceRecordSets']:
+            return resp['ResourceRecordSets'][0]['Type']
+        else:
+            return 'A'
 
-
-def _get_record_change(name, zoneid, target, rtype):
-    changes = {
-        'Action': 'UPSERT',
-        'ResourceRecordSet': {
-            'Name': name,
-            'Type': rtype,
-            'AliasTarget': {
-                'HostedZoneId': zoneid,
-                'DNSName': target,
-                'EvaluateTargetHealth': False
+    def _get_record_change(name, zoneid, target, rtype):
+        changes = {
+            'Action': 'UPSERT',
+            'ResourceRecordSet': {
+                'Name': name,
+                'Type': rtype,
+                'AliasTarget': {
+                    'HostedZoneId': zoneid,
+                    'DNSName': target,
+                    'EvaluateTargetHealth': False
+                }
             }
         }
-    }
 
-    return changes
+        return changes
 
-
-def _get_zoneid(record):
-    zones = istack.route53.list_hosted_zones_by_name(
-        DNSName=record['domain'])['HostedZones']
-    for z in zones:
-        zoneid = z['Id'].split('/')[2]
-        zone = istack.route53.get_hosted_zone(Id=zoneid)
-        if zone['HostedZone']['Name'] != record['domain'] + '.':
-            continue
-        try:
-            zone_region = zone['VPCs'][0]['VPCRegion']
-        except Exception:
-            return zoneid
-        else:
-            if zone_region == istack.boto3.region_name:
+    def _get_zoneid(record):
+        zones = istack.route53.list_hosted_zones_by_name(
+            DNSName=record['domain'])['HostedZones']
+        for z in zones:
+            zoneid = z['Id'].split('/')[2]
+            zone = istack.route53.get_hosted_zone(Id=zoneid)
+            if zone['HostedZone']['Name'] != record['domain'] + '.':
+                continue
+            try:
+                zone_region = zone['VPCs'][0]['VPCRegion']
+            except Exception:
                 return zoneid
-
-
-def create(iobj):
-    global istack
-    istack = iobj
+            else:
+                if zone_region == istack.boto3.region_name:
+                    return zoneid
 
     istack.cfg.RESOURCES_MAP = istack.cfg.RESOURCES_MAP_R53
     res = resources.get(istack)
