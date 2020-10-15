@@ -29,12 +29,7 @@ def add_stack(istack):
         'net': ['netin', 'netout'],
     }
 
-    AlarmCPUHighThreshold = 60
-    AlarmCPULowThreshold = 30
     ScalingPolicyTrackingsCpuBaseLabel = 'ScalingPolicyTrackingsCpu'
-    ScalingPolicyTrackingsCpuValue = 80
-    widget_annotations = {}
-    widget_annotations_type = 'tracking'
     widget_label = {}
 
     def get_alarm(res):
@@ -95,24 +90,20 @@ def add_stack(istack):
             return True
 
     def get_widget_annotations(res):
-        _ScalingPolicyTrackingsCpuLabel = ScalingPolicyTrackingsCpuBaseLabel
+        AlarmCPUHighThreshold = 60
+        AlarmCPULowThreshold = 30
+        ScalingPolicyTrackingsCpuValue = 80
+        ScalingPolicyTrackingsCpuLabel = ScalingPolicyTrackingsCpuBaseLabel
+        widget_annotations_type = 'tracking'
 
         if 'AlarmCPUHigh' and 'AlarmCPULow' in res:
-            _AlarmCPUHighThreshold, _AlarmCPULowThreshold = get_alarm(res)
-            _widget_annotations_type = 'step'
-        else:
-            _AlarmCPUHighThreshold = AlarmCPUHighThreshold
-            _AlarmCPULowThreshold = AlarmCPULowThreshold
-            _widget_annotations_type = widget_annotations_type
+            AlarmCPUHighThreshold, AlarmCPULowThreshold = get_alarm(res)
+            widget_annotations_type = 'step'
 
         if any(k in res for k in istack.cfg.SCALING_POLICY_TRACKINGS_NAMES):
-            (_ScalingPolicyTrackingsCpuValue,
-                _ScalingPolicyTrackingsCpuLabel) = (get_policy(res))
-            _widget_annotations_type = 'tracking'
-        else:
-            _ScalingPolicyTrackingsCpuValue = ScalingPolicyTrackingsCpuValue
-            _ScalingPolicyTrackingsCpuLabel = ScalingPolicyTrackingsCpuLabel
-            _widget_annotations_type = widget_annotations_type
+            ScalingPolicyTrackingsCpuValue, ScalingPolicyTrackingsCpuLabel = (
+                get_policy(res))
+            widget_annotations_type = 'tracking'
 
         widget_annotations = {
             'tracking': [
@@ -120,27 +111,25 @@ def add_stack(istack):
                     'value': 100
                 },
                 {
-                    'label': _ScalingPolicyTrackingsCpuLabel,
-                    'value': _ScalingPolicyTrackingsCpuValue,
+                    'label': ScalingPolicyTrackingsCpuLabel,
+                    'value': ScalingPolicyTrackingsCpuValue,
                     'color': '#1f77b4',
                 }
             ],
             'step': [
                 {
                     'label': 'AlarmCPUHighThreshold',
-                    'value': _AlarmCPUHighThreshold,
+                    'value': AlarmCPUHighThreshold,
                 },
                 {
                     'label': 'AlarmCPULowThreshold',
-                    'value': _AlarmCPULowThreshold,
+                    'value': AlarmCPULowThreshold,
                     'color': '#2ca02c',
                 }
             ]
         }
 
-        return (_AlarmCPUHighThreshold, _AlarmCPULowThreshold,
-                _ScalingPolicyTrackingsCpuValue, _widget_annotations_type,
-                widget_annotations)
+        return widget_annotations, widget_annotations_type
 
     def do_label_exist(w_label, w_metrics):
         for index, metric in enumerate(w_metrics):
@@ -444,7 +433,7 @@ def add_stack(istack):
     def mylog(string):
         print(istack.name + ' # ' + string)
 
-    def get_vars_for_metrics(res):
+    def get_metrics(res):
         # update widget_title and widget_label
         widget_title['role'] = f'{istack.EnvRole}.{istack.name}'
         title_role = widget_title['role']
@@ -909,24 +898,21 @@ def add_stack(istack):
                             }
                         ])
 
-        return (widget_title, widget_label, LoadBalancerName,
-                LoadBalancerNameExternal, LoadBalancerNameInternal,
-                AWS_ELB, Latency, HTTPCode_Backend_5XX,
-                HTTPCode_Backend_4XX, metrics)
+        return metrics
 
     # get stack resources
     res = resources.get(istack, dash=True)
-    # get widget annotations for alarms threshold
+
+    # get widget annotations and widget_annotations_type for alarms threshold
     # or policy tracking target value
-    (AlarmCPUHighThreshold, AlarmCPULowThreshold,
-        ScalingPolicyTrackingsCpuValue, widget_annotations_type,
-        widget_annotations) = get_widget_annotations(res)
+    widget_annotations, widget_annotations_type = get_widget_annotations(res)
+
     if not istack.cfg.silent:
         pprint(res)
-    # get global vars used later for metrics
-    (widget_title, widget_label, LoadBalancerName, LoadBalancerNameExternal,
-        LoadBalancerNameInternal, AWS_ELB, Latency, HTTPCode_Backend_5XX,
-        HTTPCode_Backend_4XX, metrics) = get_vars_for_metrics(res)
+
+    # get metrics
+    metrics = get_metrics(res)
+
     print('')
     # update dashboards
     update_dashboard(res, istack.cfg.dash_name)
