@@ -13,7 +13,7 @@ def get(data):
     table.padding_width = 1
     table.field_names = fields
     for n in data:
-        table.add_row(['None' if i not in n else n[i]
+        table.add_row(['None' if (i not in n or not n[i]) else n[i]
                       for i in fields])
 
     table.sortby = fields[0]
