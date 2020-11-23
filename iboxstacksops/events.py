@@ -108,7 +108,7 @@ def show(istack, timestamp, timedelta='0'):
             " " + str(event.resource_status_reason)
         )
         if (
-            event.logical_resource_id == 'Service'
+            event.resource_type == 'AWS::ECS::Service'
             and event.resource_status == 'UPDATE_IN_PROGRESS'
             and event.resource_status_reason is None
             and istack.stack.stack_status not in
