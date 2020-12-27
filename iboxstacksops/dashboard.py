@@ -938,4 +938,5 @@ def update(istack):
 
     for dash in response_dash['DashboardEntries']:
         if istack.name in dash['DashboardName']:
+            istack.cfg.dash_name = dash['DashboardName']
             add_stack(istack)
