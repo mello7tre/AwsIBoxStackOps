@@ -56,6 +56,14 @@ SCALING_POLICY_TRACKINGS_NAMES = {
     'ScalingPolicyTrackingsASCustom': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsAPPCpu': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsAPPCustom': 'ScalingPolicyTrackings1',
+    'AutoScalingScalingPolicyCpu': 'ScalingPolicyTrackings1',
+    'AutoScalingScalingPolicyDown': 'ScalingPolicyTrackings1',
+    'AutoScalingScalingPolicyUp': 'ScalingPolicyTrackings1',
+    'AutoScalingScalingPolicyCustom': 'ScalingPolicyTrackings1',
+    'ApplicationAutoScalingScalingPolicyCpu': 'ScalingPolicyTrackings1',
+    'ApplicationAutoScalingScalingPolicyDown': 'ScalingPolicyTrackings1',
+    'ApplicationAutoScalingScalingPolicyUp': 'ScalingPolicyTrackings1',
+    'ApplicationAutoScalingScalingPolicyCustom': 'ScalingPolicyTrackings1',
 }
 RESOURCES_MAP.update(SCALING_POLICY_TRACKINGS_NAMES)
 
