@@ -1,7 +1,13 @@
 import logging
-import slack
 from . import cfg
 from .common import *
+
+try:
+    import slack
+    HAVE_SLACK = True
+except ModuleNotFoundError:
+    HAVE_SLACK = False
+
 
 logging.basicConfig()
 logging.getLogger('botocore').setLevel('CRITICAL')
@@ -16,6 +22,7 @@ def get_msg_client():
         cfg.slack_channel = None
 
     if (cfg.slack_channel
+            and HAVE_SLACK
             and 'IBOX_SLACK_TOKEN' in os.environ
             and 'IBOX_SLACK_USER' in os.environ):
         slack_web = slack.WebClient(token=os.environ['IBOX_SLACK_TOKEN'])
