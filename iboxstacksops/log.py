@@ -8,7 +8,6 @@ try:
 except ModuleNotFoundError:
     HAVE_SLACK = False
 
-
 logging.basicConfig()
 logging.getLogger('botocore').setLevel('CRITICAL')
 logger = logging.getLogger('stacksops')
