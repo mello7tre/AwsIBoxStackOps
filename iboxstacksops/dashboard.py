@@ -933,7 +933,8 @@ def update(istack):
         return
 
     if (not res_changed and
-            'ScalingPolicyTrackings' not in istack.changed['outputs']):
+            (n not in istack.changed['outputs'] for n in [
+                'ScalingPolicyTrackings', 'AutoScalingScalingPolicy'])):
         return
 
     for dash in response_dash['DashboardEntries']:
