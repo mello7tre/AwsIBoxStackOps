@@ -17,6 +17,9 @@ class myboto3(object):
         if region_name:
             kwarg_session['region_name'] = region_name
 
+        if cfg.profile:
+            kwarg_session['profile_name'] = cfg.profile
+
         if not self.parallel and not region:
             try:
                 self.boto3 = cfg.boto3

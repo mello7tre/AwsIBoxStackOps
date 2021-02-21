@@ -269,6 +269,9 @@ def get_parser():
         '--region',
         help='Region', type=str)
     parser.add_argument(
+        '--profile',
+        help='AWS Profile', type=str)
+    parser.add_argument(
         '--compact',
         help='Display Stacks-Output in compact form',
         action='store_true')
