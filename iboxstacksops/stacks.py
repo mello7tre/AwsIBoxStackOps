@@ -20,6 +20,11 @@ def get_base_data(stack):
     if stack_parameters:
         data['c_parameters'] = stack_parameters
 
+        # add parameters too, this way i can show them using show command
+        for n, v in data['c_parameters'].items():
+            if n not in data:
+                data[n] = v
+
     return data
 
 
