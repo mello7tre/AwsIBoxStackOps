@@ -94,7 +94,7 @@ def add_stack(istack):
         AlarmCPULowThreshold = 30
         ScalingPolicyTrackingsCpuValue = 80
         ScalingPolicyTrackingsCpuLabel = ScalingPolicyTrackingsCpuBaseLabel
-        widget_annotations_type = 'tracking'
+        widget_annotations_type = None
 
         if 'AlarmCPUHigh' and 'AlarmCPULow' in res:
             AlarmCPUHighThreshold, AlarmCPULowThreshold = get_alarm(res)
@@ -192,7 +192,8 @@ def add_stack(istack):
                 annotations['vertical'].append(w_ann_vertical)
 
         # Horizontal annotations
-        annotations['horizontal'] = widget_annotations[widget_annotations_type]
+        annotations['horizontal'] = widget_annotations.get(
+            widget_annotations_type, [])
 
         # Horizontal (ec2-ecs)
         # if atype == 'ecs':
