@@ -57,13 +57,20 @@ SCALING_POLICY_TRACKINGS_NAMES = {
     'ScalingPolicyTrackingsAPPCpu': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsAPPCustom': 'ScalingPolicyTrackings1',
     'AutoScalingScalingPolicyCpu': 'ScalingPolicyTrackings1',
-    'AutoScalingScalingPolicyDown': 'ScalingPolicyTrackings1',
-    'AutoScalingScalingPolicyUp': 'ScalingPolicyTrackings1',
     'AutoScalingScalingPolicyCustom': 'ScalingPolicyTrackings1',
     'ApplicationAutoScalingScalingPolicyCpu': 'ScalingPolicyTrackings1',
-    'ApplicationAutoScalingScalingPolicyDown': 'ScalingPolicyTrackings1',
-    'ApplicationAutoScalingScalingPolicyUp': 'ScalingPolicyTrackings1',
     'ApplicationAutoScalingScalingPolicyCustom': 'ScalingPolicyTrackings1',
+
+    # Disabled until they are properly managed in dashboard.py [get_policy].
+    # Ideal should be to create two horizontal annotations
+    # one for the lower bound and one for the upper one
+    # but as AutoScalingScalingPolicy have been replaced with Tracking ones
+    # i do not know if it make sense to put much effort in this.
+
+    # 'AutoScalingScalingPolicyDown': 'ScalingPolicyTrackings1',
+    # 'AutoScalingScalingPolicyUp': 'ScalingPolicyTrackings1',
+    # 'ApplicationAutoScalingScalingPolicyDown': 'ScalingPolicyTrackings1',
+    # 'ApplicationAutoScalingScalingPolicyUp': 'ScalingPolicyTrackings1',
 }
 RESOURCES_MAP.update(SCALING_POLICY_TRACKINGS_NAMES)
 
