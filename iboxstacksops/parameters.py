@@ -34,7 +34,7 @@ def _set_action_parameters(istack, params_default, params_changed,
             if in_cfg and current_value != cfg_value:
                 # get value from specified cmd arg
                 value = cfg_value
-                params_changed[key] = current_value + " => " + value
+                params_changed[key] = f'{current_value} => {value}'
 
             # current value is not allowed by new template
             elif len(allowed_values) > 0 and (
@@ -42,7 +42,7 @@ def _set_action_parameters(istack, params_default, params_changed,
                 # get value from template default
                 value = default_value
                 params_forced_default[key] = (
-                    current_value + " => " + default_value)
+                    f'{current_value} => {default_value}')
 
             # current value is unchanged and allowed
             else:
