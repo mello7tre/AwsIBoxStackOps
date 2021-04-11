@@ -933,14 +933,12 @@ def update(istack):
     else:
         return
 
-    if (not res_changed and
-            (n not in istack.changed['outputs'] for n in [
+    if (res_changed
+            or any(n in istack.changed['outputs'] for n in [
                 'ScalingPolicyTrackings',
                 'AutoScalingScalingPolicy',
                 'ApplicationAutoScalingScalingPolicy'])):
-        return
-
-    for dash in response_dash['DashboardEntries']:
-        if istack.name in dash['DashboardName']:
-            istack.cfg.dash_name = dash['DashboardName']
-            add_stack(istack)
+        for dash in response_dash['DashboardEntries']:
+            if istack.name in dash['DashboardName']:
+                istack.cfg.dash_name = dash['DashboardName']
+                add_stack(istack)
