@@ -9,6 +9,7 @@ def get_base_data(stack):
         'before': {},
         'after': {},
         'changed': {},
+        'parameter_not_empty': [],
     }
 
     stack_outputs = outputs.get(stack)
@@ -22,6 +23,10 @@ def get_base_data(stack):
 
         # add parameters too, this way i can show them using show command
         for n, v in data['c_parameters'].items():
+            if (not n.startswith('Env')
+                    and n not in ['UpdateMode']
+                    and v != '' and ',,,' not in v):
+                data['parameter_not_empty'].append(n)
             if n not in data:
                 data[n] = v
 
