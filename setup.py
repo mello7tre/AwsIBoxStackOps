@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="iboxstacksops",
-    version="0.3.4",
+    version="0.3.5",
     author="Mello",
     author_email="mello+python@ankot.org",
     description="AWS Infrastructure in a Box - Stacks management program",
@@ -19,9 +19,11 @@ setuptools.setup(
     install_requires=[
         'boto3',
         'prettytable',
-        'slackclient',
         'PyYAML>=5,==5.*',
     ],
+    extras_require = {
+        'extra': ['slackclient'],
+    },
     python_requires='>=3.7',
     scripts=[
         'scripts/ibox_stacksops.py',
