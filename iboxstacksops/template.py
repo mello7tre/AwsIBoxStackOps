@@ -44,7 +44,7 @@ def get_template(istack):
                 istack.template_from = 'S3'
             # From file
             else:
-                f = open(istack.cfg.template[7:], 'r')
+                f = open(istack.cfg.template, 'r')
                 body = f.read()
                 istack.template_from = 'File'
         # Current template
