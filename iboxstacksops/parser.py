@@ -2,7 +2,8 @@ import argparse
 from . import cfg
 from .commands import (create, update, delete, cancel_update, continue_update,
                        info, parameters, resolve, show_table, log, dash,
-                       ssm_setup, ssm_put, ssm_show, r53, replicate)
+                       ssm_setup, ssm_put, ssm_show, r53, replicate,
+                       stackset_update)
 
 
 def get_create_parser(subparser, parents=[]):

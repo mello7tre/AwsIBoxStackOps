@@ -155,3 +155,6 @@ def replicate():
     pprint(result)
 
     return result
+
+def stackset_update():
+    pass
