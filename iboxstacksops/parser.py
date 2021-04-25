@@ -53,6 +53,16 @@ def get_update_parser(subparser, parents=[]):
     return parser
 
 
+def get_stackset_update_parser(subparser, parents=[]):
+    parser = subparser.add_parser('stackset_update',
+                                  parents=parents,
+                                  help='StackSet Update')
+    parser.add_argument('-s', '--stackset',
+                        help='StackSet name', type=str)
+
+    return parser
+
+
 def set_dash_parser(subparser, parents=[]):
     parser = subparser.add_parser('dash',
                                   parents=parents,
@@ -402,6 +412,14 @@ def get_parser():
         help='How many seconds go back in time from stack last event - '
              'use 0 for realtime - if < 30 assume days',
         default=cfg.timedelta)
+
+    # stackset update parser
+    parser_stackset_update = get_stackset_update_parser(
+        command_subparser, [
+            action_parser,
+            template_parser_update,
+        ])
+    parser_stackset_update.set_defaults(func=stackset_update)
 
     # dashboard parser
     set_dash_parser(

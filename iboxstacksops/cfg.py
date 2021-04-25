@@ -10,6 +10,7 @@ statistic = 'Average'
 statisticresponse = 'p95'
 silent = True
 vertical = False
+profile = False
 #
 
 OUT_WIDTH = 1000000
