@@ -177,3 +177,23 @@ def log(istack):
             time_delta = time_delta * 86400
         time_event = last_timestamp - timedelta(seconds=time_delta)
         events.show(istack, time_event, time_delta)
+
+
+def stackset_update(istack):
+    # set tags
+    istack.action_tags = get_action_tags(istack, istack.Tags)
+
+    # get final args for update
+    us_args = _get_action_args(istack)
+    del us_args['StackName']
+    del us_args['NotificationARNs']
+    us_args['StackSetName'] = istack.name
+
+    # do stack update
+    pprint(us_args)
+    exit(0)
+    response = istack.client.update_stack_set(**us_args)
+    istack.mylog(f'{json.dumps(response)}\n')
+    time.sleep(1)
+
+    return True

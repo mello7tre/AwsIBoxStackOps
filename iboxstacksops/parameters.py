@@ -69,12 +69,12 @@ def _set_action_parameters(istack, params_default, params_changed,
         istack.action_parameters.append(
             {
                 'ParameterKey': key,
-                'ParameterValue': value,
+                'ParameterValue': str(value),
                 'UsePreviousValue': use_previous_value,
             } if istack.stack else
             {
                 'ParameterKey': key,
-                'ParameterValue': value,
+                'ParameterValue': str(value),
             }
         )
 

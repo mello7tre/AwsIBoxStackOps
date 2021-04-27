@@ -23,7 +23,7 @@ def _update_template_param(istack):
             f'Error retrieving stack template with prefix: {s3_prefix}')
 
 
-def get_template(istack):
+def get_template(istack, stackset=None):
     logger.info('Getting Template Body')
     # update template param if using version one
     if istack.cfg.version:
@@ -49,8 +49,11 @@ def get_template(istack):
                 istack.template_from = 'File'
         # Current template
         else:
-            response = istack.client.get_template(StackName=istack.name)
-            tbody = response['TemplateBody']
+            if stackset:
+                tbody = istack.TemplateBody
+            else:
+                response = istack.client.get_template(StackName=istack.name)
+                tbody = response['TemplateBody']
             if isinstance(tbody, OrderedDict):
                 body = json.dumps(tbody)
             else:

@@ -58,7 +58,7 @@ def get_stackset_update_parser(subparser, parents=[]):
     parser = subparser.add_parser('stackset_update',
                                   parents=parents,
                                   help='StackSet Update')
-    parser.add_argument('-s', '--stackset',
+    parser.add_argument('-s', '--stackset', dest='stack',
                         help='StackSet name', type=str)
 
     return parser

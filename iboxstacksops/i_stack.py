@@ -138,6 +138,15 @@ class ibox_stack(object):
         result = route53.create(self)
         return result
 
+    def stackset_update(self):
+        self.exports = self.cfg.exports
+        self.template = template.get_template(self, stackset=True)
+        self.stack = True
+        parameters.process(self)
+        result = actions.stackset_update(self)
+        if result:
+            return {self.name: None}
+
 
 def exec_command(name, data, command, region=None, **kwargs):
     istack = ibox_stack(name, data, region)
