@@ -4,13 +4,17 @@ from .log import logger
 from .common import *
 
 
-def get_base_data(stack):
+def get_base_data(stack, stackset=None):
     data = {
         'before': {},
         'after': {},
         'changed': {},
         'parameter_not_empty': [],
     }
+
+    if stackset:
+        data['TemplateBody'] = stack['TemplateBody']
+        data['Tags'] = stack['Tags']
 
     stack_outputs = outputs.get(stack)
 
@@ -46,7 +50,20 @@ def _get_stack(r, data):
             data[stack_name] = stack_data
 
 
-def get(names=[], exit_if_empty=True, obj=None):
+def _get_stackset(r, data):
+    s = r['StackSet']
+    stack_name = s['StackSetName']
+    stack_data = get_base_data(s, stackset=True)
+    stack_role = stack_data.get('EnvRole', None)
+    stack_type = stack_data.get('StackType', None)
+    if (stack_name in cfg.stack
+            or stack_role in cfg.role
+            or stack_type in cfg.type
+            or 'ALL' in cfg.type):
+        data[stack_name] = stack_data
+
+
+def get(names=[], exit_if_empty=True, obj=None, stackset=None):
     if not obj:
         boto3 = myboto3()
         client = boto3.client('cloudformation')
@@ -60,7 +77,10 @@ def get(names=[], exit_if_empty=True, obj=None):
     if not names:
         names = cfg.stack
 
-    if (not cfg.role
+    if stackset:
+        response = client.describe_stack_set(StackSetName=cfg.stack[0])
+        _get_stackset(response, data)
+    elif (not cfg.role
             and not cfg.type
             and len(names) < cfg.MAX_SINGLE_STACKS):
         for s in names:

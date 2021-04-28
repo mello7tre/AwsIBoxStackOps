@@ -1,4 +1,4 @@
-from . import cfg, stacks, i_stack, i_region, events, table, ssm, stackset
+from . import cfg, stacks, i_stack, i_region, events, table, ssm
 from .tools import concurrent_exec, get_exports, show_confirm
 from .common import *
 
@@ -157,11 +157,12 @@ def replicate():
     return result
 
 
-def stackset_update():
-    name = cfg.stack
-    w_stackset = stackset.get()
+def stackset():
+    name = cfg.stack[0]
+    stackset = stacks.get(stackset=True)
     cfg.exports = get_exports()
-    istackset = i_stack.ibox_stack(name, w_stackset[name])
-    result = istackset.stackset_update()
+    stack = i_stack.ibox_stack(name, stackset[name])
+    cmd = getattr(stack, f'stackset_{cfg.command_stackset}')
+    result = cmd()
 
     return result

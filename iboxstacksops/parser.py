@@ -3,7 +3,7 @@ from . import cfg
 from .commands import (create, update, delete, cancel_update, continue_update,
                        info, parameters, resolve, show_table, log, dash,
                        ssm_setup, ssm_put, ssm_show, r53, replicate,
-                       stackset_update)
+                       stackset)
 
 
 def get_create_parser(subparser, parents=[]):
@@ -50,16 +50,6 @@ def get_update_parser(subparser, parents=[]):
     parser.add_argument('--nodetails',
                         help='Do not show extra details in changeset',
                         action='store_true')
-
-    return parser
-
-
-def get_stackset_update_parser(subparser, parents=[]):
-    parser = subparser.add_parser('stackset_update',
-                                  parents=parents,
-                                  help='StackSet Update')
-    parser.add_argument('-s', '--stackset', dest='stack',
-                        help='StackSet name', type=str)
 
     return parser
 
@@ -142,6 +132,25 @@ def set_ssm_parser(subparser, parents=[]):
         'show', help='Show Regions Distribution',
         parents=parents)
     show_parser.set_defaults(func=ssm_show, all_stacks=True)
+
+
+def set_stackset_parser(subparser, parents=[]):
+    parser = subparser.add_parser('stackset',
+                                  parents=parents,
+                                  help='StackSet operations')
+    parser.set_defaults(func=stackset)
+
+    stackset_parser = parser.add_subparsers(title='Stackset Commands',
+                                            required=True,
+                                            dest='command_stackset')
+
+    # update parser
+    parser_update = stackset_parser.add_parser(
+        'update',
+        parents=parents + [
+            get_stackset_single_parser(),
+            get_template_parser(required=False),
+        ])
 
 
 def set_replicate_parser(subparser, parents=[]):
@@ -249,6 +258,17 @@ def get_stack_single_parser():
     parser.add_argument(
         '-s', '--stack', nargs=1,
         help='Stack Names space separated',
+        required=True, type=str, default=[])
+
+    return parser
+
+
+def get_stackset_single_parser():
+    parser = argparse.ArgumentParser(add_help=False)
+
+    parser.add_argument(
+        '-s', '--stackset', nargs=1, dest='stack',
+        help='StackSet name',
         required=True, type=str, default=[])
 
     return parser
@@ -414,14 +434,6 @@ def get_parser():
              'use 0 for realtime - if < 30 assume days',
         default=cfg.timedelta)
 
-    # stackset update parser
-    parser_stackset_update = get_stackset_update_parser(
-        command_subparser, [
-            action_parser,
-            template_parser_update,
-        ])
-    parser_stackset_update.set_defaults(func=stackset_update)
-
     # dashboard parser
     set_dash_parser(
         command_subparser, [
@@ -434,6 +446,12 @@ def get_parser():
             stack_selection_parser,
         ])
     parser_show.set_defaults(func=show_table, all_stacks=True)
+
+    # stackset parser
+    set_stackset_parser(
+        command_subparser, [
+            action_parser,
+        ])
 
     # ssm parser
     set_ssm_parser(
