@@ -15,6 +15,7 @@ def get_base_data(stack, stackset=None):
     if stackset:
         data['TemplateBody'] = stack['TemplateBody']
         data['Tags'] = stack['Tags']
+        data['StackSetId'] = stack['StackSetId']
 
     stack_outputs = outputs.get(stack)
 

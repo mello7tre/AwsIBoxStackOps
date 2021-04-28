@@ -82,6 +82,7 @@ class ibox_stack(object):
 
     def info(self):
         self.stack = self.cloudformation.Stack(self.name)
+        self.template = template.get_template(self)
         outputs.show(self, 'before')
         parameters.show_override(self)
 
@@ -146,6 +147,29 @@ class ibox_stack(object):
         result = actions.stackset_update(self)
         if result:
             return {self.name: None}
+
+    def stackset_info(self):
+        self.exports = self.cfg.exports
+        self.template = template.get_template(self, stackset=True)
+        self.stack = True
+        if not self.cfg.compact:
+            self.cfg.OUT_WIDTH = 80
+        parameters.show_override(self)
+
+    def stackset_parameters(self):
+        self.exports = self.cfg.exports
+        self.template = template.get_template(self, stackset=True)
+        parser = parameters.get_stack_parameter_parser(self)
+        logger.info(f'{self.name} Parameters:')
+        parser.print_help()
+
+    def stackset_show(self):
+        result = actions.stackset_show(self)
+
+    def stackset_instances(self):
+        cfg.fields = cfg.STACKSET_INSTANCES_SHOW_TABLE_FIELDS
+        cfg.output = 'text'
+        result = actions.stackset_instances(self)
 
 
 def exec_command(name, data, command, region=None, **kwargs):

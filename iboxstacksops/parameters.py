@@ -160,20 +160,13 @@ def add_stack_params_as_args(istack, parser):
 
 def show_override(istack):
     params = {}
-
-    template_parameters = istack.client.get_template_summary(
-        StackName=istack.name)['Parameters']
-
-    for p in istack.stack.parameters:
-        name = p['ParameterKey']
-        value = p['ParameterValue']
+    for name, value in istack.c_parameters.items():
         if (
             not name.startswith('Env')
             and any(name not in n for n in ['UpdateMode'])
             and any(
-                name == s['ParameterKey']
-                and (value != s['DefaultValue'] if 'DefaultValue' in s else '')
-                for s in template_parameters
+                name == t_name and (value != t_value.get('Default'))
+                for t_name, t_value in istack.parameters.items()
             )
         ):
             params[name] = value

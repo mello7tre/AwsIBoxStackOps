@@ -1,4 +1,4 @@
-from . import resources, changeset, events, outputs, dashboard
+from . import resources, changeset, events, outputs, dashboard, table
 from .tags import get_action_tags
 from .tools import show_confirm
 from .log import logger
@@ -197,3 +197,22 @@ def stackset_update(istack):
     time.sleep(1)
 
     return True
+
+
+def stackset_instances(istack):
+    response = istack.client.list_stack_instances(StackSetName=istack.name)
+
+    for n, v in enumerate(response['Summaries']):
+        response['Summaries'][n]['StackId'] = (
+            response['Summaries'][n]['StackId'].split('/')[-2])
+        response['Summaries'][n]['StackInstanceStatus'] = (
+            response['Summaries'][n]['StackInstanceStatus']['DetailedStatus'])
+
+    s_table = table.get(response['Summaries'])
+    print(f'\nStackSetId: {istack.StackSetId}')
+    print(s_table)
+
+
+def stackset_show(istack):
+    s_table = table.get([istack.bdata])
+    print(s_table)

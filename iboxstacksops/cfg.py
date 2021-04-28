@@ -110,4 +110,13 @@ SHOW_TABLE_FIELDS = [
     'LastUpdatedTime',
 ]
 
+STACKSET_INSTANCES_SHOW_TABLE_FIELDS = [
+    'Region',
+    'Account',
+    'StackId',
+    'Status',
+    'StatusReason',
+    'StackInstanceStatus',
+]
+
 SSM_BASE_PATH = '/ibox'

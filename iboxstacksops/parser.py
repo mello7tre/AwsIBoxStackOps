@@ -136,7 +136,7 @@ def set_ssm_parser(subparser, parents=[]):
 
 def set_stackset_parser(subparser, parents=[]):
     parser = subparser.add_parser('stackset',
-                                  parents=parents,
+                                  parents=[],
                                   help='StackSet operations')
     parser.set_defaults(func=stackset)
 
@@ -148,6 +148,36 @@ def set_stackset_parser(subparser, parents=[]):
     parser_update = stackset_parser.add_parser(
         'update',
         parents=parents + [
+            get_stackset_single_parser(),
+            get_template_parser(required=False),
+        ])
+
+    # info parser
+    parser_info = stackset_parser.add_parser(
+        'info',
+        parents=[
+            get_stackset_single_parser(),
+            get_template_parser(required=False),
+        ])
+
+    # parameters parser
+    parser_parameters = stackset_parser.add_parser(
+        'parameters',
+        parents=[
+            get_stackset_single_parser(),
+            get_template_parser(required=False),
+        ])
+
+    # show parser
+    parser_show = get_show_parser(
+        stackset_parser, [
+            get_stackset_single_parser(),
+        ])
+
+    # instances parser
+    parser_instances = stackset_parser.add_parser(
+        'instances',
+        parents=[
             get_stackset_single_parser(),
             get_template_parser(required=False),
         ])
