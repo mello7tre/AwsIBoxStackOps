@@ -190,8 +190,8 @@ def stackset_update(istack):
     us_args['StackSetName'] = istack.name
 
     # do stack update
-    pprint(us_args)
-    exit(0)
+    # pprint(us_args)
+    # exit(0)
     response = istack.client.update_stack_set(**us_args)
     istack.mylog(f'{json.dumps(response)}\n')
     time.sleep(1)
