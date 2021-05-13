@@ -21,7 +21,7 @@ setuptools.setup(
         'prettytable',
         'PyYAML>=5,==5.*',
     ],
-    extras_require = {
+    extras_require={
         'extra': ['slackclient'],
     },
     python_requires='>=3.7',

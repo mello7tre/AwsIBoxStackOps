@@ -11,6 +11,7 @@ statisticresponse = 'p95'
 silent = True
 vertical = False
 profile = False
+output = 'text'
 #
 
 OUT_WIDTH = 1000000

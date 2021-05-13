@@ -140,6 +140,7 @@ class ibox_stack(object):
         return result
 
     def stackset_update(self):
+        cfg.fields = cfg.STACKSET_INSTANCES_SHOW_TABLE_FIELDS
         self.exports = self.cfg.exports
         self.template = template.get_template(self, stackset=True)
         self.stack = True

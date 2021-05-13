@@ -69,6 +69,37 @@ def _update_waiter(istack, timestamp=None):
     print('\n')
 
 
+# wait until all stackset instances finished updating
+def _stackset_update_waiter(istack):
+    pending_instances = {}
+    previous_instances = {}
+    is_pending = True
+    while is_pending:
+        instances = stackset_instances(istack, False)
+        for n in instances:
+            stack_id = n['StackId']
+            if any(n['StackInstanceStatus'] == s for s in [
+                    'PENDING',
+                    'RUNNING']):
+                pending_instances[stack_id] = n
+            else:
+                try:
+                    del pending_instances[stack_id]
+                except Exception:
+                    pass
+        if pending_instances and previous_instances != instances:
+            print(table.get(list(pending_instances.values())))
+
+        previous_instances = instances
+
+        if pending_instances:
+            time.sleep(5)
+        else:
+            is_pending = False
+
+    stackset_instances(istack)
+
+
 def create(istack):
     stack_tags = [
         {'Key': 'Env', 'Value': istack.cfg.Env},
@@ -194,12 +225,14 @@ def stackset_update(istack):
     # exit(0)
     response = istack.client.update_stack_set(**us_args)
     istack.mylog(f'{json.dumps(response)}\n')
-    time.sleep(1)
+    time.sleep(2)
+
+    _stackset_update_waiter(istack)
 
     return True
 
 
-def stackset_instances(istack):
+def stackset_instances(istack, show=True):
     response = istack.client.list_stack_instances(StackSetName=istack.name)
 
     for n, v in enumerate(response['Summaries']):
@@ -208,9 +241,12 @@ def stackset_instances(istack):
         response['Summaries'][n]['StackInstanceStatus'] = (
             response['Summaries'][n]['StackInstanceStatus']['DetailedStatus'])
 
-    s_table = table.get(response['Summaries'])
-    print(f'\nStackSetId: {istack.StackSetId}')
-    print(s_table)
+    if show:
+        s_table = table.get(response['Summaries'])
+        print(f'\nStackSetId: {istack.StackSetId}')
+        print(s_table)
+
+    return response['Summaries']
 
 
 def stackset_show(istack):
