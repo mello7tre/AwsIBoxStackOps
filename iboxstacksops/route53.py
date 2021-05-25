@@ -4,6 +4,19 @@ from .common import *
 
 def create(istack):
 
+    def _get_sd_info(service_id):
+        istack.servicediscovery = istack.boto3.client('servicediscovery')
+        resp = istack.servicediscovery.get_service(Id=service_id)
+        if resp['Service']:
+            service = resp['Service']
+            service_name = service['Name']
+            namespace_id = service['NamespaceId']
+            resp = istack.servicediscovery.get_namespace(Id=namespace_id)
+            if resp['Namespace']:
+                namespace_name = resp['Namespace']['Name']
+
+        return f'{service_name}.{namespace_name}'
+
     def _get_rec_info(record, rtype):
         r = {}
         param = record.split('.')
@@ -19,6 +32,9 @@ def create(istack):
             del r['stack']
             r['role'] = param[0]
             r['domain'] = '.'.join(param[2:5])
+        if rtype == 'sd':
+            r['region'] = param[2]
+            r['domain'] = '.'.join(param[3:])
 
         if istack.cfg.suffix and rtype != 'cf':
             r['role'] = r['role'] + '-' + istack.cfg.suffix
@@ -53,13 +69,13 @@ def create(istack):
 
         return changes
 
-    def _get_zoneid(record):
+    def _get_zoneid(domain):
         zones = istack.route53.list_hosted_zones_by_name(
-            DNSName=record['domain'])['HostedZones']
+            DNSName=domain)['HostedZones']
         for z in zones:
             zoneid = z['Id'].split('/')[2]
             zone = istack.route53.get_hosted_zone(Id=zoneid)
-            if zone['HostedZone']['Name'] != record['domain'] + '.':
+            if zone['HostedZone']['Name'] != domain + '.':
                 continue
             try:
                 zone_region = zone['VPCs'][0]['VPCRegion']
@@ -107,11 +123,26 @@ def create(istack):
                 record_cf: v,
             }
 
-        zoneid = _get_zoneid(record)
+        if r.startswith('ServiceDiscoveryService'):
+            sd_record_name = _get_sd_info(v)
+            record = _get_rec_info(sd_record_name, 'sd')
+            record_sd = record['role'] + '.' + record['domain']
+            map_record = {
+                record_sd: sd_record_name,
+            }
+            base_domain = '.'.join(
+                record['domain'].split('.')[1:])
+            zoneid = _get_zoneid(base_domain)
+
+        target_zoneid = _get_zoneid(record['domain'])
+        try:
+            zoneid
+        except Exception:
+            zoneid = target_zoneid
 
         for name, target in map_record.items():
-            rtype = _get_record_type(zoneid, target)
-            changes = _get_record_change(name, zoneid, target, rtype)
+            rtype = _get_record_type(target_zoneid, target)
+            changes = _get_record_change(name, target_zoneid, target, rtype)
             print(name)
             pprint(changes)
             print('')

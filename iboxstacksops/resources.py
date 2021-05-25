@@ -23,8 +23,9 @@ def get(istack, dash=None):
         for res in r['StackResourceSummaries']:
             res_lid = res['LogicalResourceId']
             res_type = res['ResourceType']
+            res_pid = res['PhysicalResourceId']
+
             if res_lid in res_list:
-                res_pid = res['PhysicalResourceId']
                 if res_pid.startswith('arn'):
                     res_pid = res_pid.split(':', 5)[5]
                 if res_lid in [
@@ -49,6 +50,10 @@ def get(istack, dash=None):
                 if dash and istack.cfg.RESOURCES_MAP[res_lid]:
                     res_lid = istack.cfg.RESOURCES_MAP[res_lid]
 
+                resources[res_lid] = res_pid
+            elif res_type in res_list:
+                # If RESOURCES_MAP directly include AWS Resource Type,
+                # used for AWS::ServiceDiscovery::Service
                 resources[res_lid] = res_pid
 
     return resources

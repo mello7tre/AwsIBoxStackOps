@@ -82,6 +82,7 @@ RESOURCES_MAP_R53 = {
     'RecordSetExternalRO': None,
     'RecordSetInternalRO': None,
     'RecordSetCloudFront': None,
+    'AWS::ServiceDiscovery::Service': None,
 }
 
 STACK_COMPLETE_STATUS = [
