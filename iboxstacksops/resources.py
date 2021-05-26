@@ -54,6 +54,8 @@ def get(istack, dash=None):
             elif res_type in res_list:
                 # If RESOURCES_MAP directly include AWS Resource Type,
                 # used for AWS::ServiceDiscovery::Service
+                if res_pid.startswith('arn'):
+                    res_pid = res_pid.split(':', 5)[5]
                 resources[res_lid] = res_pid
 
     return resources
