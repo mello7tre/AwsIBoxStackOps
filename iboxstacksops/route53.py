@@ -91,6 +91,7 @@ def create(istack):
     out = {}
     for r, v in res.items():
         r_out = {}
+        zoneid = None
         if r.startswith('RecordSetExternal'):
             record = _get_rec_info(v, 'external')
             record_region = '%s.%s.%s' % (
@@ -135,9 +136,8 @@ def create(istack):
             zoneid = _get_zoneid(base_domain)
 
         target_zoneid = _get_zoneid(record['domain'])
-        try:
-            zoneid
-        except Exception:
+
+        if not zoneid:
             zoneid = target_zoneid
 
         for name, target in map_record.items():
