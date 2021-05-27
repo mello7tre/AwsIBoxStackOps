@@ -22,6 +22,7 @@ def add_stack(istack):
     }
 
     widget_map = {
+        'role': ['cpu', 'response'],
         'req': ['requests', 'healthy'],
         '5xx': ['5xx', '4xx'],
         '5xx_elb': ['5xx_elb', '4xx_elb'],
@@ -260,92 +261,29 @@ def add_stack(istack):
 
         w = dash['widgets']
 
-        # BEGIN cpu
         # Find the current number of widget stacks,
         # so that the next one is added at the end
         len_stacks = len([n for n in w if n['width'] == widget_width['stack']])
 
-        list_role = [n for n, v in enumerate(w)
-                     if v['properties']['title'] == widget_title['role']]
-        index_role = list_role[0] if len(list_role) > 0 else len_stacks
+        # iterate over widget_map keys and populate relative widget
+        for wd in widget_map:
+            w_list = [n for n, v in enumerate(w)
+                      if v['properties']['title'] == widget_title[wd]]
+            if len(w_list) > 0:
+                w_index = w_list[0]
+            elif wd == 'role':
+                w_index = len_stacks
+            else:
+                w_index = len(w)
 
-        widget = get_widget_base(
-            'stack', list_role, index_role, widget_title['role'], w)
-
-        for n in ['cpu', 'response']:
-            for m in metrics[n]:
-                do_insert_metrics(m, widget)
-
-        # If metrics are empty delete widget (Ex ecs-alb)
-        if len(widget['properties']['metrics']) == 0:
-            del w[index_role]
-
-        # BEGIN requests
-        list_req = [n for n, v in enumerate(w)
-                    if v['properties']['title'] == widget_title['req']]
-        index_req = list_req[0] if len(list_req) > 0 else len(w)
-
-        if resolve_widget_map('req'):
-            widget = get_widget_base(
-                'global', list_req, index_req, widget_title['req'], w)
-
-            for n in ['requests', 'healthy']:
-                for m in metrics[n]:
-                    do_insert_metrics(m, widget)
-
-        # BEGIN 5xx
-        list_5xx = [n for n, v in enumerate(w)
-                    if v['properties']['title'] == widget_title['5xx']]
-        index_5xx = list_5xx[0] if len(list_5xx) > 0 else len(w)
-
-        if resolve_widget_map('5xx'):
-            widget = get_widget_base(
-                'global', list_5xx, index_5xx, widget_title['5xx'], w)
-
-            for n in ['5xx', '4xx']:
-                for m in metrics[n]:
-                    do_insert_metrics(m, widget)
-
-        # BEGIN 5xx ELB
-        list_5xx_elb = [n for n, v in enumerate(w)
-                        if v['properties']['title'] == widget_title['5xx_elb']]
-        index_5xx_elb = list_5xx_elb[0] if len(list_5xx_elb) > 0 else len(w)
-
-        if resolve_widget_map('5xx_elb') and 'ServiceName' not in res:
-            widget = get_widget_base(
-                'global', list_5xx_elb, index_5xx_elb,
-                widget_title['5xx_elb'], w)
-
-            for n in ['5xx_elb', '4xx_elb']:
-                for m in metrics[n]:
-                    do_insert_metrics(m, widget)
-
-        # BEGIN 50x ELB
-        list_50x_elb = [n for n, v in enumerate(w)
-                        if v['properties']['title'] == widget_title['50x_elb']]
-        index_50x_elb = list_50x_elb[0] if len(list_50x_elb) > 0 else len(w)
-
-        if resolve_widget_map('50x_elb') and 'ServiceName' not in res:
-            widget = get_widget_base(
-                'global', list_50x_elb, index_50x_elb,
-                widget_title['50x_elb'], w)
-
-            for n in ['500_elb', '502_elb', '503_elb', '504_elb']:
-                for m in metrics[n]:
-                    do_insert_metrics(m, widget)
-
-        # BEGIN network
-        list_net = [n for n, v in enumerate(w)
-                    if v['properties']['title'] == widget_title['net']]
-        index_net = list_net[0] if len(list_net) > 0 else len(w)
-
-        if resolve_widget_map('net'):
-            widget = get_widget_base(
-                'global', list_net, index_net, widget_title['net'], w)
-
-            for n in ['netin', 'netout']:
-                for m in metrics[n]:
-                    do_insert_metrics(m, widget)
+            if resolve_widget_map(wd):
+                # if relative metrics exists
+                widget = get_widget_base(
+                    'stack' if wd == 'role' else 'global',
+                    w_list, w_index, widget_title[wd], w)
+                for n in widget_map[wd]:
+                    for m in metrics[n]:
+                        do_insert_metrics(m, widget)
         # END Widgets
 
         if istack.cfg.debug:
@@ -407,22 +345,8 @@ def add_stack(istack):
             HTTPCode_Backend_5XX = None
             HTTPCode_Backend_4XX = None
 
-        metrics = {
-            'cpu': [],
-            'response': [],
-            '5xx': [],
-            '4xx': [],
-            '5xx_elb': [],
-            '4xx_elb': [],
-            '500_elb': [],
-            '502_elb': [],
-            '503_elb': [],
-            '504_elb': [],
-            'requests': [],
-            'healthy': [],
-            'netin': [],
-            'netout': []
-        }
+        # build empty metrics dict from widget_map
+        metrics = {n: [] for m in widget_map.values() for n in m}
 
         # ECS
         if all(n in res for n in ['ServiceName', 'ClusterName']):
