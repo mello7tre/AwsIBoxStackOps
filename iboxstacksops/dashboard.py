@@ -248,30 +248,40 @@ def add_stack(istack):
             # Always add cpu maximum
             do_insert_metrics('Cpu - Maximum', m, widget, 'Cpu - Maximum')
         for m in metrics['response']:
-            do_insert_metrics(widget_label['response'], m, widget, 'Response')
-            do_insert_metrics(
-                widget_label['response_external'], m, widget,
-                'Response External')
-            do_insert_metrics(
-                widget_label['response_internal'], m, widget,
-                'Response Internal')
+            if isinstance(m, dict):
+                do_insert_metrics(m['label'], m['metric'], widget, m['name'])
+            else:
+                do_insert_metrics(
+                    widget_label['response'], m, widget, 'Response')
+                do_insert_metrics(
+                    widget_label['response_external'], m, widget,
+                    'Response External')
+                do_insert_metrics(
+                    widget_label['response_internal'], m, widget,
+                    'Response Internal')
 
         add_annotations(widget, istack.StackType)
 
     def update_widget_5xx_properties(widget, res):
         for m in metrics['5xx']:
-            do_insert_metrics(widget_label['5xx'], m, widget, '5xx')
-            do_insert_metrics(
-                widget_label['5xx_external'], m, widget, '5xx External')
-            do_insert_metrics(
-                widget_label['5xx_internal'], m, widget, '5xx Internal')
+            if isinstance(m, dict):
+                do_insert_metrics(m['label'], m['metric'], widget, m['name'])
+            else:
+                do_insert_metrics(widget_label['5xx'], m, widget, '5xx')
+                do_insert_metrics(
+                    widget_label['5xx_external'], m, widget, '5xx External')
+                do_insert_metrics(
+                    widget_label['5xx_internal'], m, widget, '5xx Internal')
 
         for m in metrics['4xx']:
-            do_insert_metrics(widget_label['4xx'], m, widget, '4xx')
-            do_insert_metrics(
-                widget_label['4xx_external'], m, widget, '4xx External')
-            do_insert_metrics(
-                widget_label['4xx_internal'], m, widget, '4xx Internal')
+            if isinstance(m, dict):
+                do_insert_metrics(m['label'], m['metric'], widget, m['name'])
+            else:
+                do_insert_metrics(widget_label['4xx'], m, widget, '4xx')
+                do_insert_metrics(
+                    widget_label['4xx_external'], m, widget, '4xx External')
+                do_insert_metrics(
+                    widget_label['4xx_internal'], m, widget, '4xx Internal')
 
     def update_widget_5xx_elb_properties(widget, res):
         for m in metrics['5xx_elb']:
@@ -310,14 +320,23 @@ def add_stack(istack):
 
     def update_widget_req_properties(widget, res):
         for m in metrics['requests']:
-            do_insert_metrics(widget_label['req'], m, widget, 'Requests')
-            do_insert_metrics(
-                widget_label['req_external'], m, widget, 'Requests External')
-            do_insert_metrics(
-                widget_label['req_internal'], m, widget, 'Requests Internal')
+            if isinstance(m, dict):
+                do_insert_metrics(m['label'], m['metric'], widget, m['name'])
+            else:
+                do_insert_metrics(widget_label['req'], m, widget, 'Requests')
+                do_insert_metrics(
+                    widget_label['req_external'], m, widget,
+                    'Requests External')
+                do_insert_metrics(
+                    widget_label['req_internal'], m, widget,
+                    'Requests Internal')
 
         for m in metrics['healthy']:
-            do_insert_metrics(widget_label['healthy'], m, widget, 'Healthy')
+            if isinstance(m, dict):
+                do_insert_metrics(m['label'], m['metric'], widget, m['name'])
+            else:
+                do_insert_metrics(
+                    widget_label['healthy'], m, widget, 'Healthy')
 
     def update_widget_network_properties(widget, res):
         for m in metrics['netin']:
@@ -550,150 +569,117 @@ def add_stack(istack):
                     'label': 'Cpu - Maximum'
                 }
             ])
-            # TargetGroupExternal
-            if all(n in res
-                    for n in ['TargetGroupExternal', 'LoadBalancerExternal']):
-                # Response Time
-                metrics['response'].append([
-                    'AWS/ApplicationELB',
-                    'TargetResponseTime',
-                    'TargetGroup',
-                    res['TargetGroupExternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerExternal'],
-                    {
-                        'period': 300,
-                        'stat': istack.cfg.statisticresponse,
-                        'yAxis': 'right',
-                        'label': widget_label['response_external']
-                    }
-                ])
-                # Healthy
-                metrics['healthy'].append([
-                    'AWS/ApplicationELB',
-                    'HealthyHostCount',
-                    'TargetGroup',
-                    res['TargetGroupExternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerExternal'],
-                    {
-                        'label': widget_label['healthy'],
-                        'stat': istack.cfg.statistic,
-                        'yAxis': 'right'
-                    }
-                ])
-                # Requests
-                metrics['requests'].append([
-                    'AWS/ApplicationELB',
-                    'RequestCount',
-                    'TargetGroup',
-                    res['TargetGroupExternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerExternal'],
-                    {
-                        'label': widget_label['req_external'],
-                        'stat': 'Sum'
-                    }
-                ])
-                # 5xx
-                metrics['5xx'].append([
-                    'AWS/ApplicationELB',
-                    'HTTPCode_Target_5XX_Count',
-                    'TargetGroup',
-                    res['TargetGroupExternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerExternal'],
-                    {
-                        'label': widget_label['5xx_external'],
-                        'stat': 'Sum'
-                    }
-                ])
-                # 4xx
-                metrics['4xx'].append([
-                    'AWS/ApplicationELB',
-                    'HTTPCode_Target_4XX_Count',
-                    'TargetGroup',
-                    res['TargetGroupExternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerExternal'],
-                    {
-                        'label': widget_label['4xx_external'],
-                        'stat': 'Sum',
-                        'yAxis': 'right'
-                    }
-                ])
-            # TargetGroupInternal
-            if all(n in res
-                    for n in ['TargetGroupInternal', 'LoadBalancerInternal']):
-                # Response Time
-                metrics['response'].append([
-                    'AWS/ApplicationELB',
-                    'TargetResponseTime',
-                    'TargetGroup',
-                    res['TargetGroupInternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerInternal'],
-                    {
-                        'period': 300,
-                        'stat': istack.cfg.statisticresponse,
-                        'yAxis': 'right',
-                        'label': widget_label['response_internal']
-                    }
-                ])
-                # Healthy
-                metrics['healthy'].append([
-                    'AWS/ApplicationELB',
-                    'HealthyHostCount',
-                    'TargetGroup',
-                    res['TargetGroupInternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerInternal'],
-                    {
-                        'label': widget_label['healthy'],
-                        'stat': istack.cfg.statistic,
-                        'yAxis': 'right'
-                    }
-                ])
-                # Requests
-                metrics['requests'].append([
-                    'AWS/ApplicationELB',
-                    'RequestCount',
-                    'TargetGroup',
-                    res['TargetGroupInternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerInternal'],
-                    {
-                        'label': widget_label['req_internal'],
-                        'stat': 'Sum'
-                    }
-                ])
-                # 5xx
-                metrics['5xx'].append([
-                    'AWS/ApplicationELB',
-                    'HTTPCode_Target_5XX_Count',
-                    'TargetGroup',
-                    res['TargetGroupInternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerInternal'],
-                    {
-                        'label': widget_label['5xx_internal'],
-                        'stat': 'Sum'
-                    }
-                ])
-                # 4xx
-                metrics['4xx'].append([
-                    'AWS/ApplicationELB',
-                    'HTTPCode_Target_4XX_Count',
-                    'TargetGroup',
-                    res['TargetGroupInternal'],
-                    'LoadBalancer',
-                    res['LoadBalancerInternal'],
-                    {
-                        'label': widget_label['4xx_internal'],
-                        'stat': 'Sum',
-                        'yAxis': 'right'
-                    }
-                ])
+            # TargetGroups
+            for n, v in res.items():
+                if (n.startswith('TargetGroup')
+                        and n.endswith(('External', 'Internal'))):
+                    if n.endswith('External'):
+                        suffix = 'External'
+                    else:
+                        suffix = 'Internal'
+
+                    tg_name = n.replace('TargetGroup', '')
+
+                    if f'LoadBalancer{suffix}' not in res:
+                        continue
+                    else:
+                        lb_name = f'LoadBalancer{suffix}'
+
+                    # Response Time
+                    label = (f'Response {tg_name}'
+                             f' - {istack.cfg.statisticresponse}')
+                    metrics['response'].append({
+                        'name': f'Response {tg_name}',
+                        'label': label,
+                        'metric': [
+                            'AWS/ApplicationELB',
+                            'TargetResponseTime',
+                            'TargetGroup',
+                            res[n],
+                            'LoadBalancer',
+                            res[lb_name],
+                            {
+                                'period': 300,
+                                'stat': istack.cfg.statisticresponse,
+                                'yAxis': 'right',
+                                'label': label,
+                            }
+                        ]
+                    })
+                    # Healthy
+                    label = widget_label['healthy']
+                    metrics['healthy'].append({
+                        'name': f'Healthy {tg_name}',
+                        'label': label,
+                        'metric': [
+                            'AWS/ApplicationELB',
+                            'HealthyHostCount',
+                            'TargetGroup',
+                            res[n],
+                            'LoadBalancer',
+                            res[lb_name],
+                            {
+                                'label': label,
+                                'stat': istack.cfg.statistic,
+                                'yAxis': 'right'
+                            }
+                        ]
+                    })
+                    # Requests
+                    label = f'{title_role} {tg_name} - Requests'
+                    metrics['requests'].append({
+                        'name': f'Requests {tg_name}',
+                        'label': label,
+                        'metric': [
+                            'AWS/ApplicationELB',
+                            'RequestCount',
+                            'TargetGroup',
+                            res[n],
+                            'LoadBalancer',
+                            res[lb_name],
+                            {
+                                'label': label,
+                                'stat': 'Sum'
+                            }
+                        ]
+                    })
+                    # 5xx
+                    label = f'{title_role} {tg_name} - 5xx'
+                    metrics['5xx'].append({
+                        'name': f'5xx {tg_name}',
+                        'label': label,
+                        'metric': [
+                            'AWS/ApplicationELB',
+                            'HTTPCode_Target_5XX_Count',
+                            'TargetGroup',
+                            res[n],
+                            'LoadBalancer',
+                            res[lb_name],
+                            {
+                                'label': label,
+                                'stat': 'Sum'
+                            }
+                        ]
+                    })
+                    # 4xx
+                    label = f'{title_role} {tg_name} - 4xx'
+                    metrics['4xx'].append({
+                        'name': f'4xx {tg_name}',
+                        'label': label,
+                        'metric': [
+                            'AWS/ApplicationELB',
+                            'HTTPCode_Target_4XX_Count',
+                            'TargetGroup',
+                            res[n],
+                            'LoadBalancer',
+                            res[lb_name],
+                            {
+                                'label': label,
+                                'stat': 'Sum',
+                                'yAxis': 'right'
+                            }
+                        ]
+                    })
         else:
             # EC2
             if all(n in res for n in ['AutoScalingGroupName']):
