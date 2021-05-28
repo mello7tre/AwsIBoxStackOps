@@ -269,18 +269,21 @@ def add_stack(istack):
         for wd in widget_map:
             w_list = [n for n, v in enumerate(w)
                       if v['properties']['title'] == widget_title[wd]]
-            if len(w_list) > 0:
-                w_index = w_list[0]
-            elif wd == 'role':
+
+            if wd == 'role':
                 w_index = len_stacks
+                w_type = 'stack'
             else:
                 w_index = len(w)
+                w_type = 'global'
+
+            if len(w_list) > 0:
+                w_index = w_list[0]
 
             if resolve_widget_map(wd):
                 # if relative metrics exists
                 widget = get_widget_base(
-                    'stack' if wd == 'role' else 'global',
-                    w_list, w_index, widget_title[wd], w)
+                    w_type, w_list, w_index, widget_title[wd], w)
                 for n in widget_map[wd]:
                     for m in metrics[n]:
                         do_insert_metrics(m, widget)
