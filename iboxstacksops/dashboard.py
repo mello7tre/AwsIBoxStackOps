@@ -284,6 +284,9 @@ def add_stack(istack):
                 # if relative metrics exists
                 widget = get_widget_base(
                     w_type, w_list, w_index, widget_title[wd], w)
+                if wd == 'role':
+                    # add horizonatal annotations for role widget
+                    add_annotations(widget, None)
                 for n in widget_map[wd]:
                     for m in metrics[n]:
                         do_insert_metrics(m, widget)
