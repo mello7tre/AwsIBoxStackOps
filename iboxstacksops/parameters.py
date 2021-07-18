@@ -251,8 +251,11 @@ def get(stack):
         parameters = {}
         for parameter in s_parameters:
             key = parameter['ParameterKey']
-            value = parameter.get(
-                'ResolvedValue', parameter.get('ParameterValue'))
+            # Think is better to use always value not the resolved one,
+            # or i will have problem later when i check if value is allowed
+            # value = parameter.get(
+            #     'ResolvedValue', parameter.get('ParameterValue'))
+            value = parameter.get('ParameterValue')
             parameters[key] = value
 
         return parameters
