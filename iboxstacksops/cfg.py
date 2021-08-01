@@ -33,9 +33,9 @@ STACK_BASE_DATA = [
 RESOURCES_MAP = {
     'AutoScalingGroup': 'AutoScalingGroupName',
     'AutoScalingGroupSpot': 'AutoScalingGroupSpotName',
-#    'TargetGroup': 'TargetGroup',
-#    'TargetGroupExternal': 'TargetGroupExternal',
-#    'TargetGroupInternal': 'TargetGroupInternal',
+    # 'TargetGroup': 'TargetGroup',
+    # 'TargetGroupExternal': 'TargetGroupExternal',
+    # 'TargetGroupInternal': 'TargetGroupInternal',
     'Service': 'ServiceName',
     'ServiceExternal': 'ServiceName',
     'ServiceInternal': 'ServiceName',
