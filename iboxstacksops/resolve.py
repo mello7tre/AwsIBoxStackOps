@@ -39,6 +39,8 @@ def _process_template(istack):
                     return _resolve_not(name, v)
                 elif r == 'Condition' and isinstance(v, str):
                     return _resolve_condition(name, v)
+                elif r == 'Fn::Base64':
+                    return _recursive_resolve(name, v)
                 else:
                     r_value = _recursive_resolve(name, v)
 
@@ -134,11 +136,10 @@ def _process_template(istack):
         return str(istack.mappings[mapname][key][key_value])
 
     def _resolve_join(name, v):
-        j_list = []
-        for n in v[1]:
-            j_list.append(str(_recursive_resolve(name, n)))
+        sep = v[0]
+        data = v[1]
 
-        return v[0].join(j_list)
+        return sep.join(_recursive_resolve(name, data))
 
     def _resolve_select(name, v):
         index = v[0]
