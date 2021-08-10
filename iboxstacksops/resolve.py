@@ -139,7 +139,7 @@ def _process_template(istack):
         sep = v[0]
         data = v[1]
 
-        return sep.join(_recursive_resolve(name, data))
+        return sep.join(map(str, _recursive_resolve(name, data)))
 
     def _resolve_select(name, v):
         index = v[0]
