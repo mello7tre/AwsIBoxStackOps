@@ -57,7 +57,7 @@ def add_stack(istack):
 
     def get_policy_ecs(res):
         resname = '/'.join(
-            res['ScalingPolicyTrackings1'].split('/')[2:5]).split(':')[0]
+            res['ScalingPolicyTrackingsApp'].split('/')[2:5]).split(':')[0]
         client = istack.boto3.client('application-autoscaling')
         response = client.describe_scaling_policies(
             PolicyNames=list(istack.cfg.SCALING_POLICY_TRACKINGS_NAMES.keys()),
@@ -69,18 +69,32 @@ def add_stack(istack):
             'TargetTrackingScalingPolicyConfiguration']
 
     def get_policy(res):
-        if 'AutoScalingGroupName' in res:
-            conf = get_policy_ec2(res)
-        else:
-            conf = get_policy_ecs(res)
+        ret = []
+        for n in ['AutoScalingGroupName', 'ServiceName']:
+            if n not in res:
+                continue
+            if n == 'AutoScalingGroupName':
+                conf = get_policy_ec2(res)
+                l_type = 'EC2'
+                color = '#1f77b4'
+            if n == 'ServiceName':
+                conf = get_policy_ecs(res)
+                l_type = 'ECS'
+                color = '#36dc52'
 
-        stat = 'Average'
-        value = conf['TargetValue']
-        if ('CustomizedMetricSpecification' in conf and
-                'Statistic' in conf['CustomizedMetricSpecification']):
-            stat = conf['CustomizedMetricSpecification']['Statistic']
+            stat = 'Average'
+            value = conf['TargetValue']
+            if ('CustomizedMetricSpecification' in conf and
+                    'Statistic' in conf['CustomizedMetricSpecification']):
+                stat = conf['CustomizedMetricSpecification']['Statistic']
 
-        return value, f'{ScalingPolicyTrackingsCpuBaseLabel}{stat}'
+            ret.append((
+                value,
+                f'{ScalingPolicyTrackingsCpuBaseLabel}{l_type}{stat}',
+                color,
+            ))
+
+        return ret
 
     def resolve_widget_map(name):
         count = 0
@@ -96,27 +110,27 @@ def add_stack(istack):
         ScalingPolicyTrackingsCpuValue = 80
         ScalingPolicyTrackingsCpuLabel = ScalingPolicyTrackingsCpuBaseLabel
         widget_annotations_type = None
+        tracking_list = []
 
         if 'AlarmCPUHigh' and 'AlarmCPULow' in res:
             AlarmCPUHighThreshold, AlarmCPULowThreshold = get_alarm(res)
             widget_annotations_type = 'step'
 
         if any(k in res for k in istack.cfg.SCALING_POLICY_TRACKINGS_NAMES):
-            ScalingPolicyTrackingsCpuValue, ScalingPolicyTrackingsCpuLabel = (
-                get_policy(res))
             widget_annotations_type = 'tracking'
+            tracking_list.append({'value': 100})
+            for n in get_policy(res):
+                ScalingPolicyTrackingsCpuValue = n[0]
+                ScalingPolicyTrackingsCpuLabel = n[1]
+                ScalingPolicyTrackingsCpuColor = n[2]
+                tracking_list.append({
+                        'label': ScalingPolicyTrackingsCpuLabel,
+                        'value': ScalingPolicyTrackingsCpuValue,
+                        'color': ScalingPolicyTrackingsCpuColor,
+                    })
 
         widget_annotations = {
-            'tracking': [
-                {
-                    'value': 100
-                },
-                {
-                    'label': ScalingPolicyTrackingsCpuLabel,
-                    'value': ScalingPolicyTrackingsCpuValue,
-                    'color': '#1f77b4',
-                }
-            ],
+            'tracking': tracking_list,
             'step': [
                 {
                     'label': 'AlarmCPUHighThreshold',
@@ -354,12 +368,19 @@ def add_stack(istack):
         # build empty metrics dict from widget_map
         metrics = {n: [] for m in widget_map.values() for n in m}
 
+        # Is a MIXED stack with both ECS Service and EC2 ASG?
+        if all(n in res for n in ['ServiceName', 'AutoScalingGroupName']):
+            IS_MIXED = True
+        else:
+            IS_MIXED = False
+
         # ECS
         if all(n in res for n in ['ServiceName', 'ClusterName']):
+            L_TYPE = ' ECS' if IS_MIXED else ''
             # CPU
-            label = f'Cpu - {istack.cfg.statistic}'
+            label = f'Cpu{L_TYPE} - {istack.cfg.statistic}'
             metrics['cpu'].append({
-                'name': 'Cpu',
+                'name': f'Cpu{L_TYPE}',
                 'label': label,
                 'metric': [
                     'AWS/ECS',
@@ -376,9 +397,9 @@ def add_stack(istack):
                 ]
             })
             # Always add cpu maximum
-            label = 'Cpu - Maximum'
+            label = f'Cpu{L_TYPE} - Maximum'
             metrics['cpu'].append({
-                'name': 'Cpu - Maximum',
+                'name': f'Cpu{L_TYPE} - Maximum',
                 'label': label,
                 'metric': [
                     'AWS/ECS',
@@ -432,9 +453,9 @@ def add_stack(istack):
                         ]
                     })
                     # Healthy
-                    label = f'{title_role} - Healthy'
+                    label = f'{title_role}{L_TYPE} - Healthy'
                     metrics['healthy'].append({
-                        'name': f'Healthy {tg_name}',
+                        'name': f'Healthy{L_TYPE} {tg_name}',
                         'label': label,
                         'metric': [
                             'AWS/ApplicationELB',
@@ -505,13 +526,14 @@ def add_stack(istack):
                             }
                         ]
                     })
-        else:
+        if True:
             # EC2
             if all(n in res for n in ['AutoScalingGroupName']):
+                L_TYPE = ' EC2' if IS_MIXED else ''
                 # CPU
-                label = f'Cpu - {istack.cfg.statistic}'
+                label = f'Cpu{L_TYPE} - {istack.cfg.statistic}'
                 metrics['cpu'].append({
-                    'name': 'Cpu',
+                    'name': f'Cpu{L_TYPE}',
                     'label': label,
                     'metric': [
                         'AWS/EC2',
@@ -526,9 +548,9 @@ def add_stack(istack):
                     ]
                 })
                 # Always add cpu maximum
-                label = 'Cpu - Maximum'
+                label = f'Cpu{L_TYPE} - Maximum'
                 metrics['cpu'].append({
-                    'name': 'Cpu - Maximum',
+                    'name': f'Cpu{L_TYPE} - Maximum',
                     'label': label,
                     'metric': [
                         'AWS/EC2',
@@ -544,9 +566,9 @@ def add_stack(istack):
                 })
                 # CPU Spot
                 if all(n in res for n in ['AutoScalingGroupSpotName']):
-                    label = f'Cpu Spot - {istack.cfg.statistic}'
+                    label = f'Cpu{L_TYPE} Spot - {istack.cfg.statistic}'
                     metrics['cpu'].append({
-                        'name': 'Cpu Spot',
+                        'name': f'Cpu{L_TYPE} Spot',
                         'label': label,
                         'metric': [
                             'AWS/EC2',
@@ -561,9 +583,9 @@ def add_stack(istack):
                         ]
                     })
                 # Healthy
-                label = f'{title_role} - Healthy'
+                label = f'{title_role}{L_TYPE} - Healthy'
                 metrics['healthy'].append({
-                    'name': 'Healthy',
+                    'name': f'Healthy{L_TYPE}',
                     'label': label,
                     'metric': [
                         'AWS/AutoScaling',
@@ -616,7 +638,7 @@ def add_stack(istack):
             for n in ['External', 'Internal']:
                 res_name = locals()[f'LoadBalancerName{n}']
 
-                if res_name in res:
+                if res_name in res and 'ServiceName' not in res:
                     # Response
                     label = f'Response {n} - {istack.cfg.statisticresponse}'
                     metrics['response'].append({

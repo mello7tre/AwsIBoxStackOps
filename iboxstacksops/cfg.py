@@ -55,14 +55,15 @@ RESOURCES_MAP = {
 }
 SCALING_POLICY_TRACKINGS_NAMES = {
     'ScalingPolicyTrackings1': None,
+    'ScalingPolicyTrackingsApp': None,
     'ScalingPolicyTrackingsASCpu': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsASCustom': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsAPPCpu': 'ScalingPolicyTrackings1',
     'ScalingPolicyTrackingsAPPCustom': 'ScalingPolicyTrackings1',
     'AutoScalingScalingPolicyCpu': 'ScalingPolicyTrackings1',
     'AutoScalingScalingPolicyCustom': 'ScalingPolicyTrackings1',
-    'ApplicationAutoScalingScalingPolicyCpu': 'ScalingPolicyTrackings1',
-    'ApplicationAutoScalingScalingPolicyCustom': 'ScalingPolicyTrackings1',
+    'ApplicationAutoScalingScalingPolicyCpu': 'ScalingPolicyTrackingsApp',
+    'ApplicationAutoScalingScalingPolicyCustom': 'ScalingPolicyTrackingsApp',
 
     # Disabled until they are properly managed in dashboard.py [get_policy].
     # Ideal should be to create two horizontal annotations
