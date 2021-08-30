@@ -1,8 +1,8 @@
 import argparse
 from . import cfg
 from .commands import (create, update, delete, cancel_update, continue_update,
-                       info, parameters, resolve, show_table, log, dash,
-                       ssm_setup, ssm_put, ssm_show, r53, replicate,
+                       rollback, info, parameters, resolve, show_table, log,
+                       dash, ssm_setup, ssm_put, ssm_show, r53, replicate,
                        stackset)
 
 
@@ -314,6 +314,10 @@ def get_create_update_parser():
                         help='Max retry numbers when updating ECS '
                              'service and runningCount is stuck to zero',
                         type=int, default=0)
+    parser.add_argument('--disable_rollback',
+                        help='Preserve the state of previously provisioned '
+                             'resources when an operation fails',
+                        action='store_true')
 
     return parser
 
@@ -428,6 +432,15 @@ def get_parser():
         '--resources_to_skip',
         help='Resource to Skip',
         default=[], nargs='+')
+
+    # roll back parser
+    parser_rollback = command_subparser.add_parser(
+        'rollback',
+        parents=[
+            action_parser,
+            stack_selection_parser],
+        help='RollBack to the last known stable state')
+    parser_rollback.set_defaults(func=rollback)
 
     # info parser
     parser_info = command_subparser.add_parser(

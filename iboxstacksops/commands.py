@@ -61,6 +61,15 @@ def continue_update():
     return result
 
 
+def rollback():
+    w_stacks = stacks.get()
+    cfg.exports = get_exports()
+    result = concurrent_exec('rollback', w_stacks, i_stack)
+    pprint(result)
+
+    return result
+
+
 def parameters():
     w_stacks = stacks.get()
     cfg.exports = get_exports()

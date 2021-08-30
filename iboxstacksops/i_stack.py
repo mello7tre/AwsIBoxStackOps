@@ -69,6 +69,14 @@ class ibox_stack(object):
             self.stack.reload()
             return self.stack.stack_status
 
+    def rollback(self):
+        self.stack = self.cloudformation.Stack(self.name)
+        result = actions.rollback(self)
+
+        if result:
+            self.stack.reload()
+            return self.stack.stack_status
+
     def parameters(self, check=None):
         self.exports = self.cfg.exports
         self.template = template.get_template(self)

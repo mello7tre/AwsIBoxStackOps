@@ -12,6 +12,7 @@ silent = True
 vertical = False
 profile = False
 output = 'text'
+disable_rollback = False
 #
 
 OUT_WIDTH = 1000000

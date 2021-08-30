@@ -35,6 +35,9 @@ def _get_action_args(istack):
     if istack.template_from == 'File':
         us_args['TemplateBody'] = json.dumps(istack.template)
 
+    if istack.cfg.disable_rollback:
+        us_args['DisableRollback'] = True
+
     return us_args
 
 
@@ -189,6 +192,16 @@ def continue_update(istack):
     response = istack.client.continue_update_rollback(
         StackName=istack.name,
         ResourcesToSkip=istack.cfg.resources_to_skip)
+    istack.mylog(f'{json.dumps(response)}\n')
+    # -show update status until complete
+    _update_waiter(istack)
+
+    return True
+
+
+def rollback(istack):
+    istack.last_event_timestamp = events.get_last_timestamp(istack)
+    response = istack.client.rollback_stack(StackName=istack.name)
     istack.mylog(f'{json.dumps(response)}\n')
     # -show update status until complete
     _update_waiter(istack)
