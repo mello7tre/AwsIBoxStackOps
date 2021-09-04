@@ -17,18 +17,18 @@ class IboxErrorECSService(Exception):
 
 
 CLF_YAML_FUNC = (
-    '!Ref',
-    '!GetAtt',
-    '!GetAZs',
+    "!Ref",
+    "!GetAtt",
+    "!GetAZs",
 )
 
 
 def yaml_exclamation_mark(dumper, data):
     if data.startswith(CLF_YAML_FUNC):
-        tag = data.split(' ')[0]
-        value = dumper.represent_scalar(tag, data.replace(f'{tag} ', ''))
+        tag = data.split(" ")[0]
+        value = dumper.represent_scalar(tag, data.replace(f"{tag} ", ""))
     else:
-        value = dumper.represent_scalar(u'tag:yaml.org,2002:str', data)
+        value = dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
     return value
 

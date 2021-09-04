@@ -12,22 +12,12 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mello7tre/AwsIBoxStackOps",
-    packages=[
-        'iboxstacksops',
-    ],
+    packages=["iboxstacksops",],
     package_data={},
-    install_requires=[
-        'boto3',
-        'prettytable',
-        'PyYAML>=5,==5.*',
-    ],
-    extras_require={
-        'extra': ['slackclient'],
-    },
-    python_requires='>=3.7',
-    scripts=[
-        'scripts/ibox_stacksops.py',
-    ],
+    install_requires=["boto3", "prettytable", "PyYAML>=5,==5.*",],
+    extras_require={"extra": ["slackclient"],},
+    python_requires=">=3.7",
+    scripts=["scripts/ibox_stacksops.py",],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

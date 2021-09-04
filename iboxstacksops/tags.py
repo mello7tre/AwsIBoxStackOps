@@ -10,8 +10,8 @@ def get_action_tags(istack, stack_tags):
     final_tags = []
 
     for tag in stack_tags:
-        key = tag['Key']
-        current_value = tag['Value']
+        key = tag["Key"]
+        current_value = tag["Value"]
 
         # check if key exist as cfg param/attr too
         try:
@@ -21,7 +21,7 @@ def get_action_tags(istack, stack_tags):
             in_cfg = None
 
         # Skip LastUpdate Tag
-        if key == 'LastUpdate':
+        if key == "LastUpdate":
             continue
 
         # current value differ from cmd arg
@@ -32,7 +32,7 @@ def get_action_tags(istack, stack_tags):
             if len(value) == 0:
                 value = "empty"
 
-            tags_changed[key] = '%s => %s' % (current_value, value)
+            tags_changed[key] = "%s => %s" % (current_value, value)
 
         # keep current tag value
         else:
@@ -44,24 +44,18 @@ def get_action_tags(istack, stack_tags):
 
             tags_default[key] = value
 
-        final_tags.append({
-            'Key': key,
-            'Value': value
-        })
+        final_tags.append({"Key": key, "Value": value})
 
     # Add LastUpdate Tag with current time
-    final_tags.append({
-        'Key': 'LastUpdate',
-        'Value': str(datetime.now())
-    })
+    final_tags.append({"Key": "LastUpdate", "Value": str(datetime.now())})
 
     if len(tags_default) > 0:
         istack.mylog(
-            'DEFAULT - STACK TAGS\n%s\n' % pformat(
-                tags_default, width=1000000))
+            "DEFAULT - STACK TAGS\n%s\n" % pformat(tags_default, width=1000000)
+        )
     if len(tags_changed) > 0:
         istack.mylog(
-            'CHANGED - STACK TAGS\n%s\n' % pformat(
-                tags_changed, width=1000000))
+            "CHANGED - STACK TAGS\n%s\n" % pformat(tags_changed, width=1000000)
+        )
 
     return final_tags

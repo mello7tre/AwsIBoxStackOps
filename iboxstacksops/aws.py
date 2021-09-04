@@ -15,10 +15,10 @@ class myboto3(object):
         kwarg_session = {}
         region_name = region if region else cfg.region
         if region_name:
-            kwarg_session['region_name'] = region_name
+            kwarg_session["region_name"] = region_name
 
         if cfg.profile:
-            kwarg_session['profile_name'] = cfg.profile
+            kwarg_session["profile_name"] = cfg.profile
 
         if not self.parallel and not region:
             try:
@@ -32,7 +32,7 @@ class myboto3(object):
         self.region_name = self.boto3.region_name
 
     def client(self, name):
-        attr_name = f'cli_{self.region_name}_{name}'
+        attr_name = f"cli_{self.region_name}_{name}"
 
         if self.parallel and self.istack:
             obj = self.istack
@@ -48,7 +48,7 @@ class myboto3(object):
         return client
 
     def resource(self, name):
-        attr_name = f'res_{self.region_name}_{name}'
+        attr_name = f"res_{self.region_name}_{name}"
 
         if self.parallel:
             obj = self.istack

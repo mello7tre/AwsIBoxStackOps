@@ -12,7 +12,7 @@ def main():
     try:
         cfg.func()
     except IboxError as e:
-        logger.error(f'{e.args[0]}\n')
+        logger.error(f"{e.args[0]}\n")
         return e
 
 

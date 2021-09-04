@@ -9,7 +9,7 @@ class ibox_region(object):
     def __init__(self, name, base_data):
         # aws clients/resource
         self.boto3 = myboto3(self, name)
-        self.ssm = self.boto3.client('ssm')
+        self.ssm = self.boto3.client("ssm")
 
         # set property
         self.name = name
@@ -37,7 +37,7 @@ class ibox_region(object):
         return result
 
     def mylog(self, msg):
-        message = f'{self.name} # {msg}'
+        message = f"{self.name} # {msg}"
         try:
             print(message)
         except IOError:

@@ -8,35 +8,36 @@ from .common import *
 # build all args for action
 def _get_action_args(istack):
     us_args = {}
-    us_args['StackName'] = istack.name
-    us_args['Parameters'] = istack.action_parameters
-    us_args['Tags'] = istack.action_tags
-    us_args['Capabilities'] = [
-        'CAPABILITY_IAM',
-        'CAPABILITY_NAMED_IAM',
-        'CAPABILITY_AUTO_EXPAND',
+    us_args["StackName"] = istack.name
+    us_args["Parameters"] = istack.action_parameters
+    us_args["Tags"] = istack.action_tags
+    us_args["Capabilities"] = [
+        "CAPABILITY_IAM",
+        "CAPABILITY_NAMED_IAM",
+        "CAPABILITY_AUTO_EXPAND",
     ]
 
     # sns topic
-    us_args['NotificationARNs'] = istack.cfg.topics
+    us_args["NotificationARNs"] = istack.cfg.topics
 
     # Handle policy during update
-    if hasattr(istack.cfg, 'policy') and istack.cfg.policy:
-        action = ['"Update:%s"' % a for a in istack.cfg.policy.split(',')]
-        action = '[%s]' % ','.join(action)
-        us_args['StackPolicyDuringUpdateBody'] = (
+    if hasattr(istack.cfg, "policy") and istack.cfg.policy:
+        action = ['"Update:%s"' % a for a in istack.cfg.policy.split(",")]
+        action = "[%s]" % ",".join(action)
+        us_args["StackPolicyDuringUpdateBody"] = (
             '{"Statement" : [{"Effect" : "Allow",'
-            '"Action" :%s,"Principal": "*","Resource" : "*"}]}' % action)
+            '"Action" :%s,"Principal": "*","Resource" : "*"}]}' % action
+        )
 
-    if istack.template_from == 'Current':
-        us_args['UsePreviousTemplate'] = True
-    if istack.template_from == 'S3':
-        us_args['TemplateURL'] = istack.cfg.template
-    if istack.template_from == 'File':
-        us_args['TemplateBody'] = json.dumps(istack.template)
+    if istack.template_from == "Current":
+        us_args["UsePreviousTemplate"] = True
+    if istack.template_from == "S3":
+        us_args["TemplateURL"] = istack.cfg.template
+    if istack.template_from == "File":
+        us_args["TemplateBody"] = json.dumps(istack.template)
 
     if istack.cfg.disable_rollback:
-        us_args['DisableRollback'] = True
+        us_args["DisableRollback"] = True
 
     return us_args
 
@@ -69,7 +70,7 @@ def _update_waiter(istack, timestamp=None):
             logger.warning(e.args[0])
             cancel_update(istack)
 
-    print('\n')
+    print("\n")
 
 
 # wait until all stackset instances finished updating
@@ -80,10 +81,8 @@ def _stackset_update_waiter(istack):
     while is_pending:
         instances = stackset_instances(istack, False)
         for n in instances:
-            stack_id = n['StackId']
-            if any(n['StackInstanceStatus'] == s for s in [
-                    'PENDING',
-                    'RUNNING']):
+            stack_id = n["StackId"]
+            if any(n["StackInstanceStatus"] == s for s in ["PENDING", "RUNNING"]):
                 pending_instances[stack_id] = n
             else:
                 try:
@@ -105,10 +104,10 @@ def _stackset_update_waiter(istack):
 
 def create(istack):
     stack_tags = [
-        {'Key': 'Env', 'Value': istack.cfg.Env},
-        {'Key': 'EnvRole', 'Value': istack.cfg.EnvRole},
-        {'Key': 'EnvStackVersion', 'Value': istack.cfg.version},
-        {'Key': 'EnvApp1Version', 'Value': istack.cfg.EnvApp1Version},
+        {"Key": "Env", "Value": istack.cfg.Env},
+        {"Key": "EnvRole", "Value": istack.cfg.EnvRole},
+        {"Key": "EnvStackVersion", "Value": istack.cfg.version},
+        {"Key": "EnvApp1Version", "Value": istack.cfg.EnvApp1Version},
     ]
 
     # set tags
@@ -121,7 +120,7 @@ def create(istack):
     us_args = _get_action_args(istack)
 
     response = istack.client.create_stack(**us_args)
-    istack.mylog(f'{json.dumps(response)}\n')
+    istack.mylog(f"{json.dumps(response)}\n")
     time.sleep(1)
 
     istack.stack = istack.cloudformation.Stack(istack.name)
@@ -138,21 +137,22 @@ def update(istack):
     # get final args for update
     us_args = _get_action_args(istack)
 
-    outputs.show(istack, 'before')
+    outputs.show(istack, "before")
 
     # -if using changeset ...
     if not istack.cfg.nochangeset and (
-            len(istack.cfg.stacks) == 1 or istack.cfg.dryrun):
+        len(istack.cfg.stacks) == 1 or istack.cfg.dryrun
+    ):
         changeset_ok = changeset.process(istack, us_args)
         if not changeset_ok:
             return
 
-    istack.before['resources'] = resources.get(istack)
+    istack.before["resources"] = resources.get(istack)
     istack.last_event_timestamp = events.get_last_timestamp(istack)
 
     # do stack update
     response = istack.client.update_stack(**us_args)
-    istack.mylog(f'{json.dumps(response)}\n')
+    istack.mylog(f"{json.dumps(response)}\n")
     time.sleep(1)
 
     # -show update status until complete
@@ -170,7 +170,7 @@ def update(istack):
 def delete(istack):
     istack.last_event_timestamp = events.get_last_timestamp(istack)
     response = istack.stack.delete()
-    istack.mylog(f'{json.dumps(response)}\n')
+    istack.mylog(f"{json.dumps(response)}\n")
     # -show update status until complete
     _update_waiter(istack)
 
@@ -180,7 +180,7 @@ def delete(istack):
 def cancel_update(istack):
     istack.last_event_timestamp = events.get_last_timestamp(istack)
     response = istack.stack.cancel_update()
-    istack.mylog(f'{json.dumps(response)}\n')
+    istack.mylog(f"{json.dumps(response)}\n")
     # -show update status until complete
     _update_waiter(istack)
 
@@ -190,9 +190,9 @@ def cancel_update(istack):
 def continue_update(istack):
     istack.last_event_timestamp = events.get_last_timestamp(istack)
     response = istack.client.continue_update_rollback(
-        StackName=istack.name,
-        ResourcesToSkip=istack.cfg.resources_to_skip)
-    istack.mylog(f'{json.dumps(response)}\n')
+        StackName=istack.name, ResourcesToSkip=istack.cfg.resources_to_skip
+    )
+    istack.mylog(f"{json.dumps(response)}\n")
     # -show update status until complete
     _update_waiter(istack)
 
@@ -202,7 +202,7 @@ def continue_update(istack):
 def rollback(istack):
     istack.last_event_timestamp = events.get_last_timestamp(istack)
     response = istack.client.rollback_stack(StackName=istack.name)
-    istack.mylog(f'{json.dumps(response)}\n')
+    istack.mylog(f"{json.dumps(response)}\n")
     # -show update status until complete
     _update_waiter(istack)
 
@@ -229,15 +229,15 @@ def stackset_update(istack):
 
     # get final args for update
     us_args = _get_action_args(istack)
-    del us_args['StackName']
-    del us_args['NotificationARNs']
-    us_args['StackSetName'] = istack.name
+    del us_args["StackName"]
+    del us_args["NotificationARNs"]
+    us_args["StackSetName"] = istack.name
 
     # do stack update
     # pprint(us_args)
     # exit(0)
     response = istack.client.update_stack_set(**us_args)
-    istack.mylog(f'{json.dumps(response)}\n')
+    istack.mylog(f"{json.dumps(response)}\n")
     time.sleep(2)
 
     _stackset_update_waiter(istack)
@@ -248,18 +248,20 @@ def stackset_update(istack):
 def stackset_instances(istack, show=True):
     response = istack.client.list_stack_instances(StackSetName=istack.name)
 
-    for n, v in enumerate(response['Summaries']):
-        response['Summaries'][n]['StackId'] = (
-            response['Summaries'][n]['StackId'].split('/')[-2])
-        response['Summaries'][n]['StackInstanceStatus'] = (
-            response['Summaries'][n]['StackInstanceStatus']['DetailedStatus'])
+    for n, v in enumerate(response["Summaries"]):
+        response["Summaries"][n]["StackId"] = response["Summaries"][n]["StackId"].split(
+            "/"
+        )[-2]
+        response["Summaries"][n]["StackInstanceStatus"] = response["Summaries"][n][
+            "StackInstanceStatus"
+        ]["DetailedStatus"]
 
     if show:
-        s_table = table.get(response['Summaries'])
-        print(f'\nStackSetId: {istack.StackSetId}')
+        s_table = table.get(response["Summaries"])
+        print(f"\nStackSetId: {istack.StackSetId}")
         print(s_table)
 
-    return response['Summaries']
+    return response["Summaries"]
 
 
 def stackset_show(istack):
