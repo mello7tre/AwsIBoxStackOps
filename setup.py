@@ -18,9 +18,10 @@ setuptools.setup(
     extras_require={"extra": ["slackclient"],},
     python_requires=">=3.7",
     scripts=["scripts/ibox_stacksops.py",],
+    license="OSI Approved :: Open Software License 3.0 (OSL-3.0)",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Open Software License 3.0 (OSL-3.0)",
         "Operating System :: OS Independent",
     ],
     include_package_data=True,
