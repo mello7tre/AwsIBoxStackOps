@@ -37,7 +37,7 @@ def get(istack, dash=None):
                     res_pid = "/".join(res_pid.split("/")[1:4])
                 if res_lid == "ScalableTarget":
                     res_pid = res_pid.split("/")[1]
-                if res_lid == "Service":
+                if res_lid in ["Service", "ServiceSpot"]:
                     res_pid_arr = res_pid.split("/")
                     if len(res_pid_arr) == 3:
                         res_pid = res_pid_arr[2]

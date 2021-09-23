@@ -1,6 +1,8 @@
 from . import resources
 from .common import *
 
+from copy import deepcopy
+
 
 def add_stack(istack):
     widget_width = {
@@ -333,6 +335,40 @@ def add_stack(istack):
     def mylog(string):
         print(istack.name + " # " + string)
 
+    def add_spot_metric(metric, index):
+        label = metric[index]["label"]
+        stat = metric[index]["metric"][6]["stat"]
+        metric.insert(
+            index,
+            {
+                "name": metric[index]["name"],
+                "label": label,
+                "metric": [
+                    {
+                        "visible": True,
+                        "expression": f"cpu{stat}Base + cpu{stat}Spot",
+                        "label": label,
+                        "id": f"cpu{stat}sum",
+                    }
+                ],
+            },
+        )
+        i = index + 1
+        metric.insert(i + 1, deepcopy(metric[i]))
+
+        metric[i]["label"] += " - Base"
+        metric[i]["name"] += " - Base"
+        metric[i]["metric"][6].update(
+            {"visible": False, "id": f"cpu{stat}Base", "label": metric[i]["label"]}
+        )
+
+        metric[i + 1]["label"] += " - Spot"
+        metric[i + 1]["name"] += " - Spot"
+        metric[i + 1]["metric"][6].update(
+            {"visible": False, "id": f"cpu{stat}Spot", "label": metric[i + 1]["label"]}
+        )
+        metric[i + 1]["metric"][3] = res["ServiceSpotName"]
+
     def get_metrics(res):
         # update widget_title and widget_label
         widget_title["role"] = f"{istack.EnvRole}.{istack.name}"
@@ -416,6 +452,11 @@ def add_stack(istack):
                     ],
                 }
             )
+
+            if "ServiceSpotName" in res:
+                for n, v in enumerate(list(metrics["cpu"])):
+                    add_spot_metric(metrics["cpu"], n * 3)
+
             # TargetGroups
             for n, v in res.items():
                 if n.startswith("TargetGroup") and n.endswith(("External", "Internal")):

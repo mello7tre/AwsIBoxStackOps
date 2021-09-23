@@ -38,6 +38,7 @@ RESOURCES_MAP = {
     # 'TargetGroupExternal': 'TargetGroupExternal',
     # 'TargetGroupInternal': 'TargetGroupInternal',
     "Service": "ServiceName",
+    "ServiceSpot": "ServiceSpotName",
     "ServiceExternal": "ServiceName",
     "ServiceInternal": "ServiceName",
     "LoadBalancerClassicExternal": "LoadBalancerNameExternal",
