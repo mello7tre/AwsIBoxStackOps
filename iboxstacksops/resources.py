@@ -23,7 +23,7 @@ def get(istack, dash=None):
         for res in r["StackResourceSummaries"]:
             res_lid = res["LogicalResourceId"]
             res_type = res["ResourceType"]
-            res_pid = res.get("PhysicalResourceId", 'null')
+            res_pid = res.get("PhysicalResourceId", "null")
 
             if res_lid in res_list:
                 if res_pid.startswith("arn"):
