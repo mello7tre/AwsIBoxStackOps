@@ -47,7 +47,12 @@ def get_action_tags(istack, stack_tags):
         final_tags.append({"Key": key, "Value": value})
 
     # Add LastUpdate Tag with current time
-    final_tags.append({"Key": "LastUpdate", "Value": str(datetime.now())})
+    # Currently disabled:
+    # Some resource, like CloudFormation Distribution, take time to be updated.
+    # Does it make sense to have a tag with LastUpdateTime even if resource properties are not changed at all ?
+    # If a resource is created by CloudFormation i can simply look at Stack LastUpdateTime
+    # to have the same information derived by tagging it (i know that with tagging is simpler to do this).
+    # final_tags.append({"Key": "LastUpdate", "Value": str(datetime.now())})
 
     if len(tags_default) > 0:
         istack.mylog(
