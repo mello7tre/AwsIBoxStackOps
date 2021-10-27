@@ -162,28 +162,45 @@ def set_stackset_parser(subparser, parents=[]):
     parser_update = stackset_parser.add_parser(
         "update",
         parents=parents
-        + [get_stackset_single_parser(), get_template_parser(required=False),],
+        + [
+            get_stackset_single_parser(),
+            get_template_parser(required=False),
+        ],
     )
 
     # info parser
     parser_info = stackset_parser.add_parser(
         "info",
-        parents=[get_stackset_single_parser(), get_template_parser(required=False),],
+        parents=[
+            get_stackset_single_parser(),
+            get_template_parser(required=False),
+        ],
     )
 
     # parameters parser
     parser_parameters = stackset_parser.add_parser(
         "parameters",
-        parents=[get_stackset_single_parser(), get_template_parser(required=False),],
+        parents=[
+            get_stackset_single_parser(),
+            get_template_parser(required=False),
+        ],
     )
 
     # show parser
-    parser_show = get_show_parser(stackset_parser, [get_stackset_single_parser(),])
+    parser_show = get_show_parser(
+        stackset_parser,
+        [
+            get_stackset_single_parser(),
+        ],
+    )
 
     # instances parser
     parser_instances = stackset_parser.add_parser(
         "instances",
-        parents=[get_stackset_single_parser(), get_template_parser(required=False),],
+        parents=[
+            get_stackset_single_parser(),
+            get_template_parser(required=False),
+        ],
     )
 
 
@@ -531,23 +548,53 @@ def get_parser():
     )
 
     # dashboard parser
-    set_dash_parser(command_subparser, [stack_selection_parser,])
+    set_dash_parser(
+        command_subparser,
+        [
+            stack_selection_parser,
+        ],
+    )
 
     # show parser
-    parser_show = get_show_parser(command_subparser, [stack_selection_parser,])
+    parser_show = get_show_parser(
+        command_subparser,
+        [
+            stack_selection_parser,
+        ],
+    )
     parser_show.set_defaults(func=show_table, all_stacks=True)
 
     # stackset parser
-    set_stackset_parser(command_subparser, [action_parser,])
+    set_stackset_parser(
+        command_subparser,
+        [
+            action_parser,
+        ],
+    )
 
     # ssm parser
-    set_ssm_parser(command_subparser, [stack_selection_parser,])
+    set_ssm_parser(
+        command_subparser,
+        [
+            stack_selection_parser,
+        ],
+    )
 
     # replicate parser
-    set_replicate_parser(command_subparser, [action_parser,])
+    set_replicate_parser(
+        command_subparser,
+        [
+            action_parser,
+        ],
+    )
 
     # r53 parser
-    set_r53_parser(command_subparser, [stack_selection_parser,])
+    set_r53_parser(
+        command_subparser,
+        [
+            stack_selection_parser,
+        ],
+    )
 
     return parser
 

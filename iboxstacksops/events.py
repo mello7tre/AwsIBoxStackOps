@@ -31,7 +31,10 @@ def _show_service_update(istack, event, timedelta):
     while task != deployment_task or deployments_len > 1 or pendingCount != 0:
         istack.stack.reload()
         task = istack.stack.Resource("TaskDefinition").physical_resource_id
-        response = client.describe_services(cluster=cluster, services=[service],)
+        response = client.describe_services(
+            cluster=cluster,
+            services=[service],
+        )
         deployments = response["services"][0]["deployments"]
         deployments_len = len(deployments)
         for dep in deployments:

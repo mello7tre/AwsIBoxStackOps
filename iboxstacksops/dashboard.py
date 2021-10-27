@@ -53,7 +53,8 @@ def add_stack(istack):
         )
         client = istack.boto3.client("autoscaling")
         response = client.describe_policies(
-            AutoScalingGroupName=res[AutoScalingGroupName], PolicyNames=[polname],
+            AutoScalingGroupName=res[AutoScalingGroupName],
+            PolicyNames=[polname],
         )
 
         return response["ScalingPolicies"][0]["TargetTrackingConfiguration"]
@@ -96,7 +97,11 @@ def add_stack(istack):
                 stat = conf["CustomizedMetricSpecification"]["Statistic"]
 
             ret.append(
-                (value, f"{ScalingPolicyTrackingsCpuBaseLabel}{l_type}{stat}", color,)
+                (
+                    value,
+                    f"{ScalingPolicyTrackingsCpuBaseLabel}{l_type}{stat}",
+                    color,
+                )
             )
 
         return ret
@@ -139,7 +144,10 @@ def add_stack(istack):
         widget_annotations = {
             "tracking": tracking_list,
             "step": [
-                {"label": "AlarmCPUHighThreshold", "value": AlarmCPUHighThreshold,},
+                {
+                    "label": "AlarmCPUHighThreshold",
+                    "value": AlarmCPUHighThreshold,
+                },
                 {
                     "label": "AlarmCPULowThreshold",
                     "value": AlarmCPULowThreshold,
@@ -431,7 +439,11 @@ def add_stack(istack):
                         res["ServiceName"],
                         "ClusterName",
                         res["ClusterName"],
-                        {"period": 300, "stat": istack.cfg.statistic, "label": label,},
+                        {
+                            "period": 300,
+                            "stat": istack.cfg.statistic,
+                            "label": label,
+                        },
                     ],
                 }
             )
@@ -448,7 +460,11 @@ def add_stack(istack):
                         res["ServiceName"],
                         "ClusterName",
                         res["ClusterName"],
-                        {"period": 300, "stat": "Maximum", "label": label,},
+                        {
+                            "period": 300,
+                            "stat": "Maximum",
+                            "label": label,
+                        },
                     ],
                 }
             )
@@ -600,7 +616,11 @@ def add_stack(istack):
                             "CPUUtilization",
                             "AutoScalingGroupName",
                             res["AutoScalingGroupName"],
-                            {"period": 300, "stat": "Maximum", "label": label,},
+                            {
+                                "period": 300,
+                                "stat": "Maximum",
+                                "label": label,
+                            },
                         ],
                     }
                 )

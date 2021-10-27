@@ -278,7 +278,11 @@ def _check_ecr_images(istack):
                 ecr.describe_images(
                     registryId=registry_id,
                     repositoryName=repository_name,
-                    imageIds=[{"imageTag": image_id,}],
+                    imageIds=[
+                        {
+                            "imageTag": image_id,
+                        }
+                    ],
                 )
                 images.append(image)
             except botocore.exceptions.ClientError as e:

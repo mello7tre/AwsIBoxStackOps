@@ -42,7 +42,9 @@ def create(istack):
 
     def _get_record_type(zoneid, name):
         resp = istack.route53.list_resource_record_sets(
-            HostedZoneId=zoneid, StartRecordName=name, MaxItems="1",
+            HostedZoneId=zoneid,
+            StartRecordName=name,
+            MaxItems="1",
         )
 
         if resp["ResourceRecordSets"]:

@@ -72,7 +72,10 @@ def _set_action_parameters(
                 "UsePreviousValue": use_previous_value,
             }
             if istack.stack
-            else {"ParameterKey": key, "ParameterValue": str(value),}
+            else {
+                "ParameterKey": key,
+                "ParameterValue": str(value),
+            }
         )
 
         # update resolved parameter final value istack.r_parameters

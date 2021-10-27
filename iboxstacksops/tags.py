@@ -13,16 +13,16 @@ def get_action_tags(istack, stack_tags):
         key = tag["Key"]
         current_value = tag["Value"]
 
+        # Skip LastUpdate and EnvApp1Version Tag
+        if key in ["LastUpdate", "EnvApp1Version"]:
+            continue
+
         # check if key exist as cfg param/attr too
         try:
             cfg_value = getattr(istack.cfg, key)
             in_cfg = True if cfg_value is not None else None
         except Exception:
             in_cfg = None
-
-        # Skip LastUpdate Tag
-        if key == "LastUpdate":
-            continue
 
         # current value differ from cmd arg
         if in_cfg and current_value != cfg_value:
