@@ -107,7 +107,11 @@ def create(istack):
         {"Key": "Env", "Value": istack.cfg.Env},
         {"Key": "EnvRole", "Value": istack.cfg.EnvRole},
         {"Key": "EnvStackVersion", "Value": istack.cfg.version},
-        {"Key": "EnvApp1Version", "Value": istack.cfg.EnvApp1Version},
+        # Currently disabled. Same considerations of commit 360a1c3 (LastUpdate).
+        # Furthermore, EnvAppVersion should be unrelated to Stack resources configuration.
+        # So it make no sense to tag stack resource with it; should be sufficient
+        # to look at CF Stack parameter value.
+        # {"Key": "EnvApp1Version", "Value": istack.cfg.EnvApp1Version},
     ]
 
     # set tags
