@@ -39,13 +39,20 @@ def _show_service_update(istack, event, timedelta):
         deployments_len = len(deployments)
         for dep in deployments:
             status = dep["status"]
-            for p in ["desiredCount", "runningCount", "pendingCount", "taskDefinition"]:
+            for p in [
+                "taskDefinition",
+                "desiredCount",
+                "runningCount",
+                "pendingCount",
+                "failedTasks",
+            ]:
                 deps[status][p] = dep[p]
 
         deployment_task = deps["PRIMARY"]["taskDefinition"]
         desiredCount = deps["PRIMARY"]["desiredCount"]
-        pendingCount = deps["PRIMARY"]["pendingCount"]
         runningCount = deps["PRIMARY"]["runningCount"]
+        pendingCount = deps["PRIMARY"]["pendingCount"]
+        failedTasks = deps["PRIMARY"]["failedTasks"]
 
         if str(deps) != deps_before:
             deps_before = str(deps)
@@ -65,7 +72,9 @@ def _show_service_update(istack, event, timedelta):
                     "cancelling update [ROLLBACK]"
                 )
 
-            if desiredCount > 0 and runningCount == 0:
+            # if desiredCount > 0 and runningCount == 0:
+            # Just use failedTasks
+            if failedTasks > 0:
                 stuck_n += 1
 
         time.sleep(5)
