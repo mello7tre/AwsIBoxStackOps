@@ -68,7 +68,7 @@ def _show_service_update(istack, event, timedelta):
                 istack.last_event_timestamp = event.timestamp
                 raise IboxErrorECSService(
                     "ECS Service did not stabilize "
-                    f"[{failedTasks} > {max_retry}] - "
+                    f"[{failedTasks} >= {max_retry}] - "
                     "cancelling update [ROLLBACK]"
                 )
 
