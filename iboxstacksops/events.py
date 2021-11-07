@@ -11,7 +11,7 @@ def _show_service_update(istack, event, timedelta):
     service_logical_resource_id = event.logical_resource_id
     service = task = cluster = deps_before = None
     deployment_task = ""
-    deployments_len = pendingCount = stuck_n = 0
+    deployments_len = pendingCount = 0
     client = istack.boto3.client("ecs")
 
     try:
@@ -64,20 +64,13 @@ def _show_service_update(istack, event, timedelta):
 
             # is update stuck ?
             max_retry = istack.cfg.max_retry_ecs_service_running_count
-            # Just use failedTasks
-            # if max_retry > 0 and stuck_n > max_retry:
             if max_retry > 0 and failedTasks >= max_retry:
                 istack.last_event_timestamp = event.timestamp
                 raise IboxErrorECSService(
                     "ECS Service did not stabilize "
-                    f"[{stuck_n} > {max_retry}] - "
+                    f"[{failedTasks} > {max_retry}] - "
                     "cancelling update [ROLLBACK]"
                 )
-
-            # Just use failedTasks
-            # if desiredCount > 0 and runningCount == 0:
-            # if failedTasks > 0:
-            #    stuck_n += 1
 
         time.sleep(5)
 
