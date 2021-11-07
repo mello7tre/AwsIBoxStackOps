@@ -368,8 +368,7 @@ def get_create_update_parser():
     parser.add_argument(
         "-M",
         "--max_retry_ecs_service_running_count",
-        help="Max retry numbers when updating ECS "
-        "service and runningCount is stuck to zero",
+        help="Trigger Stack Cancel Update (RollBack) if Service deployment's failedTasks is equals or greater than max_retry",
         type=int,
         default=0,
     )
