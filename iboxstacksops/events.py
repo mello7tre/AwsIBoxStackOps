@@ -64,7 +64,9 @@ def _show_service_update(istack, event, timedelta):
 
             # is update stuck ?
             max_retry = istack.cfg.max_retry_ecs_service_running_count
-            if max_retry > 0 and stuck_n > max_retry:
+            # Just use failedTasks
+            # if max_retry > 0 and stuck_n > max_retry:
+            if max_retry > 0 and failedTasks >= max_retry:
                 istack.last_event_timestamp = event.timestamp
                 raise IboxErrorECSService(
                     "ECS Service did not stabilize "
@@ -72,10 +74,10 @@ def _show_service_update(istack, event, timedelta):
                     "cancelling update [ROLLBACK]"
                 )
 
-            # if desiredCount > 0 and runningCount == 0:
             # Just use failedTasks
-            if failedTasks > 0:
-                stuck_n += 1
+            # if desiredCount > 0 and runningCount == 0:
+            # if failedTasks > 0:
+            #    stuck_n += 1
 
         time.sleep(5)
 
