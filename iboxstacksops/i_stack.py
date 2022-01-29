@@ -43,6 +43,7 @@ class ibox_stack(object):
         self.template = template.get_template(self)
         self.c_parameters = {}
         parameters.process(self)
+        resolve.process(self)
         result = actions.create(self)
         if result:
             return {self.name: self.stack.stack_status}
