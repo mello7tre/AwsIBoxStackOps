@@ -50,7 +50,7 @@ def _get_stack(r, data):
         if (
             stack_name in cfg.stack
             or stack_role in cfg.role
-            or stack_type in cfg.type
+            or any(t in cfg.type for t in (stack_type.split() if stack_type else []))
             or "ALL" in cfg.type
         ):
             data[stack_name] = stack_data
@@ -65,7 +65,7 @@ def _get_stackset(r, data):
     if (
         stack_name in cfg.stack
         or stack_role in cfg.role
-        or stack_type in cfg.type
+        or any(t in cfg.type for t in (stack_type.split() if stack_type else []))
         or "ALL" in cfg.type
     ):
         data[stack_name] = stack_data
