@@ -97,17 +97,18 @@ def _force_envshort(istack):
     istack.cfg.EnvShort = env_envshort_dict[env]
 
 
-# if template in s3, force version to the one in his url part
-# if from file force fixed value 1
+# for template in s3, try to get version from url/key otherway use fixed value "1"
 # Ex for version=master-2ed25d5:
-# https://eu-west-1-ibox-app-repository.s3.amazonaws.com
-# /ibox/master-2ed25d5/templates/cache-portal.json
+# https://eu-west-1-ibox-app-repository.s3.amazonaws.com/ibox/master-2ed25d5/templates/cache-portal.json
 def _do_envstackversion_from_s3_template(istack):
     template = istack.cfg.template
-    istack.cfg.version = (
-        template.split("/")[4] if str(template).startswith("https") else "1"
-    )
-    istack.cfg.EnvStackVersion = istack.cfg.version
+    istack.cfg.EnvStackVersion = "1"
+
+    if str(template).startswith("https"):
+        try:
+            istack.cfg.EnvStackVersion = template.split("/")[4]
+        except Exception:
+            pass
 
 
 def get_stack_parameter_parser(istack):
