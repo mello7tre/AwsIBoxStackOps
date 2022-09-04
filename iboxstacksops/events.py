@@ -27,6 +27,8 @@ def _show_service_update(istack, event, timedelta):
     deps = {
         "PRIMARY": {},
         "ACTIVE": {},
+        "INACTIVE": {},
+        "DRAINING": {},
     }
     while task != deployment_task or deployments_len > 1 or pendingCount != 0:
         istack.stack.reload()
