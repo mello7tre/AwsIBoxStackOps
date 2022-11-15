@@ -1,6 +1,5 @@
 from . import cfg, ssm, replica
 from .aws import myboto3
-from .log import logger, get_msg_client
 from .tools import smodule_to_class
 from .common import *
 

@@ -1,6 +1,5 @@
 from . import stacks, i_stack, table
 from .tools import concurrent_exec, get_exports
-from .log import logger
 from .common import *
 
 

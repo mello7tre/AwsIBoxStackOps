@@ -2,7 +2,6 @@ from prettytable import PrettyTable, ALL as ptALL
 from . import cfg, i_stack
 from .aws import myboto3
 from .tools import concurrent_exec
-from .log import logger
 from .common import *
 
 

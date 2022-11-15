@@ -7,7 +7,6 @@ from prettytable import (
     NONE as ptNONE,
 )
 from . import cfg
-from .log import logger
 from .common import *
 
 

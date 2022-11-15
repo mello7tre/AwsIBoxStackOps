@@ -4,10 +4,14 @@ from iboxstacksops.parser import set_cfg
 from iboxstacksops.common import IboxError
 from iboxstacksops.log import logger
 from iboxstacksops import cfg
+from iboxstacksops.msg import init as msg_init
 
 
 def main():
     set_cfg(sys.argv[1:])
+
+    # Pre-Init msg client
+    msg_init()
 
     try:
         cfg.func()

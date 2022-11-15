@@ -3,9 +3,7 @@ import concurrent.futures
 from traceback import print_exc
 from .aws import myboto3
 from . import cfg
-from .log import logger
 from .common import *
-
 
 def show_confirm():
     if cfg.parallel or cfg.answer_yes:

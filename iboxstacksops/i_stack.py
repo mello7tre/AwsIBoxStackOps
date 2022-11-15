@@ -11,7 +11,6 @@ from . import (
     route53,
 )
 from .aws import myboto3
-from .log import logger, get_msg_client
 from .tools import smodule_to_class
 from .common import *
 
@@ -139,13 +138,13 @@ class ibox_stack(object):
         except IOError:
             pass
         # logger.info(message)
-        client = get_msg_client()
+        client = getattr(self.cfg, "MSG_CLIENT", None)
         if client and chat:
             try:
                 client.chat_postMessage(
                     channel=f"#{cfg.slack_channel}",
                     text=message,
-                    username=os.environ["IBOX_SLACK_USER"],
+                    username=self.cfg.MSG_USER,
                     icon_emoji=":robot_face:",
                 )
             except Exception as e:

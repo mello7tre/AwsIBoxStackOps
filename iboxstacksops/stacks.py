@@ -1,6 +1,5 @@
 from . import cfg, parameters, outputs
 from .aws import myboto3
-from .log import logger
 from .common import *
 
 

@@ -4,8 +4,15 @@ import yaml
 import json
 import time
 import botocore
+import logging
 from datetime import datetime, timedelta, tzinfo
 from pprint import pprint, pformat
+
+
+logging.basicConfig()
+logging.getLogger("botocore").setLevel("CRITICAL")
+logger = logging.getLogger("stacksops")
+logger.setLevel(logging.INFO)
 
 
 class IboxError(Exception):
