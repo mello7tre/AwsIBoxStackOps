@@ -12,6 +12,7 @@ from . import (
 )
 from .aws import myboto3
 from .tools import smodule_to_class
+from .msg import init as msg_init
 from .common import *
 
 
@@ -138,7 +139,7 @@ class ibox_stack(object):
         except IOError:
             pass
         # logger.info(message)
-        client = getattr(self.cfg, "MSG_CLIENT", None)
+        client = msg_init(self)
         if client and chat:
             try:
                 client.chat_postMessage(

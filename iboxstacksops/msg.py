@@ -7,14 +7,16 @@ except ModuleNotFoundError:
     HAVE_MSG = False
 else:
     HAVE_MSG = True
-    MSG_AUTH = os.environ.get("IBOX_SLACK_TOKEN")
-    MSG_USER = os.environ.get("IBOX_SLACK_USER")
 
 
 def init(stack=None):
+    obj = stack.cfg if stack else cfg
     try:
-        cfg.MSG_CLIENT
+        return obj.MSG_CLIENT
     except Exception:
-        if HAVE_MSG and MSG_AUTH and MSG_USER and cfg.slack_channel:
-            cfg.MSG_USER = MSG_USER
-            cfg.MSG_CLIENT = slack.WebClient(token=MSG_AUTH)
+        MSG_AUTH = os.environ.get("IBOX_SLACK_TOKEN")
+        MSG_USER = os.environ.get("IBOX_SLACK_USER")
+        if HAVE_MSG and MSG_AUTH and MSG_USER and obj.slack_channel:
+            obj.MSG_USER = MSG_USER
+            obj.MSG_CLIENT = slack.WebClient(token=MSG_AUTH)
+            return obj.MSG_CLIENT
