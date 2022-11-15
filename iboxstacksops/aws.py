@@ -62,3 +62,11 @@ class myboto3(object):
             setattr(obj, attr_name, resource)
 
         return resource
+
+    def init_clients(self, names):
+        for name in names:
+            self.client(name)
+
+    def init_resources(self, names):
+        for name in names:
+            self.resource(name)
