@@ -16,7 +16,7 @@ def init(stack=None):
     except Exception:
         MSG_AUTH = os.environ.get("IBOX_SLACK_TOKEN")
         MSG_USER = os.environ.get("IBOX_SLACK_USER")
-        if HAVE_MSG and MSG_AUTH and MSG_USER and obj.slack_channel:
+        if HAVE_MSG and MSG_AUTH and MSG_USER and getattr(obj, "slack_channel", None):
             obj.MSG_USER = MSG_USER
             obj.MSG_CLIENT = slack.WebClient(token=MSG_AUTH)
             return obj.MSG_CLIENT
