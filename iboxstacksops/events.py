@@ -11,7 +11,7 @@ def _show_service_update(istack, event, timedelta):
     service_logical_resource_id = event.logical_resource_id
     service = task = cluster = deps_before = None
     deployment_task = ""
-    deployments_len = pendingCount = 0
+    deployments_len = desiredCount = runningCount = 0
     client = istack.boto3.client("ecs")
 
     try:
@@ -30,7 +30,9 @@ def _show_service_update(istack, event, timedelta):
         "INACTIVE": {},
         "DRAINING": {},
     }
-    while task != deployment_task or deployments_len > 1 or pendingCount != 0:
+    while (
+        task != deployment_task or deployments_len > 1 or desiredCount != runningCount
+    ):
         istack.stack.reload()
         task = istack.stack.Resource("TaskDefinition").physical_resource_id
         response = client.describe_services(
