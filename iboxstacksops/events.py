@@ -24,15 +24,15 @@ def _show_service_update(istack, event, timedelta):
     except Exception:
         return
 
-    deps = {
-        "PRIMARY": {},
-        "ACTIVE": {},
-        "INACTIVE": {},
-        "DRAINING": {},
-    }
     while (
         task != deployment_task or deployments_len > 1 or desiredCount != runningCount
     ):
+        deps = {
+            "PRIMARY": {},
+            "ACTIVE": {},
+            "INACTIVE": {},
+            "DRAINING": {},
+        }
         istack.stack.reload()
         task = istack.stack.Resource("TaskDefinition").physical_resource_id
         response = client.describe_services(
@@ -60,11 +60,12 @@ def _show_service_update(istack, event, timedelta):
 
         if str(deps) != deps_before:
             deps_before = str(deps)
-            for d in ["PRIMARY", "ACTIVE"]:
+            for d in ["PRIMARY", "ACTIVE", "DRAINING"]:
                 if "taskDefinition" in deps[d]:
                     deps[d]["taskDefinition"] = deps[d]["taskDefinition"].split("/")[-1]
             istack.mylog("PRIMARY: %s" % pformat(deps["PRIMARY"], width=1000000))
-            istack.mylog("ACTIVE: %s\n" % pformat(deps["ACTIVE"], width=1000000))
+            istack.mylog("ACTIVE: %s" % pformat(deps["ACTIVE"], width=1000000))
+            istack.mylog("DRAINING: %s\n" % pformat(deps["DRAINING"], width=1000000))
 
             # is update stuck ?
             max_retry = istack.cfg.max_retry_ecs_service_running_count
