@@ -8,24 +8,26 @@ def _show_service_update(istack, event, timedelta):
     if timedelta != "0":
         return
 
-    service_logical_resource_id = event.logical_resource_id
-    service = task = cluster = deps_before = None
-    deployment_task = ""
-    deployments_len = desiredCount = runningCount = 0
+    pri_task_def = deps_before = rolloutState = None
+    deps_len = 0
+    max_retry = istack.cfg.max_retry_ecs_service_running_count
     client = istack.boto3.client("ecs")
 
+    # get cluster and service from service arn
     try:
-        cluster = istack.stack.Resource("ScalableTarget").physical_resource_id.split(
-            "/"
-        )[1]
-        service = istack.stack.Resource(
-            service_logical_resource_id
-        ).physical_resource_id
+        cluster_name = event.physical_resource_id.split("/")[1]
+        service_name = event.physical_resource_id.split("/")[2]
     except Exception:
+        istack.mylog(
+            f"Unable to retrieve Cluster and Service name from event Physical Resource ID: {event.physical_resource_id}\n"
+            "skipping Service deployment logging."
+        )
         return
 
     while (
-        task != deployment_task or deployments_len > 1 or desiredCount != runningCount
+        pri_task_def not in istack.cfg.stack_tasks_defs
+        or deps_len > 1
+        or rolloutState == "IN_PROGRESS"
     ):
         deps = {
             "PRIMARY": {},
@@ -33,14 +35,16 @@ def _show_service_update(istack, event, timedelta):
             "INACTIVE": {},
             "DRAINING": {},
         }
-        istack.stack.reload()
-        task = istack.stack.Resource("TaskDefinition").physical_resource_id
-        response = client.describe_services(
-            cluster=cluster,
-            services=[service],
-        )
-        deployments = response["services"][0]["deployments"]
-        deployments_len = len(deployments)
+
+        service = client.describe_services(
+            cluster=cluster_name,
+            services=[service_name],
+        )["services"][0]
+
+        # dep_task_def = service["taskDefinition"]
+        deployments = service["deployments"]
+        deps_len = len(deployments)
+
         for dep in deployments:
             status = dep["status"]
             for p in [
@@ -49,14 +53,13 @@ def _show_service_update(istack, event, timedelta):
                 "runningCount",
                 "pendingCount",
                 "failedTasks",
+                "rolloutState",
             ]:
-                deps[status][p] = dep[p]
+                deps[status][p] = dep.get(p)
 
-        deployment_task = deps["PRIMARY"]["taskDefinition"]
-        desiredCount = deps["PRIMARY"]["desiredCount"]
-        runningCount = deps["PRIMARY"]["runningCount"]
-        pendingCount = deps["PRIMARY"]["pendingCount"]
+        pri_task_def = deps["PRIMARY"]["taskDefinition"]
         failedTasks = deps["PRIMARY"]["failedTasks"]
+        rolloutState = deps["PRIMARY"]["rolloutState"]
 
         if str(deps) != deps_before:
             deps_before = str(deps)
@@ -68,9 +71,14 @@ def _show_service_update(istack, event, timedelta):
             istack.mylog("DRAINING: %s\n" % pformat(deps["DRAINING"], width=1000000))
 
             # is update stuck ?
-            max_retry = istack.cfg.max_retry_ecs_service_running_count
-            if max_retry > 0 and failedTasks >= max_retry:
+            if (
+                pri_task_def in istack.cfg.stack_tasks_defs
+                and max_retry > 0
+                and failedTasks >= max_retry
+            ):
                 istack.last_event_timestamp = event.timestamp
+                # empty task definitions list
+                istack.cfg.stack_tasks_defs = []
                 raise IboxErrorECSService(
                     "ECS Service did not stabilize "
                     f"[{failedTasks} >= {max_retry}] - "
@@ -107,11 +115,21 @@ def show(istack, timestamp, timedelta="0"):
             + " "
             + str(event.resource_status_reason)
         )
+        # get TaskDefinitions
+        if (
+            event.resource_type == "AWS::ECS::TaskDefinition"
+            and event.resource_status == "UPDATE_COMPLETE"
+            and event.resource_status_reason is None
+            and istack.stack.stack_status not in istack.cfg.STACK_COMPLETE_STATUS
+        ):
+            istack.cfg.stack_tasks_defs.append(event.physical_resource_id)
+        # show service depoyment logging
         if (
             event.resource_type == "AWS::ECS::Service"
             and event.resource_status == "UPDATE_IN_PROGRESS"
             and event.resource_status_reason is None
             and istack.stack.stack_status not in istack.cfg.STACK_COMPLETE_STATUS
+            and istack.cfg.stack_tasks_defs
         ):
             _show_service_update(istack, event, timedelta)
 
