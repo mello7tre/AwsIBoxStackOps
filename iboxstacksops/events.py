@@ -13,6 +13,13 @@ def _show_service_update(istack, event, timedelta):
     max_retry = istack.cfg.max_retry_ecs_service_running_count
     client = istack.boto3.client("ecs")
 
+    # get the current Stack TaskDefinitions to be deployed
+    stack_tasks_defs = [
+        res.physical_resource_id
+        for res in istack.stack.resource_summaries.all()
+        if res.resource_type == "AWS::ECS::TaskDefinition"
+    ]
+
     # get cluster and service from service arn
     try:
         cluster_name = event.physical_resource_id.split("/")[1]
@@ -25,7 +32,7 @@ def _show_service_update(istack, event, timedelta):
         return
 
     while (
-        pri_task_def not in istack.cfg.stack_tasks_defs
+        pri_task_def not in stack_tasks_defs
         or deps_len > 1
         or rolloutState == "IN_PROGRESS"
     ):
@@ -72,13 +79,11 @@ def _show_service_update(istack, event, timedelta):
 
             # is update stuck ?
             if (
-                pri_task_def in istack.cfg.stack_tasks_defs
+                pri_task_def in stack_tasks_defs
                 and max_retry > 0
                 and failedTasks >= max_retry
             ):
                 istack.last_event_timestamp = event.timestamp
-                # empty task definitions list
-                istack.cfg.stack_tasks_defs = []
                 raise IboxErrorECSService(
                     "ECS Service did not stabilize "
                     f"[{failedTasks} >= {max_retry}] - "
@@ -115,21 +120,12 @@ def show(istack, timestamp, timedelta="0"):
             + " "
             + str(event.resource_status_reason)
         )
-        # get TaskDefinitions
-        if (
-            event.resource_type == "AWS::ECS::TaskDefinition"
-            and event.resource_status == "UPDATE_COMPLETE"
-            and event.resource_status_reason is None
-            and istack.stack.stack_status not in istack.cfg.STACK_COMPLETE_STATUS
-        ):
-            istack.cfg.stack_tasks_defs.append(event.physical_resource_id)
         # show service depoyment logging
         if (
             event.resource_type == "AWS::ECS::Service"
             and event.resource_status == "UPDATE_IN_PROGRESS"
             and event.resource_status_reason is None
             and istack.stack.stack_status not in istack.cfg.STACK_COMPLETE_STATUS
-            and istack.cfg.stack_tasks_defs
         ):
             _show_service_update(istack, event, timedelta)
 
