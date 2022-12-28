@@ -35,7 +35,7 @@ def get(istack, dash=None):
                     "ListenerHttpInternalRules1",
                 ]:
                     res_pid = "/".join(res_pid.split("/")[1:4])
-                if res_lid == "ScalableTarget":
+                if res_lid in ["ScalableTarget", "ScalableTargetECSService"]:
                     res_pid = res_pid.split("/")[1]
                 if res_lid in ["Service", "ServiceSpot"]:
                     res_pid_arr = res_pid.split("/")

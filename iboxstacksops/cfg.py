@@ -47,6 +47,7 @@ RESOURCES_MAP = {
     "LoadBalancerApplicationInternal": "LoadBalancerInternal",
     "Cluster": "ClusterName",
     "ScalableTarget": "ClusterName",
+    "ScalableTargetECSService": "ClusterName",
     "ListenerHttpsExternalRules1": "LoadBalancerExternal",
     "ListenerHttpsExternalRules2": "LoadBalancerExternal",
     "ListenerHttpExternalRules1": "LoadBalancerExternal",
