@@ -46,8 +46,6 @@ RESOURCES_MAP = {
     "LoadBalancerApplicationExternal": "LoadBalancerExternal",
     "LoadBalancerApplicationInternal": "LoadBalancerInternal",
     "Cluster": "ClusterName",
-    "ScalableTarget": "ClusterName",
-    "ScalableTargetECSService": "ClusterName",
     "ListenerHttpsExternalRules1": "LoadBalancerExternal",
     "ListenerHttpsExternalRules2": "LoadBalancerExternal",
     "ListenerHttpExternalRules1": "LoadBalancerExternal",
@@ -55,6 +53,7 @@ RESOURCES_MAP = {
     "AlarmCPUHigh": None,
     "AlarmCPULow": None,
     "AWS::ElasticLoadBalancingV2::TargetGroup": None,
+    "AWS::ApplicationAutoScaling::ScalableTarget": "ClusterName",
 }
 SCALING_POLICY_TRACKINGS_NAMES = {
     "ScalingPolicyTrackings1": None,

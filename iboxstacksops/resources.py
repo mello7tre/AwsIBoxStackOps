@@ -35,8 +35,6 @@ def get(istack, dash=None):
                     "ListenerHttpInternalRules1",
                 ]:
                     res_pid = "/".join(res_pid.split("/")[1:4])
-                if res_lid in ["ScalableTarget", "ScalableTargetECSService"]:
-                    res_pid = res_pid.split("/")[1]
                 if res_lid in ["Service", "ServiceSpot"]:
                     res_pid_arr = res_pid.split("/")
                     if len(res_pid_arr) == 3:
@@ -58,6 +56,16 @@ def get(istack, dash=None):
                 # used for AWS::ServiceDiscovery::Service
                 if res_pid.startswith("arn"):
                     res_pid = res_pid.split(":", 5)[5]
+                if dash:
+                    if (
+                        res_type == "AWS::ApplicationAutoScaling::ScalableTarget"
+                        and res_pid.startswith("service/")
+                    ):
+                        # used to get ClusterName for ecs stacks in dashboard
+                        res_pid = res_pid.split("/")[1]
+                    if istack.cfg.RESOURCES_MAP[res_type]:
+                        res_lid = istack.cfg.RESOURCES_MAP[res_type]
+
                 resources[res_lid] = res_pid
 
     return resources
