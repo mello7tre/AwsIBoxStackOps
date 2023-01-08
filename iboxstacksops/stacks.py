@@ -51,6 +51,11 @@ def _get_stack(r, data):
             or stack_role in cfg.role
             or stack_type in cfg.type
             or any(t in cfg.type for t in (stack_type.split() if stack_type else []))
+            or (
+                len(cfg.type) == 1
+                and cfg.type[0].endswith("+")
+                and cfg.type[0].rstrip("+") == stack_type
+            )
             or "ALL" in cfg.type
         ):
             data[stack_name] = stack_data
