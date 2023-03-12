@@ -7,7 +7,7 @@ from copy import deepcopy
 def add_stack(istack):
     widget_width = {
         "stack": 12,
-        "global": 24,
+        "global": 12,
     }
 
     widget_height = {
@@ -16,6 +16,7 @@ def add_stack(istack):
     }
 
     widget_title = {
+        "memory": "Memory",
         "5xx": "5xx - 4xx",
         "req": "Requests - Healthy",
         "net": "NetworkIN - NetworkOUT",
@@ -25,6 +26,7 @@ def add_stack(istack):
 
     widget_map = {
         "role": ["cpu", "response"],
+        "memory": ["memory"],
         "req": ["requests", "healthy"],
         "5xx": ["5xx", "4xx"],
         "5xx_elb": ["5xx_elb", "4xx_elb"],
@@ -185,16 +187,12 @@ def add_stack(istack):
                 print(f"\tMetrics: {msg} {out_msg}")
 
     def get_widget_map_position(wtype, index):
-        if wtype == "stack":
-            # even index (left side)
-            if (index & 1) == 0:
-                return (0, widget_height["stack"] * index)
-            # odd index (right side)
-            else:
-                return (widget_width["stack"], widget_height["stack"] * index)
-        # global type
+        # even index (left side)
+        if (index & 1) == 0:
+            return (0, widget_height[wtype] * index)
+        # odd index (right side)
         else:
-            return (0, widget_height["global"] * index)
+            return (widget_width[wtype], widget_height[wtype] * index)
 
     def add_annotations(w, atype):
         if "annotations" not in w["properties"]:
@@ -291,7 +289,7 @@ def add_stack(istack):
 
         # Find the current number of widget stacks,
         # so that the next one is added at the end
-        len_stacks = len([n for n in w if n["width"] == widget_width["stack"]])
+        len_stacks = len([n for n in w if "Cpu - Response" in n["properties"]["title"]])
 
         # iterate over widget_map keys and populate relative widget
         for wd in widget_map:
@@ -379,7 +377,7 @@ def add_stack(istack):
 
     def get_metrics(res):
         # update widget_title and widget_label
-        widget_title["role"] = f"{istack.EnvRole}.{istack.name}"
+        widget_title["role"] = f"{istack.EnvRole}.{istack.name} [Cpu - Response]"
         title_role = widget_title["role"]
 
         # Set common variable for ELB Classic and Application used by EC2 stack
@@ -472,6 +470,28 @@ def add_stack(istack):
             if "ServiceSpotName" in res:
                 for n, v in enumerate(list(metrics["cpu"])):
                     add_spot_metric(metrics["cpu"], n * 3)
+
+            # Memory
+            label = f"{title_role} - Memory Maximum"
+            metrics["memory"].append(
+                {
+                    "name": label,
+                    "label": label,
+                    "metric": [
+                        "AWS/ECS",
+                        "MemoryUtilization",
+                        "ServiceName",
+                        res["ServiceName"],
+                        "ClusterName",
+                        res["ClusterName"],
+                        {
+                            "period": 300,
+                            "stat": "Maximum",
+                            "label": label,
+                        },
+                    ],
+                }
+            )
 
             # TargetGroups
             for n, v in res.items():
