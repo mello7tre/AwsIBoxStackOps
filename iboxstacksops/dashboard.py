@@ -377,8 +377,8 @@ def add_stack(istack):
 
     def get_metrics(res):
         # update widget_title and widget_label
-        widget_title["role"] = f"{istack.EnvRole}.{istack.name} [Cpu - Response]"
-        title_role = widget_title["role"]
+        title_role = f"{istack.EnvRole}.{istack.name}"
+        widget_title["role"] = f"{title_role} [Cpu - Response]"
 
         # Set common variable for ELB Classic and Application used by EC2 stack
         if any(
