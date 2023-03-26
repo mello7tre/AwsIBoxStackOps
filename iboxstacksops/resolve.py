@@ -299,9 +299,15 @@ def _do_check(istack):
 
 def show(istack):
     _process_template(istack)
-    print("")
     logger.info(f"Resolved: {istack.name}")
-    print(yaml.dump(istack.r_resources))
+    print(
+        yaml.dump(
+            {
+                "AWSTemplateFormatVersion": "2010-09-09",
+                "Resources": istack.r_resources,
+            }
+        )
+    )
 
 
 def process(istack):
