@@ -108,7 +108,6 @@ SHOW_TABLE_FIELDS = [
     "EnvRole",
     "StackName",
     "StackType",
-    "UpdateMode",
     "EnvApp1Version",
     "StackStatus",
     "LastUpdatedTime",
