@@ -10,8 +10,9 @@ from . import cfg
 from .common import *
 
 
-def get(data):
-    fields = cfg.fields
+def get(data, fields=[]):
+    if not fields:
+        fields = cfg.fields
     table = PrettyTable()
     table.padding_width = 1
     table.field_names = fields

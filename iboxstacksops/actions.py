@@ -226,6 +226,18 @@ def log(istack):
         events.show(istack, time_event, time_delta)
 
 
+def show_resources(istack):
+    l_res = []
+    paginator = istack.client.get_paginator("list_stack_resources")
+    response_iterator = paginator.paginate(StackName=istack.name)
+
+    for r in response_iterator:
+        for res in r["StackResourceSummaries"]:
+            l_res.append(res)
+    s_table = table.get(l_res, cfg.SHOW_RESOURCES_FIELD)
+    istack.mylog(f"STACK RESOURCES:\n{s_table}")
+
+
 def stackset_update(istack):
     # set tags
     istack.action_tags = get_action_tags(istack, istack.Tags)

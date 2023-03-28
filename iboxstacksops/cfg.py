@@ -113,6 +113,14 @@ SHOW_TABLE_FIELDS = [
     "LastUpdatedTime",
 ]
 
+SHOW_RESOURCES_FIELD = [
+    "LogicalResourceId",
+    "PhysicalResourceId",
+    "ResourceType",
+    "LastUpdatedTimestamp",
+    "ResourceStatus",
+]
+
 STACKSET_INSTANCES_SHOW_TABLE_FIELDS = [
     "Region",
     "Account",

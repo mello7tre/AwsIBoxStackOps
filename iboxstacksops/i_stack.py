@@ -105,6 +105,10 @@ class ibox_stack(object):
         outputs.show(self, "before")
         parameters.show_override(self)
 
+    def show_resources(self):
+        self.stack = self.cloudformation.Stack(self.name)
+        result = actions.show_resources(self)
+
     def log(self):
         self.stack = self.cloudformation.Stack(self.name)
         actions.log(self)

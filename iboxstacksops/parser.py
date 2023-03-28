@@ -8,6 +8,7 @@ from .commands import (
     continue_update,
     rollback,
     info,
+    show_resources,
     parameters,
     resolve,
     show_table,
@@ -516,6 +517,12 @@ def get_parser():
         "info", parents=[stack_selection_parser], help="Show Stack Info"
     )
     parser_info.set_defaults(func=info)
+
+    # resources parser
+    parser_resources = command_subparser.add_parser(
+        "resources", parents=[stack_selection_parser], help="Show Stack Resources"
+    )
+    parser_resources.set_defaults(func=show_resources)
 
     # parameters parser
     parser_parameters = command_subparser.add_parser(

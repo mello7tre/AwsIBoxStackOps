@@ -5,6 +5,7 @@ from .aws import myboto3
 from . import cfg
 from .common import *
 
+
 def show_confirm():
     if cfg.parallel or cfg.answer_yes:
         return True

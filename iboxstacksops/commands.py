@@ -83,6 +83,11 @@ def info():
     result = concurrent_exec("info", w_stacks, i_stack)
 
 
+def show_resources():
+    w_stacks = stacks.get()
+    result = concurrent_exec("show_resources", w_stacks, i_stack)
+
+
 def log():
     name = cfg.stack[0]
     stack = i_stack.ibox_stack(name, {})
