@@ -234,7 +234,7 @@ def show_resources(istack):
     for r in response_iterator:
         for res in r["StackResourceSummaries"]:
             l_res.append(res)
-    s_table = table.get(l_res, istack.cfg.SHOW_RESOURCES_FIELD)
+    s_table = table.get(l_res)
     istack.mylog(f"STACK RESOURCES:\n{s_table}")
 
 

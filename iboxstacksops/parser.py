@@ -522,6 +522,17 @@ def get_parser():
     parser_resources = command_subparser.add_parser(
         "resources", parents=[stack_selection_parser], help="Show Stack Resources"
     )
+    parser_resources.add_argument(
+        "-F",
+        "--fields",
+        nargs="+",
+        type=str,
+        default=cfg.SHOW_RESOURCES_FIELDS,
+        help="LogicalResourceId PhysicalResourceId ResourceType LastUpdatedTimestamp ResourceStatus ResourceStatusReason",
+    )
+    parser_resources.add_argument(
+        "-O", "--output", type=str, default="text", choices=["text", "html", "bare"]
+    )
     parser_resources.set_defaults(func=show_resources)
 
     # parameters parser

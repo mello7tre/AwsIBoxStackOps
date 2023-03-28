@@ -113,11 +113,9 @@ SHOW_TABLE_FIELDS = [
     "LastUpdatedTime",
 ]
 
-SHOW_RESOURCES_FIELD = [
+SHOW_RESOURCES_FIELDS = [
     "LogicalResourceId",
-    "PhysicalResourceId",
     "ResourceType",
-    "LastUpdatedTimestamp",
     "ResourceStatus",
 ]
 
