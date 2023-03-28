@@ -233,7 +233,11 @@ def show_resources(istack):
 
     for r in response_iterator:
         for res in r["StackResourceSummaries"]:
-            l_res.append(res)
+            if (
+                not istack.cfg.resource_types
+                or res["ResourceType"] in istack.cfg.resource_types
+            ):
+                l_res.append(res)
     s_table = table.get(l_res)
     istack.mylog(f"STACK RESOURCES:\n{s_table}")
 
