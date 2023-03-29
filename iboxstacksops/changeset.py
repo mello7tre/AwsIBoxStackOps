@@ -65,7 +65,24 @@ def _parse_changeset(changeset):
     return changes, not_replaced
 
 
-def _show_changeset_changes(istack, changes, not_replaced):
+# semplify changeset by removing changes where all CausingEntity items will be not replaced
+def _simplify_changeset(changes, not_replaced):
+    recurse = False
+    for row in list(changes):
+        causing_entity = row.get("CausingEntityList", [])
+        if causing_entity and all(
+            n.split(".")[0] in not_replaced for n in causing_entity
+        ):
+            not_replaced.append(row["LogicalResourceId"])
+            changes.remove(row)
+            recurse = True
+    if recurse:
+        return _simplify_changeset(changes, not_replaced)
+
+    return changes
+
+
+def _show_changeset_changes(istack, changes):
     fields = ["LogicalResourceId", "ResourceType", "Action"]
     fileds_ex = ["Replacement", "Scope", "Target", "CausingEntity"]
     fields.extend(fileds_ex)
@@ -78,16 +95,6 @@ def _show_changeset_changes(istack, changes, not_replaced):
     table.align["LogicalResourceId"] = "l"
     table.align["ResourceType"] = "l"
     for row in changes:
-
-        # semplify changeset by removing changes where all CausingEntity items will be not replaced
-        causing_entity = row.get("CausingEntityList", [])
-        if (
-            not istack.cfg.changeset_original
-            and causing_entity
-            and all(n.split(".")[0] in not_replaced for n in causing_entity)
-        ):
-            continue
-
         table.add_row(
             [
                 "None" if i in fileds_ex and row["Action"] != "Modify" else row[i]
@@ -139,8 +146,12 @@ def process(istack, us_args):
     # -parse changeset changes
     changeset_changes, not_replaced = _parse_changeset(changeset)
 
+    # simplify changeset
+    if not istack.cfg.changeset_original:
+        changeset_changes = _simplify_changeset(changeset_changes, not_replaced)
+
     # -show changeset changes
-    _show_changeset_changes(istack, changeset_changes, not_replaced)
+    _show_changeset_changes(istack, changeset_changes)
 
     # -delete changeset
     _delete_changeset(istack, changeset_id)
