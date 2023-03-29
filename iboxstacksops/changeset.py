@@ -81,8 +81,10 @@ def _show_changeset_changes(istack, changes, not_replaced):
 
         # semplify changeset by removing changes where all CausingEntity items will be not replaced
         causing_entity = row.get("CausingEntityList", [])
-        if not istack.cfg.changeset_original and causing_entity and all(
-            n.split(".")[0] in not_replaced for n in causing_entity
+        if (
+            not istack.cfg.changeset_original
+            and causing_entity
+            and all(n.split(".")[0] in not_replaced for n in causing_entity)
         ):
             continue
 
