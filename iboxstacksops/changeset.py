@@ -33,6 +33,7 @@ def _changeset_waiter(istack, changeset_id):
 # parse changeset changes
 def _parse_changeset(changeset):
     changes = []
+    not_replaced = []
     for change in changeset["Changes"]:
         change_dict = {}
         ResChange = change["ResourceChange"]
@@ -41,6 +42,8 @@ def _parse_changeset(changeset):
         change_dict["ResourceType"] = ResChange["ResourceType"]
         if ResChange["Action"] == "Modify":
             change_dict["Replacement"] = ResChange["Replacement"]
+            if change_dict["Replacement"] == "False":
+                not_replaced.append(change_dict["LogicalResourceId"])
             scope = ResChange["Scope"]
             change_dict["Scope"] = list_to_string_list(scope)
             target = []
@@ -56,12 +59,13 @@ def _parse_changeset(changeset):
                     causingentity.append(i["CausingEntity"])
             change_dict["Target"] = list_to_string_list(target)
             change_dict["CausingEntity"] = list_to_string_list(causingentity)
+            change_dict["CausingEntityList"] = causingentity
 
         changes.append(change_dict)
-    return changes
+    return changes, not_replaced
 
 
-def _show_changeset_changes(istack, changes):
+def _show_changeset_changes(istack, changes, not_replaced):
     fields = ["LogicalResourceId", "ResourceType", "Action"]
     fileds_ex = ["Replacement", "Scope", "Target", "CausingEntity"]
     fields.extend(fileds_ex)
@@ -74,6 +78,14 @@ def _show_changeset_changes(istack, changes):
     table.align["LogicalResourceId"] = "l"
     table.align["ResourceType"] = "l"
     for row in changes:
+
+        # semplify changeset by removing changes where all CausingEntity items will be not replaced
+        causing_entity = row.get("CausingEntityList", [])
+        if not istack.cfg.changeset_original and causing_entity and all(
+            n.split(".")[0] in not_replaced for n in causing_entity
+        ):
+            continue
+
         table.add_row(
             [
                 "None" if i in fileds_ex and row["Action"] != "Modify" else row[i]
@@ -123,10 +135,10 @@ def process(istack, us_args):
     # pprint(changeset)
 
     # -parse changeset changes
-    changeset_changes = _parse_changeset(changeset)
+    changeset_changes, not_replaced = _parse_changeset(changeset)
 
     # -show changeset changes
-    _show_changeset_changes(istack, changeset_changes)
+    _show_changeset_changes(istack, changeset_changes, not_replaced)
 
     # -delete changeset
     _delete_changeset(istack, changeset_id)

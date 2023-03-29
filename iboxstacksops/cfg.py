@@ -13,6 +13,7 @@ vertical = False
 profile = False
 output = "text"
 disable_rollback = False
+changeset_original = False
 #
 
 OUT_WIDTH = 1000000
