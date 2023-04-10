@@ -122,6 +122,9 @@ def get_stack_parameter_parser(istack):
     # for parameter in sorted(
     #    stack_parameters, key=lambda x: x['ParameterKey']):
     for p in sorted(istack.parameters):
+        # skip intrinsic cmd parameters already parsed
+        if hasattr(istack.cfg.cmd_args, p):
+            continue
         v = istack.parameters[p]
         allowed_values = v["AllowedValues"] if "AllowedValues" in v else []
         kwargs = {"type": str, "metavar": "\t%s" % v["Description"]}

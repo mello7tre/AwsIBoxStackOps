@@ -640,4 +640,5 @@ def set_cfg(argv):
         parser.print_help()
         exit(0)
 
+    cfg.cmd_args = args[0]
     cfg.stack_args = args[1]
