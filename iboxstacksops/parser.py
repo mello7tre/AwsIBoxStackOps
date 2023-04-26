@@ -386,6 +386,13 @@ def get_create_update_parser():
         "resources when an operation fails",
         action="store_true",
     )
+    parser.add_argument(
+        "--tags",
+        nargs="+",
+        help="Tags to associate with this stack. Space separated, use '=' to separate Name and Value",
+        type=str,
+        default=[],
+    )
 
     return parser
 
