@@ -57,7 +57,7 @@ def _process_template(istack):
 
             return r_root
 
-        elif isinstance(value, (int, str)):
+        elif isinstance(value, (int, str, float)):
 
             return value
 
