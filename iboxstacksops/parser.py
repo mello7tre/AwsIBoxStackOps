@@ -389,7 +389,7 @@ def get_create_update_parser():
     parser.add_argument(
         "--tags",
         nargs="+",
-        help="Tags to associate with this stack. Space separated, use '=' to separate Name and Value",
+        help="Tags, space separated, to associate with this stack. [Name=Value]",
         type=str,
         default=[],
     )
