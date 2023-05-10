@@ -1,5 +1,5 @@
 # parser default cfg
-stack = role = type = topics = stack_args = cmd_args = []
+stack = role = type = topics = stack_args = cmd_args = tags = []
 parallel = region = jobs = pause = version = template = None
 nowait = compact = dryrun = answer_yes = no_stacks = all_stacks = None
 debug = False
