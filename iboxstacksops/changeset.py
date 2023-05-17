@@ -70,8 +70,10 @@ def _simplify_changeset(changes, not_replaced):
     recurse = False
     for row in list(changes):
         causing_entity = row.get("CausingEntityList", [])
-        if causing_entity and all(
-            n.split(".")[0] in not_replaced for n in causing_entity
+        if (
+            causing_entity
+            and all(n.split(".")[0] in not_replaced for n in causing_entity)
+            and len(row.get("Target", [])) <= len(row.get("CausingEntityList", []))
         ):
             not_replaced.append(row["LogicalResourceId"])
             changes.remove(row)
@@ -124,10 +126,10 @@ def _execute_changeset(istack, changeset_id):
 
 # change list in a string new line separated element
 def list_to_string_list(mylist):
-    joined_string = "\n".join(mylist)
-    mystring = joined_string if len(mylist) < 2 else f"({joined_string})"
-
-    return mystring
+    return ",".join(mylist)
+    # joined_string = "\n".join(mylist)
+    # mystring = joined_string if len(mylist) < 2 else f"({joined_string})"
+    # return mystring
 
 
 def process(istack, us_args):
