@@ -76,12 +76,13 @@ def parameters():
     result = concurrent_exec("parameters", w_stacks, i_stack)
 
 
-def info():
+def info(mylog=True):
     if not cfg.compact:
         cfg.OUT_WIDTH = 80
     w_stacks = stacks.get()
-    result = concurrent_exec("info", w_stacks, i_stack)
+    result = concurrent_exec("info", w_stacks, i_stack, **{"mylog": mylog})
 
+    return result
 
 def show_resources():
     w_stacks = stacks.get()
