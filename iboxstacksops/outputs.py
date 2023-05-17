@@ -20,12 +20,12 @@ def show_changed(istack):
 
 
 # show stack current outputs as dict
-def show(istack, when, mylog=True):
+def show(istack, when):
     outputs = getattr(istack, when)["outputs"]
 
     out = pformat(outputs, width=istack.cfg.OUT_WIDTH)
 
-    if mylog:
+    if istack.cfg.print_mylog:
         istack.mylog(f"{when.upper()} - STACK OUTPUTS\n{out}\n")
 
     return outputs

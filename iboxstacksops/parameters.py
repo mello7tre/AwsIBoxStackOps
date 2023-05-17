@@ -158,7 +158,7 @@ def add_stack_params_as_args(istack, parser):
             setattr(istack.cfg, n, v)
 
 
-def show_override(istack, mylog=True):
+def show_override(istack):
     params = {}
     for name, value in istack.c_parameters.items():
         if (
@@ -173,7 +173,7 @@ def show_override(istack, mylog=True):
 
     out = pformat(params, width=istack.cfg.OUT_WIDTH)
 
-    if mylog:
+    if istack.cfg.print_mylog:
         istack.mylog(f"CURRENT NOT DEFAULT - STACK PARAMETERS\n{out}\n")
 
     return params

@@ -99,11 +99,11 @@ class ibox_stack(object):
             logger.info(f"{self.name} Parameters:")
             parser.print_help()
 
-    def info(self, mylog=True):
+    def info(self):
         self.stack = self.cloudformation.Stack(self.name)
         self.template = template.get_template(self)
-        outputs_out = outputs.show(self, "before", mylog=mylog)
-        parameters_out = parameters.show_override(self, mylog=mylog)
+        outputs_out = outputs.show(self, "before")
+        parameters_out = parameters.show_override(self)
 
         return {
             "OUTPUTS": outputs_out,
