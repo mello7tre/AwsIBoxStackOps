@@ -58,6 +58,7 @@ def _parse_changeset(changeset):
                 ):
                     causingentity.append(i["CausingEntity"])
             change_dict["Target"] = list_to_string_list(target)
+            change_dict["TargetList"] = target
             change_dict["CausingEntity"] = list_to_string_list(causingentity)
             change_dict["CausingEntityList"] = causingentity
 
@@ -73,7 +74,7 @@ def _simplify_changeset(changes, not_replaced):
         if (
             causing_entity
             and all(n.split(".")[0] in not_replaced for n in causing_entity)
-            and len(row.get("Target", [])) <= len(row.get("CausingEntityList", []))
+            and len(row.get("TargetList", [])) <= len(causing_entity)
         ):
             not_replaced.append(row["LogicalResourceId"])
             changes.remove(row)
