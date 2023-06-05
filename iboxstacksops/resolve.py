@@ -59,7 +59,7 @@ def _process_template(istack):
 
         elif isinstance(value, (int, str, float)):
 
-            return value
+            return str(value)
 
     def _resolve_sub(name, value):
         if isinstance(value, list):
