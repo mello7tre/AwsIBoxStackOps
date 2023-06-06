@@ -12,6 +12,10 @@ def get_action_tags(istack, stack_tags):
 
     # changed tags - same value as corresponding stack param
     tags_changed = {}
+
+    # metadata tags - found inside template Metadata Section
+    tags_metadata = {}
+
     final_tags = []
 
     for tag in stack_tags:
@@ -55,11 +59,17 @@ def get_action_tags(istack, stack_tags):
 
         final_tags.append({"Key": key, "Value": value})
 
-    # Add cmd tags that do not have as Value REMOVE
+    # Add cmd tags that must not be removed
     for key, value in cmd_tags.items():
-        if value != "REMOVE":
+        if key not in tags_remove:
             final_tags.append({"Key": key, "Value": value})
             tags_cmd[key] = value
+
+    # Add metadata tags found inside template Metadata Section
+    for key, value in istack.metadata.get("Tags", {}).items():
+        if key not in tags_remove + tags_default + tags_changed + tags_cmd:
+            final_tags.append({"Key": key, "Value": value})
+            tags_metadata[key] = value
 
     # Add LastUpdate Tag with current time
     # Currently disabled:
@@ -80,6 +90,10 @@ def get_action_tags(istack, stack_tags):
     if tags_cmd:
         istack.mylog(
             "COMMAND LINE - STACK TAGS\n%s\n" % pformat(tags_cmd, width=1000000)
+        )
+    if tags_metadata:
+        istack.mylog(
+            "METADATA - STACK TAGS\n%s\n" % pformat(tags_metadata, width=1000000)
         )
     if tags_remove:
         istack.mylog("REMOVE - STACK TAGS\n%s\n" % pformat(tags_remove, width=1000000))

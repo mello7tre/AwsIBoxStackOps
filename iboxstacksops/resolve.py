@@ -246,8 +246,14 @@ def _process_template(istack):
                 if v["Type"] == "AWS::Lambda::Function":
                     _check_lambda(r)
 
+    def _process_metadata():
+        istack.metadata = _recursive_resolve(
+            "Metadata", istack.template.get("Metadata", {})
+        )
+
     _process_conditions()
     _process_resources()
+    _process_metadata()
 
 
 def _check_s3_files(istack):
