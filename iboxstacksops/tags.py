@@ -1,26 +1,6 @@
 from .common import *
 
 
-def add_or_update_tag(
-    key, value, final_tags, tags_changed, tags_default, tags_remove, tags_type
-):
-    final_tags_keys = [n["Key"] for n in final_tags]
-    final_tags_values = [n["Value"] for n in final_tags]
-
-    if key not in tags_remove:
-        # Tag must not be removed
-        tag = {"Key": key, "Value": value}
-        if tag not in final_tags and key in final_tags_keys:
-            # Tag Key already present but with different Value
-            loc = final_tags_keys.index(key)
-            final_tags[loc] = tag
-            tags_changed[key] = "%s => %s" % (final_tags_values[loc], value)
-            tags_default.pop(key, None)
-        elif tag not in final_tags:
-            final_tags.append(tag)
-            tags_type[key] = value
-
-
 def get_action_tags(istack, stack_tags):
     # cmd lines tags
     cmd_tags = {n.split("=")[0]: n.split("=")[1] for n in istack.cfg.tags}
@@ -34,7 +14,7 @@ def get_action_tags(istack, stack_tags):
     tags_changed = {}
 
     # metadata tags - found inside template Metadata Section
-    tags_meta = {}
+    tags_metadata = {}
 
     final_tags = []
 
@@ -79,17 +59,32 @@ def get_action_tags(istack, stack_tags):
 
         final_tags.append({"Key": key, "Value": value})
 
-    # Add command line tags
-    for key, value in cmd_tags.items():
-        add_or_update_tag(
-            key, value, final_tags, tags_changed, tags_default, tags_remove, tags_cmd
-        )
+    final_tags_keys = [n["Key"] for n in final_tags]
+    final_tags_values = [n["Value"] for n in final_tags]
 
-    # Add metadata tags found inside template Metadata Section
-    for key, value in istack.metadata.get("Tags", {}).items():
-        add_or_update_tag(
-            key, value, final_tags, tags_changed, tags_default, tags_remove, tags_meta
-        )
+    upsert_tags_cfg = [
+        # Command line tags
+        (cmd_tags, tags_cmd),
+        # Metadata tags found inside template Metadata Section
+        (istack.metadata.get("Tags", {}), tags_metadata),
+    ]
+
+    # Add or Update Tags
+    for n in upsert_tags_cfg:
+        for key, value in n[0].items():
+            if key not in tags_remove:
+                # Tag must not be removed
+                tag = {"Key": key, "Value": value}
+                if tag not in final_tags and key in final_tags_keys:
+                    # Tag Key already present but with different Value
+                    loc = final_tags_keys.index(key)
+                    final_tags[loc] = tag
+                    tags_changed[key] = "%s => %s" % (final_tags_values[loc], value)
+                    tags_default.pop(key, None)
+                elif tag not in final_tags:
+                    # Tag Key do not exist add/append it
+                    final_tags.append(tag)
+                    n[1][key] = value
 
     # Add LastUpdate Tag with current time
     # Currently disabled:
@@ -111,8 +106,10 @@ def get_action_tags(istack, stack_tags):
         istack.mylog(
             "COMMAND LINE - STACK TAGS\n%s\n" % pformat(tags_cmd, width=1000000)
         )
-    if tags_meta:
-        istack.mylog("METADATA - STACK TAGS\n%s\n" % pformat(tags_meta, width=1000000))
+    if tags_metadata:
+        istack.mylog(
+            "METADATA - STACK TAGS\n%s\n" % pformat(tags_metadata, width=1000000)
+        )
     if tags_remove:
         istack.mylog("REMOVE - STACK TAGS\n%s\n" % pformat(tags_remove, width=1000000))
 
