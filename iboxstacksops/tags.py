@@ -60,7 +60,6 @@ def get_action_tags(istack, stack_tags):
         final_tags.append({"Key": key, "Value": value})
 
     final_tags_keys = [n["Key"] for n in final_tags]
-    final_tags_values = [n["Value"] for n in final_tags]
 
     upsert_tags_cfg = [
         # Command line tags
@@ -78,8 +77,8 @@ def get_action_tags(istack, stack_tags):
                 if tag not in final_tags and key in final_tags_keys:
                     # Tag Key already present but with different Value
                     loc = final_tags_keys.index(key)
+                    tags_changed[key] = "%s => %s" % (final_tags[loc]["Value"], value)
                     final_tags[loc] = tag
-                    tags_changed[key] = "%s => %s" % (final_tags_values[loc], value)
                     tags_default.pop(key, None)
                 elif tag not in final_tags:
                     # Tag Key do not exist add/append it
