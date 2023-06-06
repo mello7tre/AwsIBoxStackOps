@@ -84,6 +84,7 @@ def info():
 
     return result
 
+
 def show_resources():
     w_stacks = stacks.get()
     result = concurrent_exec("show_resources", w_stacks, i_stack)
