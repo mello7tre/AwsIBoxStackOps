@@ -67,7 +67,10 @@ def get_action_tags(istack, stack_tags):
 
     # Add metadata tags found inside template Metadata Section
     for key, value in istack.metadata.get("Tags", {}).items():
-        if key not in tags_remove + tags_default + tags_changed + tags_cmd:
+        if all(
+            key not in n.keys()
+            for n in [tags_remove, tags_default, tags_changed, tags_cmd]
+        ):
             final_tags.append({"Key": key, "Value": value})
             tags_metadata[key] = value
 
