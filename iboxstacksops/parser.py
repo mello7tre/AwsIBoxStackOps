@@ -114,7 +114,8 @@ def get_show_parser(subparser, parents=[]):
     parser = subparser.add_parser("show", parents=parents, help="Show Stacks table")
 
     parser.add_argument(
-        "-F", "--fields", nargs="+", type=str, default=cfg.SHOW_TABLE_FIELDS
+        "-F", "--fields", nargs="+", type=str, default=cfg.SHOW_TABLE_FIELDS,
+        help="Can use syntax 'Name=DisplayName' to use custom table heading",
     )
     parser.add_argument(
         "-O", "--output", type=str, default="text", choices=["text", "html", "bare"]

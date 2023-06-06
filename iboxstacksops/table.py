@@ -11,8 +11,23 @@ from .common import *
 
 
 def get(data, fields=[]):
-    if not fields:
-        fields = cfg.fields
+    table_data_names = {}
+
+    for f in fields if fields else cfg.fields:
+        if "=" in f:
+            # custom ad hoc field can use = to split data name from column name
+            loc = f.find("=")
+            data_name = f[0:loc]
+            field_name = f[loc + 1 :]
+        else:
+            data_name = field_name = f
+
+        if any(data_name in n for n in data):
+            table_data_names[field_name] = data_name
+
+    fields = list(table_data_names)
+    table_data = list(table_data_names.values())
+
     table = PrettyTable()
     table.padding_width = 1
     table.field_names = fields
@@ -25,7 +40,7 @@ def get(data, fields=[]):
                 else f"{n[i]} *"
                 if i in parameter_not_empty
                 else n[i]
-                for i in fields
+                for i in table_data
             ]
         )
 
