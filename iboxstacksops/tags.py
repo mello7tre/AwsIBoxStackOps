@@ -75,7 +75,7 @@ def get_action_tags(istack, stack_tags):
                 # Tag must not be removed
                 tag = {"Key": key, "Value": value}
                 if tag in final_tags:
-                    # Tag Key already exist, skip it
+                    # Tag already exist, skip it
                     pass
                 elif key in final_tags_keys:
                     # Tag Key already exist but with different Value, update it
