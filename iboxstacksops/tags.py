@@ -62,10 +62,10 @@ def get_action_tags(istack, stack_tags):
     final_tags_keys = [n["Key"] for n in final_tags]
 
     upsert_tags_cfg = [
-        # Command line tags
-        (cmd_tags, tags_cmd),
         # Metadata tags found inside template Metadata Section
         (istack.metadata.get("Tags", {}), tags_metadata),
+        # Command line tags
+        (cmd_tags, tags_cmd),
     ]
 
     # Add or Update Tags
