@@ -74,14 +74,20 @@ def get_action_tags(istack, stack_tags):
             if key not in tags_remove:
                 # Tag must not be removed
                 tag = {"Key": key, "Value": value}
-                if tag not in final_tags and key in final_tags_keys:
-                    # Tag Key already present but with different Value
+                if tag in final_tags:
+                    # Tag Key already exist, skip it
+                    pass
+                elif key in final_tags_keys:
+                    # Tag Key already exist but with different Value, update it
                     loc = final_tags_keys.index(key)
-                    tags_changed[key] = "%s => %s" % (final_tags[loc]["Value"], value)
+                    tags_changed[key] = "%s => %s" % (
+                        final_tags[loc]["Value"],
+                        value,
+                    )
                     final_tags[loc] = tag
                     tags_default.pop(key, None)
-                elif tag not in final_tags:
-                    # Tag Key do not exist add/append it
+                else:
+                    # Tag Key do not exist, add/append it
                     final_tags.append(tag)
                     n[1][key] = value
 
