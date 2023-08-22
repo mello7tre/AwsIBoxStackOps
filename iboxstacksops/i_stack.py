@@ -174,6 +174,7 @@ class ibox_stack(object):
         self.template = template.get_template(self, stackset=True)
         self.stack = True
         parameters.process(self)
+        resolve.process(self)
         result = actions.stackset_update(self)
         if result:
             return {self.name: None}
