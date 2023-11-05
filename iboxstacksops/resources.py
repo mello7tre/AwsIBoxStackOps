@@ -35,7 +35,7 @@ def get(istack, dash=None):
                     "ListenerHttpInternalRules1",
                 ]:
                     res_pid = "/".join(res_pid.split("/")[1:4])
-                if res_lid in ["Service", "ServiceSpot"]:
+                if res_lid in ["Service", "ServiceSpot"] and res_pid != "null":
                     res_pid_arr = res_pid.split("/")
                     if len(res_pid_arr) == 3:
                         res_pid = res_pid_arr[2]
