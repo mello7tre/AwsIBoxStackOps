@@ -62,6 +62,8 @@ def add_stack(istack):
         return response["ScalingPolicies"][0]["TargetTrackingConfiguration"]
 
     def get_policy_ecs(res):
+        if "ScalingPolicyTrackingsApp" not in res:
+            return {}
         resname = "/".join(res["ScalingPolicyTrackingsApp"].split("/")[2:5]).split(":")[
             0
         ]
@@ -91,7 +93,7 @@ def add_stack(istack):
                 color = "#36dc52"
 
             stat = "Average"
-            value = conf["TargetValue"]
+            value = conf.get("TargetValue", 0)
             if (
                 "CustomizedMetricSpecification" in conf
                 and "Statistic" in conf["CustomizedMetricSpecification"]
