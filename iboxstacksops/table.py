@@ -44,7 +44,8 @@ def get(data, fields=[]):
             ]
         )
 
-    table.sortby = fields[0]
+    if fields:
+        table.sortby = fields[0]
     table.reversesort = True
     table.align = "l"
 
