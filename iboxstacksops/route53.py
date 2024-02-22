@@ -103,10 +103,10 @@ def create(istack):
                 record_region: v,
             }
 
-            if "RecordSetCloudFront" not in res:
+            if "RecordSetCloudFront" not in res and not istack.cfg.safe:
                 map_record[record_cf] = record_region
 
-            if not istack.cfg.noorigin:
+            if not istack.cfg.noorigin and not istack.cfg.safe:
                 map_record[record_origin] = record_region
 
         if r.startswith("RecordSetInternal"):
@@ -116,7 +116,7 @@ def create(istack):
                 record_internal: v,
             }
 
-        if r == "RecordSetCloudFront":
+        if r == "RecordSetCloudFront" and not istack.cfg.safe:
             record = _get_rec_info(v, "cf")
             record_cf = record["role"] + "." + record["domain"]
             map_record = {

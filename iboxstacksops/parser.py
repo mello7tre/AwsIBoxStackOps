@@ -284,6 +284,9 @@ def set_r53_parser(subparser, parents=[]):
 
     parser.add_argument("--dryrun", help="Show changes and exit", action="store_true")
     parser.add_argument(
+        "--safe", help="Create only internal and regional records", action="store_true"
+    )
+    parser.add_argument(
         "--noorigin", help="Do not create Origin Record", action="store_true"
     )
     parser.add_argument(
