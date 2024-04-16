@@ -52,13 +52,13 @@ def get_update_parser(subparser, parents=[]):
     parser.add_argument(
         "-n", "--nochangeset", help="No ChangeSet", required=False, action="store_true"
     )
-    parser.add_argument(
-        "-C",
-        "--changeset-original",
-        help="Do not simply ChangeSet",
-        required=False,
-        action="store_true",
-    )
+#    parser.add_argument(
+#        "-C",
+#        "--changeset-original",
+#        help="Do not simply ChangeSet",
+#        required=False,
+#        action="store_true",
+#    )
     parser.add_argument("--dryrun", help="Show changeset and exit", action="store_true")
     parser.add_argument(
         "-T", "--showtags", help="Show tags changes in changeset", action="store_true"

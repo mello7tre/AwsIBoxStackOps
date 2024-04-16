@@ -24,7 +24,9 @@ def _changeset_waiter(istack, changeset_id):
     while True:
         time.sleep(3)
         changeset = istack.client.describe_change_set(
-            ChangeSetName=changeset_id, StackName=istack.name
+            ChangeSetName=changeset_id,
+            StackName=istack.name,
+            IncludePropertyValues=True,
         )
         if changeset["Status"] in istack.cfg.CHANGESET_COMPLETE_STATUS:
             return changeset
@@ -149,9 +151,9 @@ def process(istack, us_args):
     # -parse changeset changes
     changeset_changes, not_replaced = _parse_changeset(changeset)
 
-    # simplify changeset
-    if not istack.cfg.changeset_original:
-        changeset_changes = _simplify_changeset(changeset_changes, not_replaced)
+    # simplify changeset - replaced by IncludePropertyValues
+#    if not istack.cfg.changeset_original:
+#        changeset_changes = _simplify_changeset(changeset_changes, not_replaced)
 
     # -show changeset changes
     _show_changeset_changes(istack, changeset_changes)

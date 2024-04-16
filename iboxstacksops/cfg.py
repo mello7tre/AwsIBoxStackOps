@@ -13,7 +13,7 @@ vertical = False
 profile = False
 output = "text"
 disable_rollback = False
-changeset_original = False
+# changeset_original = False
 print_mylog = True
 #
 
