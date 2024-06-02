@@ -35,7 +35,6 @@ def add_stack(istack):
     }
 
     ScalingPolicyTrackingsCpuBaseLabel = "ScalingPolicyTrackingsCpu"
-    widget_label = {}
 
     def get_alarm(res):
         alarms = {}
@@ -935,20 +934,18 @@ def update(istack):
     resources.set_changed(istack)
     if istack.cfg.dashboard == "OnChange":
         res_changed = istack.changed["resources"]
-        mode = ""
     elif istack.cfg.dashboard in ["Always", "Generic"]:
         res_changed = istack.after["resources"]
-        mode = istack.cfg.dashboard
     else:
         return
 
     if res_changed or any(
-        n in istack.changed["outputs"]
-        for n in [
+        n.startswith(
             "ScalingPolicyTrackings",
             "AutoScalingScalingPolicy",
             "ApplicationAutoScalingScalingPolicy",
-        ]
+        )
+        for n in istack.changed["outputs"]
     ):
         for dash in response_dash["DashboardEntries"]:
             if istack.name in dash["DashboardName"]:
