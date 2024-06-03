@@ -941,9 +941,11 @@ def update(istack):
 
     if res_changed or any(
         n.startswith(
-            "ScalingPolicyTrackings",
-            "AutoScalingScalingPolicy",
-            "ApplicationAutoScalingScalingPolicy",
+            (
+                "ScalingPolicyTrackings",
+                "AutoScalingScalingPolicy",
+                "ApplicationAutoScalingScalingPolicy",
+            )
         )
         for n in istack.changed["outputs"]
     ):
