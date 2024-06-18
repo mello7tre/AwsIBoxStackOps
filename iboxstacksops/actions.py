@@ -154,7 +154,10 @@ def update(istack):
     istack.last_event_timestamp = events.get_last_timestamp(istack)
 
     # do stack update
-    response = istack.client.update_stack(**us_args)
+    try:
+        response = istack.client.update_stack(**us_args)
+    except botocore.exceptions.ClientError as err:
+        raise IboxError(err)
     istack.mylog(f"{json.dumps(response)}\n")
     time.sleep(1)
 
