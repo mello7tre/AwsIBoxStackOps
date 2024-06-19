@@ -65,7 +65,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
                 print_exc()
                 raise IboxError(e)
 
-    if n_failed == len(stacks):
+    if len(stacks) > 1 and n_failed == len(stacks):
         raise IboxError(f"All failed:\n{data}")
 
     if do_exit:
