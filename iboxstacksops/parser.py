@@ -1,5 +1,5 @@
 import argparse
-from . import cfg
+from . import cfg, __version__
 from .commands import (
     create,
     update,
@@ -52,13 +52,13 @@ def get_update_parser(subparser, parents=[]):
     parser.add_argument(
         "-n", "--nochangeset", help="No ChangeSet", required=False, action="store_true"
     )
-#    parser.add_argument(
-#        "-C",
-#        "--changeset-original",
-#        help="Do not simply ChangeSet",
-#        required=False,
-#        action="store_true",
-#    )
+    #    parser.add_argument(
+    #        "-C",
+    #        "--changeset-original",
+    #        help="Do not simply ChangeSet",
+    #        required=False,
+    #        action="store_true",
+    #    )
     parser.add_argument("--dryrun", help="Show changeset and exit", action="store_true")
     parser.add_argument(
         "-T", "--showtags", help="Show tags changes in changeset", action="store_true"
@@ -636,12 +636,21 @@ def get_parser():
         ],
     )
 
+    # iboxstacksops version parser
+    parser_version = command_subparser.add_parser(
+        "version", help="Show version and exit"
+    )
+
     return parser
 
 
 def set_cfg(argv):
     parser = get_parser()
     args = parser.parse_known_args(argv)
+
+    if args[0].command == "version":
+        print(__version__)
+        exit(0)
 
     for n, v in vars(args[0]).items():
         setattr(cfg, n, v)
