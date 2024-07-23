@@ -51,9 +51,15 @@ def _show_service_update(istack, event, timedelta):
         # dep_task_def = service["taskDefinition"]
         deployments = service["deployments"]
         deps_len = len(deployments)
+        more_recent_timestamp = None
 
         for dep in deployments:
             status = dep["status"]
+            dep_timestamp = dep.get("updatedAt")
+            if dep_timestamp and (
+                not more_recent_timestamp or dep_timestamp > more_recent_timestamp
+            ):
+                more_recent_timestamp = dep_timestamp
             for p in [
                 "taskDefinition",
                 "desiredCount",
@@ -69,6 +75,8 @@ def _show_service_update(istack, event, timedelta):
         rolloutState = deps["PRIMARY"]["rolloutState"]
 
         if str(deps) != deps_before:
+            if more_recent_timestamp:
+                istack.mylog(more_recent_timestamp.strftime("%Y-%m-%dT%X.000Z"))
             deps_before = str(deps)
             for d in ["PRIMARY", "ACTIVE", "DRAINING"]:
                 if "taskDefinition" in deps[d]:
