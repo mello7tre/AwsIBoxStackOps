@@ -74,7 +74,7 @@ def _show_service_update(istack, event, timedelta):
 
         if str(deps) != deps_before:
             if last_updatedAt:
-                istack.mylog(last_updatedAt.strftime("%Y-%m-%dT%X.000Z"))
+                istack.mylog(last_updatedAt.strftime("%Y-%m-%d %X"))
             deps_before = str(deps)
             for d in ["PRIMARY", "ACTIVE", "DRAINING"]:
                 if "taskDefinition" in deps[d]:
