@@ -66,11 +66,15 @@ RESOURCES_MAP = {
         "Prefix": "RecordSet",
     },
     "AWS::ServiceDiscovery::Service": {},
-    "AutoScalingGroupSpot": "AutoScalingGroupSpotName",
-    "AlarmCPUHigh": None,
-    "AlarmCPULow": None,
-    "RecordSetCloudFront": None,
-    "ServiceSpot": "ServiceSpotName",
+    "AutoScalingGroupSpot": {
+        "Name": "AutoScalingGroupSpotName",
+    },
+    "AlarmCPUHigh": {},
+    "AlarmCPULow": {},
+    "RecordSetCloudFront": {},
+    "ServiceSpot": {
+        "Name": "ServiceSpotName",
+    }
 }
 
 
