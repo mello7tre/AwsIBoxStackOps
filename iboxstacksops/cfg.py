@@ -34,6 +34,47 @@ STACK_BASE_DATA = [
 ]
 
 RESOURCES_MAP = {
+    "AWS::AutoScaling::AutoScalingGroup": {
+        "Name": "AutoScalingGroupName",
+    }
+    "AWS::ECS::Service": {
+        "Name": "ServiceName",
+        "PidEval": 'res_pid.split("/")[2]',
+    },
+    "AWS::ElasticLoadBalancing::LoadBalancer": {
+        "Prefix": "LoadBalancerName",
+    }
+    "AWS::ElasticLoadBalancingV2::LoadBalancer": {
+        "Prefix": "LoadBalancer",
+        "PidEval": '"/".join(res_pid.split("/")[1:4]'
+    },
+    "AWS::ElasticLoadBalancingV2::Listener": {
+        "Prefix": "LoadBalancer",
+        "PidEval": '"/".join(res_pid.split("/")[1:4])'
+    },
+    "AWS::ECS::Cluster": {
+        "Name": "ClusterName",
+    }
+    "AWS::ElasticLoadBalancingV2::TargetGroup": {
+        "PidEval": 'res_pid.split(":", 5)[5]'
+    },
+    "AWS::ApplicationAutoScaling::ScalableTarget": {
+        "Name": "ClusterName",
+        "PidEval": 'res_pid.split("/")[1]',
+    },
+    "AWS::Route53::RecordSet": {
+        "Prefix": "RecordSet",
+    },
+    "AWS::ServiceDiscovery::Service": {},
+    "AutoScalingGroupSpot": "AutoScalingGroupSpotName",
+    "AlarmCPUHigh": None,
+    "AlarmCPULow": None,
+    "RecordSetCloudFront": None,
+    "ServiceSpot": "ServiceSpotName",
+}
+
+
+RESOURCES_MAP = {
     "AutoScalingGroup": "AutoScalingGroupName",
     "AutoScalingGroupSpot": "AutoScalingGroupSpotName",
     # 'TargetGroup': 'TargetGroup',
