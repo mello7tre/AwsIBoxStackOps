@@ -90,40 +90,49 @@ def create(istack):
     for r, v in res.items():
         r_out = {}
         zoneid = None
-        if "RecordSetExternal" in r:
-            record = _get_rec_info(v, "external")
-            record_region = "%s.%s.%s" % (
-                record["role"],
-                record["region"],
-                record["domain"],
-            )
-            record_origin = "%s.origin.%s" % (record["role"], record["domain"])
-            record_cf = "%s.%s" % (record["role"], record["domain"])
-            map_record = {
-                record_region: v,
-            }
+        if "RecordSet" in r:
+            # process Route53 RecordSet
+            if "External" in r:
+                # External
+                record = _get_rec_info(v, "external")
+                record_region = "%s.%s.%s" % (
+                    record["role"],
+                    record["region"],
+                    record["domain"],
+                )
+                record_origin = "%s.origin.%s" % (record["role"], record["domain"])
+                record_cf = "%s.%s" % (record["role"], record["domain"])
+                map_record = {
+                    record_region: v,
+                }
 
-            if all("RecordSetCloudFront" not in n for n in res) and not istack.cfg.safe: 
-                map_record[record_cf] = record_region
+                if (
+                    all("RecordSetCloudFront" not in n for n in res)
+                    and not istack.cfg.safe
+                ):
+                    map_record[record_cf] = record_region
 
-            if not istack.cfg.noorigin and not istack.cfg.safe:
-                map_record[record_origin] = record_region
+                if not istack.cfg.noorigin and not istack.cfg.safe:
+                    map_record[record_origin] = record_region
 
-        if "RecordSetInternal" in r:
-            record = _get_rec_info(v, "internal")
-            record_internal = record["role"] + "." + record["domain"]
-            map_record = {
-                record_internal: v,
-            }
+            if "Internal" in r:
+                # Internal
+                record = _get_rec_info(v, "internal")
+                record_internal = record["role"] + "." + record["domain"]
+                map_record = {
+                    record_internal: v,
+                }
 
-        if "RecordSetCloudFront" in r and not istack.cfg.safe:
-            record = _get_rec_info(v, "cf")
-            record_cf = record["role"] + "." + record["domain"]
-            map_record = {
-                record_cf: v,
-            }
+            if "CloudFront" in r and not istack.cfg.safe:
+                # CloudFront
+                record = _get_rec_info(v, "cf")
+                record_cf = record["role"] + "." + record["domain"]
+                map_record = {
+                    record_cf: v,
+                }
 
         if "ServiceDiscoveryService" in r:
+            # process ServiceDiscovery Service
             sd_record_name = _get_sd_info(v)
             record = _get_rec_info(sd_record_name, "sd")
             record_sd = record["role"] + "." + record["domain"]
