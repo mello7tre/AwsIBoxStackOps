@@ -27,7 +27,7 @@ def add_stack(istack):
     widget_map = {
         "role": ["cpu", "response"],
         "memory": ["memory"],
-        "req": ["requests", "healthy"],
+        "req": ["requests", "packets", "healthy"],
         "5xx": ["5xx", "4xx"],
         "5xx_elb": ["5xx_elb", "4xx_elb"],
         "50x_elb": ["500_elb", "502_elb", "503_elb", "504_elb"],
@@ -378,13 +378,22 @@ def add_stack(istack):
 
     def get_metrics(res):
         # update widget_title and widget_label
+        LoadBalancerName = None
+        LoadBalancerNameExternal = None
+        LoadBalancerNameInternal = None
+        AWS_ELB = None
+        Latency = None
+        HTTPCode_Backend_5XX = None
+        HTTPCode_Backend_4XX = None
+
         title_role = f"{istack.EnvRole}.{istack.name}"
         widget_title["role"] = f"{title_role} [Cpu - Response]"
 
-        # Set common variable for ELB Classic and Application used by EC2 stack
+        # Set common variable for ELB Classic and Application
         if any(
             n in res for n in ["LoadBalancerNameExternal", "LoadBalancerNameInternal"]
         ):
+            # Classic
             LoadBalancerName = "LoadBalancerName"
             LoadBalancerNameExternal = "LoadBalancerNameExternal"
             LoadBalancerNameInternal = "LoadBalancerNameInternal"
@@ -394,7 +403,14 @@ def add_stack(istack):
             HTTPCode_Backend_4XX = "HTTPCode_Backend_4XX"
             HTTPCode_ELB_5XX = "HTTPCode_ELB_5XX"
             HTTPCode_ELB_4XX = "HTTPCode_ELB_4XX"
-        elif any(n in res for n in ["LoadBalancerExternal", "LoadBalancerInternal"]):
+        elif any(
+            n in res
+            for n in [
+                "LoadBalancerExternal",
+                "LoadBalancerInternal",
+            ]
+        ):
+            # Application
             LoadBalancerName = "LoadBalancer"
             LoadBalancerNameExternal = "LoadBalancerExternal"
             LoadBalancerNameInternal = "LoadBalancerInternal"
@@ -404,14 +420,19 @@ def add_stack(istack):
             HTTPCode_Backend_4XX = "HTTPCode_Target_4XX_Count"
             HTTPCode_ELB_5XX = "HTTPCode_ELB_5XX_Count"
             HTTPCode_ELB_4XX = "HTTPCode_ELB_4XX_Count"
-        else:
-            LoadBalancerName = None
-            LoadBalancerNameExternal = None
-            LoadBalancerNameInternal = None
-            AWS_ELB = None
-            Latency = None
-            HTTPCode_Backend_5XX = None
-            HTTPCode_Backend_4XX = None
+        elif any(
+            n in res
+            for n in [
+                "LoadBalancerListenerExternal",
+                "LoadBalancerListenerInternal",
+            ]
+        ):
+            # Listener only
+            LoadBalancerName = "LoadBalancerListener"
+            AWS_ELB = "AWS/ApplicationELB"
+            Latency = "TargetResponseTime"
+            HTTPCode_Backend_5XX = "HTTPCode_Target_5XX_Count"
+            HTTPCode_Backend_4XX = "HTTPCode_Target_4XX_Count"
 
         # build empty metrics dict from widget_map
         metrics = {n: [] for m in widget_map.values() for n in m}
@@ -496,7 +517,7 @@ def add_stack(istack):
 
             # TargetGroups
             for n, v in res.items():
-                if "TargetGroup" in n  and n.endswith(("External", "Internal")):
+                if "TargetGroup" in n and n.endswith(("External", "Internal")):
                     if n.endswith("External"):
                         suffix = "External"
                     else:
@@ -504,10 +525,10 @@ def add_stack(istack):
 
                     tg_name = n.replace("TargetGroup", "")
 
-                    if f"LoadBalancer{suffix}" not in res:
+                    if f"{LoadBalancerName}{suffix}" not in res:
                         continue
                     else:
-                        lb_name = f"LoadBalancer{suffix}"
+                        lb_name = f"{LoadBalancerName}{suffix}"
 
                     if res[lb_name].startswith("net/"):
                         AWS_ELB = "AWS/NetworkELB"
@@ -608,21 +629,59 @@ def add_stack(istack):
                             ],
                         }
                     )
-        if True:
-            # EC2
-            if all(n in res for n in ["AutoScalingGroupName"]):
-                L_TYPE = " EC2" if IS_MIXED else ""
-                # CPU
-                label = f"Cpu{L_TYPE} - {istack.cfg.statistic}"
+        # EC2
+        if all(n in res for n in ["AutoScalingGroupName"]):
+            L_TYPE = " EC2" if IS_MIXED else ""
+            # CPU
+            label = f"Cpu{L_TYPE} - {istack.cfg.statistic}"
+            metrics["cpu"].append(
+                {
+                    "name": f"Cpu{L_TYPE}",
+                    "label": label,
+                    "metric": [
+                        "AWS/EC2",
+                        "CPUUtilization",
+                        "AutoScalingGroupName",
+                        res["AutoScalingGroupName"],
+                        {
+                            "period": 300,
+                            "stat": istack.cfg.statistic,
+                            "label": label,
+                        },
+                    ],
+                }
+            )
+            # Always add cpu maximum
+            label = f"Cpu{L_TYPE} - Maximum"
+            metrics["cpu"].append(
+                {
+                    "name": f"Cpu{L_TYPE} - Maximum",
+                    "label": label,
+                    "metric": [
+                        "AWS/EC2",
+                        "CPUUtilization",
+                        "AutoScalingGroupName",
+                        res["AutoScalingGroupName"],
+                        {
+                            "period": 300,
+                            "stat": "Maximum",
+                            "label": label,
+                        },
+                    ],
+                }
+            )
+            # CPU Spot
+            if all(n in res for n in ["AutoScalingGroupSpotName"]):
+                label = f"Cpu{L_TYPE} Spot - {istack.cfg.statistic}"
                 metrics["cpu"].append(
                     {
-                        "name": f"Cpu{L_TYPE}",
+                        "name": f"Cpu{L_TYPE} Spot",
                         "label": label,
                         "metric": [
                             "AWS/EC2",
                             "CPUUtilization",
                             "AutoScalingGroupName",
-                            res["AutoScalingGroupName"],
+                            res["AutoScalingGroupSpotName"],
                             {
                                 "period": 300,
                                 "stat": istack.cfg.statistic,
@@ -631,286 +690,258 @@ def add_stack(istack):
                         ],
                     }
                 )
-                # Always add cpu maximum
-                label = f"Cpu{L_TYPE} - Maximum"
-                metrics["cpu"].append(
+            # Healthy
+            label = f"{title_role}{L_TYPE} - Healthy"
+            metrics["healthy"].append(
+                {
+                    "name": f"Healthy{L_TYPE}",
+                    "label": label,
+                    "metric": [
+                        "AWS/AutoScaling",
+                        "GroupInServiceInstances",
+                        "AutoScalingGroupName",
+                        res["AutoScalingGroupName"],
+                        {
+                            "label": label,
+                            "stat": istack.cfg.statistic,
+                            "yAxis": "right",
+                        },
+                    ],
+                }
+            )
+            # Network
+            label = f"{title_role} - NetworkIN"
+            metrics["netin"].append(
+                {
+                    "name": "NetworkIN",
+                    "label": label,
+                    "metric": [
+                        "AWS/EC2",
+                        "NetworkIn",
+                        "AutoScalingGroupName",
+                        res["AutoScalingGroupName"],
+                        {"label": label, "period": 300, "stat": "Sum"},
+                    ],
+                }
+            )
+            label = f"{title_role} - NetworkOUT"
+            metrics["netout"].append(
+                {
+                    "name": "NetworkOUT",
+                    "label": label,
+                    "metric": [
+                        "AWS/EC2",
+                        "NetworkOut",
+                        "AutoScalingGroupName",
+                        res["AutoScalingGroupName"],
+                        {
+                            "label": label,
+                            "period": 300,
+                            "stat": "Sum",
+                            "yAxis": "right",
+                        },
+                    ],
+                }
+            )
+
+        # ELB
+        for n in ["External", "Internal"]:
+            res_name = locals()[f"LoadBalancerName{n}"]
+
+            if res_name in res:
+                if res[lb_name].startswith("net/"):
+                    # Network LoadBalancer
+                    # Packets
+                    AWS_ELB = "AWS/NetworkELB"
+                    label = f"{title_role} {n} - Packets"
+                    metrics["packets"].append(
+                        {
+                            "name": f"Packets {n}",
+                            "label": label,
+                            "metric": [
+                                AWS_ELB,
+                                "ProcessedPackets",
+                                LoadBalancerName,
+                                res[res_name],
+                                {"label": label, "stat": "Sum"},
+                            ],
+                        }
+                    )
+                    continue
+                # Response
+                label = f"Response {n} - {istack.cfg.statisticresponse}"
+                metrics["response"].append(
                     {
-                        "name": f"Cpu{L_TYPE} - Maximum",
+                        "name": f"Response {n}",
                         "label": label,
                         "metric": [
-                            "AWS/EC2",
-                            "CPUUtilization",
-                            "AutoScalingGroupName",
-                            res["AutoScalingGroupName"],
+                            AWS_ELB,
+                            Latency,
+                            LoadBalancerName,
+                            res[res_name],
                             {
                                 "period": 300,
-                                "stat": "Maximum",
+                                "stat": istack.cfg.statisticresponse,
+                                "yAxis": "right",
                                 "label": label,
                             },
                         ],
                     }
                 )
-                # CPU Spot
-                if all(n in res for n in ["AutoScalingGroupSpotName"]):
-                    label = f"Cpu{L_TYPE} Spot - {istack.cfg.statistic}"
-                    metrics["cpu"].append(
+                # Requests
+                label = f"{title_role} {n} - Requests"
+                metrics["requests"].append(
+                    {
+                        "name": f"Requests {n}",
+                        "label": label,
+                        "metric": [
+                            AWS_ELB,
+                            "RequestCount",
+                            LoadBalancerName,
+                            res[res_name],
+                            {"label": label, "stat": "Sum"},
+                        ],
+                    }
+                )
+                # 5xx
+                label = f"{title_role} {n} - 5xx"
+                metrics["5xx"].append(
+                    {
+                        "name": f"5xx {n}",
+                        "label": label,
+                        "metric": [
+                            AWS_ELB,
+                            HTTPCode_Backend_5XX,
+                            LoadBalancerName,
+                            res[res_name],
+                            {"label": label, "stat": "Sum"},
+                        ],
+                    }
+                )
+                # 4xx
+                label = f"{title_role} {n} - 4xx"
+                metrics["4xx"].append(
+                    {
+                        "name": f"4xx {n}",
+                        "label": label,
+                        "metric": [
+                            AWS_ELB,
+                            HTTPCode_Backend_4XX,
+                            LoadBalancerName,
+                            res[res_name],
+                            {"label": label, "stat": "Sum", "yAxis": "right"},
+                        ],
+                    }
+                )
+                # 5xx ELB
+                label = f"{title_role} {n} - 5xx"
+                metrics["5xx_elb"].append(
+                    {
+                        "name": f"5xx {n} ELB",
+                        "label": label,
+                        "metric": [
+                            AWS_ELB,
+                            HTTPCode_ELB_5XX,
+                            LoadBalancerName,
+                            res[res_name],
+                            {"label": label, "stat": "Sum"},
+                        ],
+                    }
+                )
+                # 4xx ELB
+                label = f"{title_role} {n} - 4xx"
+                metrics["4xx_elb"].append(
+                    {
+                        "name": f"4xx {n} ELB",
+                        "label": label,
+                        "metric": [
+                            AWS_ELB,
+                            HTTPCode_ELB_4XX,
+                            LoadBalancerName,
+                            res[res_name],
+                            {"label": label, "stat": "Sum", "yAxis": "right"},
+                        ],
+                    }
+                )
+
+                # 50x ELB
+                if f"LoadBalancer{n}" in res:
+                    # 500
+                    label = f"{title_role} {n} - 500"
+                    metrics["500_elb"].append(
                         {
-                            "name": f"Cpu{L_TYPE} Spot",
+                            "name": f"500 {n} ELB",
                             "label": label,
                             "metric": [
-                                "AWS/EC2",
-                                "CPUUtilization",
-                                "AutoScalingGroupName",
-                                res["AutoScalingGroupSpotName"],
+                                AWS_ELB,
+                                "HTTPCode_ELB_500_Count",
+                                "LoadBalancer",
+                                res[res_name],
                                 {
-                                    "period": 300,
-                                    "stat": istack.cfg.statistic,
                                     "label": label,
+                                    "stat": "Sum",
+                                    "yAxis": ("right" if n == "Internal" else "left"),
                                 },
                             ],
                         }
                     )
-                # Healthy
-                label = f"{title_role}{L_TYPE} - Healthy"
-                metrics["healthy"].append(
-                    {
-                        "name": f"Healthy{L_TYPE}",
-                        "label": label,
-                        "metric": [
-                            "AWS/AutoScaling",
-                            "GroupInServiceInstances",
-                            "AutoScalingGroupName",
-                            res["AutoScalingGroupName"],
-                            {
-                                "label": label,
-                                "stat": istack.cfg.statistic,
-                                "yAxis": "right",
-                            },
-                        ],
-                    }
-                )
-                # Network
-                label = f"{title_role} - NetworkIN"
-                metrics["netin"].append(
-                    {
-                        "name": "NetworkIN",
-                        "label": label,
-                        "metric": [
-                            "AWS/EC2",
-                            "NetworkIn",
-                            "AutoScalingGroupName",
-                            res["AutoScalingGroupName"],
-                            {"label": label, "period": 300, "stat": "Sum"},
-                        ],
-                    }
-                )
-                label = f"{title_role} - NetworkOUT"
-                metrics["netout"].append(
-                    {
-                        "name": "NetworkOUT",
-                        "label": label,
-                        "metric": [
-                            "AWS/EC2",
-                            "NetworkOut",
-                            "AutoScalingGroupName",
-                            res["AutoScalingGroupName"],
-                            {
-                                "label": label,
-                                "period": 300,
-                                "stat": "Sum",
-                                "yAxis": "right",
-                            },
-                        ],
-                    }
-                )
-
-            # ELB
-            for n in ["External", "Internal"]:
-                res_name = locals()[f"LoadBalancerName{n}"]
-
-                if res_name in res and "ServiceName" not in res:
-                    # Response
-                    label = f"Response {n} - {istack.cfg.statisticresponse}"
-                    metrics["response"].append(
+                    # 502
+                    label = f"{title_role} {n} - 502"
+                    metrics["502_elb"].append(
                         {
-                            "name": f"Response {n}",
+                            "name": f"502 {n} ELB",
                             "label": label,
                             "metric": [
                                 AWS_ELB,
-                                Latency,
-                                LoadBalancerName,
+                                "HTTPCode_ELB_502_Count",
+                                "LoadBalancer",
                                 res[res_name],
                                 {
-                                    "period": 300,
-                                    "stat": istack.cfg.statisticresponse,
-                                    "yAxis": "right",
                                     "label": label,
+                                    "stat": "Sum",
+                                    "yAxis": ("right" if n == "Internal" else "left"),
                                 },
                             ],
                         }
                     )
-                    # Requests
-                    label = f"{title_role} {n} - Requests"
-                    metrics["requests"].append(
+                    # 503
+                    label = f"{title_role} {n} - 503"
+                    metrics["503_elb"].append(
                         {
-                            "name": f"Requests {n}",
+                            "name": f"503 {n} ELB",
                             "label": label,
                             "metric": [
                                 AWS_ELB,
-                                "RequestCount",
-                                LoadBalancerName,
+                                "HTTPCode_ELB_503_Count",
+                                "LoadBalancer",
                                 res[res_name],
-                                {"label": label, "stat": "Sum"},
+                                {
+                                    "label": label,
+                                    "stat": "Sum",
+                                    "yAxis": ("right" if n == "Internal" else "left"),
+                                },
                             ],
                         }
                     )
-                    # 5xx
-                    label = f"{title_role} {n} - 5xx"
-                    metrics["5xx"].append(
+                    # 504
+                    label = f"{title_role} {n} - 504"
+                    metrics["504_elb"].append(
                         {
-                            "name": f"5xx {n}",
+                            "name": f"504 {n} ELB",
                             "label": label,
                             "metric": [
                                 AWS_ELB,
-                                HTTPCode_Backend_5XX,
-                                LoadBalancerName,
+                                "HTTPCode_ELB_504_Count",
+                                "LoadBalancer",
                                 res[res_name],
-                                {"label": label, "stat": "Sum"},
+                                {
+                                    "label": label,
+                                    "stat": "Sum",
+                                    "yAxis": ("right" if n == "Internal" else "left"),
+                                },
                             ],
                         }
                     )
-                    # 4xx
-                    label = f"{title_role} {n} - 4xx"
-                    metrics["4xx"].append(
-                        {
-                            "name": f"4xx {n}",
-                            "label": label,
-                            "metric": [
-                                AWS_ELB,
-                                HTTPCode_Backend_4XX,
-                                LoadBalancerName,
-                                res[res_name],
-                                {"label": label, "stat": "Sum", "yAxis": "right"},
-                            ],
-                        }
-                    )
-                    # 5xx ELB
-                    label = f"{title_role} {n} - 5xx"
-                    metrics["5xx_elb"].append(
-                        {
-                            "name": f"5xx {n} ELB",
-                            "label": label,
-                            "metric": [
-                                AWS_ELB,
-                                HTTPCode_ELB_5XX,
-                                LoadBalancerName,
-                                res[res_name],
-                                {"label": label, "stat": "Sum"},
-                            ],
-                        }
-                    )
-                    # 4xx ELB
-                    label = f"{title_role} {n} - 4xx"
-                    metrics["4xx_elb"].append(
-                        {
-                            "name": f"4xx {n} ELB",
-                            "label": label,
-                            "metric": [
-                                AWS_ELB,
-                                HTTPCode_ELB_4XX,
-                                LoadBalancerName,
-                                res[res_name],
-                                {"label": label, "stat": "Sum", "yAxis": "right"},
-                            ],
-                        }
-                    )
-
-                    # 50x ELB
-                    if f"LoadBalancer{n}" in res:
-                        # 500
-                        label = f"{title_role} {n} - 500"
-                        metrics["500_elb"].append(
-                            {
-                                "name": f"500 {n} ELB",
-                                "label": label,
-                                "metric": [
-                                    AWS_ELB,
-                                    "HTTPCode_ELB_500_Count",
-                                    "LoadBalancer",
-                                    res[res_name],
-                                    {
-                                        "label": label,
-                                        "stat": "Sum",
-                                        "yAxis": (
-                                            "right" if n == "Internal" else "left"
-                                        ),
-                                    },
-                                ],
-                            }
-                        )
-                        # 502
-                        label = f"{title_role} {n} - 502"
-                        metrics["502_elb"].append(
-                            {
-                                "name": f"502 {n} ELB",
-                                "label": label,
-                                "metric": [
-                                    AWS_ELB,
-                                    "HTTPCode_ELB_502_Count",
-                                    "LoadBalancer",
-                                    res[res_name],
-                                    {
-                                        "label": label,
-                                        "stat": "Sum",
-                                        "yAxis": (
-                                            "right" if n == "Internal" else "left"
-                                        ),
-                                    },
-                                ],
-                            }
-                        )
-                        # 503
-                        label = f"{title_role} {n} - 503"
-                        metrics["503_elb"].append(
-                            {
-                                "name": f"503 {n} ELB",
-                                "label": label,
-                                "metric": [
-                                    AWS_ELB,
-                                    "HTTPCode_ELB_503_Count",
-                                    "LoadBalancer",
-                                    res[res_name],
-                                    {
-                                        "label": label,
-                                        "stat": "Sum",
-                                        "yAxis": (
-                                            "right" if n == "Internal" else "left"
-                                        ),
-                                    },
-                                ],
-                            }
-                        )
-                        # 504
-                        label = f"{title_role} {n} - 504"
-                        metrics["504_elb"].append(
-                            {
-                                "name": f"504 {n} ELB",
-                                "label": label,
-                                "metric": [
-                                    AWS_ELB,
-                                    "HTTPCode_ELB_504_Count",
-                                    "LoadBalancer",
-                                    res[res_name],
-                                    {
-                                        "label": label,
-                                        "stat": "Sum",
-                                        "yAxis": (
-                                            "right" if n == "Internal" else "left"
-                                        ),
-                                    },
-                                ],
-                            }
-                        )
 
         return metrics
 
