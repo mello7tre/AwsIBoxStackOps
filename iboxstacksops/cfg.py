@@ -43,7 +43,7 @@ RESOURCES_MAP = {
     },
     "AWS::ElasticLoadBalancingV2::LoadBalancer": {
         "Prefix": "LoadBalancer",
-        "PidEval": '"/".join(res_pid.split("/")[1:4]',
+        "PidEval": '"/".join(res_pid.split("/")[1:4])',
     },
     "AWS::ElasticLoadBalancingV2::Listener": {
         "Prefix": "LoadBalancer",
