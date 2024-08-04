@@ -83,7 +83,6 @@ def create(istack):
                 if zone_region == istack.boto3.region_name:
                     return zoneid
 
-    istack.cfg.RESOURCES_MAP = istack.cfg.RESOURCES_MAP_R53
     res = resources.get(istack)
     pprint(res)
     out = {}

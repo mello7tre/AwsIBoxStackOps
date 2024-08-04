@@ -13,6 +13,7 @@ def set_changed(istack):
 
 
 def get(istack, dash=None):
+    # todo manage dash or not
     resources = {}
     res_list = list(istack.cfg.RESOURCES_MAP.keys())
 
@@ -23,85 +24,33 @@ def get(istack, dash=None):
         for res in r["StackResourceSummaries"]:
             res_lid = res["LogicalResourceId"]
             res_type = res["ResourceType"]
-            res_pid = res.get("PhysicalResourceId", "null")
+            res_pid = res.get("PhysicalResourceId")
 
             if res_type in res_list:
+                # match on ResourceType
                 conf = istack.cfg.RESOURCES_MAP[res_type]
                 name = conf.get("Name")
                 prefix = conf.get("Prefix")
                 pid_eval = conf.get("PidEval")
 
-                if prefix:
-                    for n in ["External", "Internal"]:
-                        if n in res_lid:
-                            name = f"{prefix}{n}"
-                if pid_eval:
-                    res_pid = eval(pid_eval)
-                
-                if res_lid in res_list:
-                    conf = istack.cfg.RESOURCES_MAP[res_lid]
-                    name = conf.get("Name", res_lid)
-                
-                if name:
-                    res_lid = name
-
-                resources[res_lid] = res_pid
-
-
-
-def get(istack, dash=None):
-    resources = {}
-    res_list = list(istack.cfg.RESOURCES_MAP.keys())
-
-    paginator = istack.client.get_paginator("list_stack_resources")
-    response_iterator = paginator.paginate(StackName=istack.name)
-
-    for r in response_iterator:
-        for res in r["StackResourceSummaries"]:
-            res_lid = res["LogicalResourceId"]
-            res_type = res["ResourceType"]
-            res_pid = res.get("PhysicalResourceId", "null")
-
-            if res_lid in res_list:
-                if res_pid.startswith("arn"):
-                    res_pid = res_pid.split(":", 5)[5]
-                if res_lid in [
-                    "ListenerHttpsExternalRules1",
-                    "ListenerHttpsExternalRules2",
-                    "ListenerHttpExternalRules1",
-                    "ListenerHttpInternalRules1",
-                ]:
-                    res_pid = "/".join(res_pid.split("/")[1:4])
-                if res_lid in ["Service", "ServiceSpot"] and res_pid != "null":
-                    res_pid_arr = res_pid.split("/")
-                    if len(res_pid_arr) == 3:
-                        res_pid = res_pid_arr[2]
-                    else:
-                        res_pid = res_pid_arr[1]
-                if res_lid in [
-                    "LoadBalancerApplicationExternal",
-                    "LoadBalancerApplicationInternal",
-                ]:
-                    res_pid = "/".join(res_pid.split("/")[1:4])
-
-                if dash and istack.cfg.RESOURCES_MAP[res_lid]:
-                    res_lid = istack.cfg.RESOURCES_MAP[res_lid]
-
-                resources[res_lid] = res_pid
-            elif res_type in res_list:
-                # If RESOURCES_MAP directly include AWS Resource Type,
-                # used for AWS::ServiceDiscovery::Service
-                if res_pid.startswith("arn"):
-                    res_pid = res_pid.split(":", 5)[5]
                 if dash:
-                    if (
-                        res_type == "AWS::ApplicationAutoScaling::ScalableTarget"
-                        and res_pid.startswith("service/")
-                    ):
-                        # used to get ClusterName for ecs stacks in dashboard
-                        res_pid = res_pid.split("/")[1]
-                    if istack.cfg.RESOURCES_MAP[res_type]:
-                        res_lid = istack.cfg.RESOURCES_MAP[res_type]
+                    if prefix:
+                        for n in ["External", "Internal"]:
+                            if n in res_lid:
+                                name = f"{prefix}{n}"
+                    if pid_eval:
+                        res_pid = eval(pid_eval)
+
+                    if res_lid in res_list:
+                        # match on LogicalResourceId too
+                        conf = istack.cfg.RESOURCES_MAP[res_lid]
+                        name = conf.get("Name", res_lid)
+
+                    if name:
+                        res_lid = name
+                    else:
+                        # default name for CW metric
+                        res_lid = res_type.split("::")[2] + "Name"
 
                 resources[res_lid] = res_pid
 

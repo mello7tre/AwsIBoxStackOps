@@ -34,104 +34,47 @@ STACK_BASE_DATA = [
 ]
 
 RESOURCES_MAP = {
-    "AWS::AutoScaling::AutoScalingGroup": {
-        "Name": "AutoScalingGroupName",
-    }
+    "AWS::AutoScaling::AutoScalingGroup": {},
     "AWS::ECS::Service": {
-        "Name": "ServiceName",
         "PidEval": 'res_pid.split("/")[2]',
     },
     "AWS::ElasticLoadBalancing::LoadBalancer": {
         "Prefix": "LoadBalancerName",
-    }
+    },
     "AWS::ElasticLoadBalancingV2::LoadBalancer": {
         "Prefix": "LoadBalancer",
-        "PidEval": '"/".join(res_pid.split("/")[1:4]'
+        "PidEval": '"/".join(res_pid.split("/")[1:4]',
     },
     "AWS::ElasticLoadBalancingV2::Listener": {
         "Prefix": "LoadBalancer",
-        "PidEval": '"/".join(res_pid.split("/")[1:4])'
+        "PidEval": '"/".join(res_pid.split("/")[1:4])',
     },
-    "AWS::ECS::Cluster": {
-        "Name": "ClusterName",
-    }
+    "AWS::ECS::Cluster": {},
     "AWS::ElasticLoadBalancingV2::TargetGroup": {
-        "PidEval": 'res_pid.split(":", 5)[5]'
+        "PidEval": 'res_pid.split(":", 5)[5]',
     },
     "AWS::ApplicationAutoScaling::ScalableTarget": {
         "Name": "ClusterName",
         "PidEval": 'res_pid.split("/")[1]',
     },
-    "AWS::Route53::RecordSet": {
-        "Prefix": "RecordSet",
+    "AWS::CloudWatch::Alarm": {},
+    "AWS::Route53::RecordSet": {},
+    "AWS::AutoScaling::ScalingPolicy": {
+        "Name": "ScalingPolicyTrackings1",
+    },
+    "AWS::ApplicationAutoScaling::ScalingPolicy": {
+        "Name": "ScalingPolicyTrackingsApp",
     },
     "AWS::ServiceDiscovery::Service": {},
+    # LogicalResourceId
     "AutoScalingGroupSpot": {
         "Name": "AutoScalingGroupSpotName",
     },
     "AlarmCPUHigh": {},
     "AlarmCPULow": {},
-    "RecordSetCloudFront": {},
     "ServiceSpot": {
         "Name": "ServiceSpotName",
-    }
-}
-
-
-RESOURCES_MAP = {
-    "AutoScalingGroup": "AutoScalingGroupName",
-    "AutoScalingGroupSpot": "AutoScalingGroupSpotName",
-    # 'TargetGroup': 'TargetGroup',
-    # 'TargetGroupExternal': 'TargetGroupExternal',
-    # 'TargetGroupInternal': 'TargetGroupInternal',
-    "Service": "ServiceName",
-    "ServiceSpot": "ServiceSpotName",
-    "ServiceExternal": "ServiceName",
-    "ServiceInternal": "ServiceName",
-    "LoadBalancerClassicExternal": "LoadBalancerNameExternal",
-    "LoadBalancerClassicInternal": "LoadBalancerNameInternal",
-    "LoadBalancerApplicationExternal": "LoadBalancerExternal",
-    "LoadBalancerApplicationInternal": "LoadBalancerInternal",
-    "Cluster": "ClusterName",
-    "ListenerHttpsExternalRules1": "LoadBalancerExternal",
-    "ListenerHttpsExternalRules2": "LoadBalancerExternal",
-    "ListenerHttpExternalRules1": "LoadBalancerExternal",
-    "ListenerHttpInternalRules1": "LoadBalancerInternal",
-    "AlarmCPUHigh": None,
-    "AlarmCPULow": None,
-    "AWS::ElasticLoadBalancingV2::TargetGroup": None,
-    "AWS::ApplicationAutoScaling::ScalableTarget": "ClusterName",
-}
-SCALING_POLICY_TRACKINGS_NAMES = {
-    "ScalingPolicyTrackings1": None,
-    "ScalingPolicyTrackingsApp": None,
-    "ScalingPolicyTrackingsASCpu": "ScalingPolicyTrackings1",
-    "ScalingPolicyTrackingsASCustom": "ScalingPolicyTrackings1",
-    "ScalingPolicyTrackingsAPPCpu": "ScalingPolicyTrackings1",
-    "ScalingPolicyTrackingsAPPCustom": "ScalingPolicyTrackings1",
-    "AutoScalingScalingPolicyCpu": "ScalingPolicyTrackings1",
-    "AutoScalingScalingPolicyCustom": "ScalingPolicyTrackings1",
-    "ApplicationAutoScalingScalingPolicyCpu": "ScalingPolicyTrackingsApp",
-    "ApplicationAutoScalingScalingPolicyCustom": "ScalingPolicyTrackingsApp",
-    # Disabled until they are properly managed in dashboard.py [get_policy].
-    # Ideal should be to create two horizontal annotations
-    # one for the lower bound and one for the upper one
-    # but as AutoScalingScalingPolicy have been replaced with Tracking ones
-    # i do not know if it make sense to put much effort in this.
-    # 'AutoScalingScalingPolicyDown': 'ScalingPolicyTrackings1',
-    # 'AutoScalingScalingPolicyUp': 'ScalingPolicyTrackings1',
-    # 'ApplicationAutoScalingScalingPolicyDown': 'ScalingPolicyTrackings1',
-    # 'ApplicationAutoScalingScalingPolicyUp': 'ScalingPolicyTrackings1',
-}
-RESOURCES_MAP.update(SCALING_POLICY_TRACKINGS_NAMES)
-
-RESOURCES_MAP_R53 = {
-    "RecordSetExternal": None,
-    "RecordSetInternal": None,
-    "RecordSetExternalRO": None,
-    "RecordSetInternalRO": None,
-    "RecordSetCloudFront": None,
-    "AWS::ServiceDiscovery::Service": None,
+    },
 }
 
 STACK_COMPLETE_STATUS = [
