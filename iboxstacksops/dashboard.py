@@ -496,7 +496,7 @@ def add_stack(istack):
 
             # TargetGroups
             for n, v in res.items():
-                if n.startswith("TargetGroup") and n.endswith(("External", "Internal")):
+                if "TargetGroup" in n  and n.endswith(("External", "Internal")):
                     if n.endswith("External"):
                         suffix = "External"
                     else:
@@ -509,6 +509,49 @@ def add_stack(istack):
                     else:
                         lb_name = f"LoadBalancer{suffix}"
 
+                    if res[lb_name].startswith("net/"):
+                        AWS_ELB = "AWS/NetworkELB"
+
+                    # Healthy
+                    label = f"{title_role}{L_TYPE} - Healthy"
+                    metrics["healthy"].append(
+                        {
+                            "name": f"Healthy{L_TYPE} {tg_name}",
+                            "label": label,
+                            "metric": [
+                                AWS_ELB,
+                                "HealthyHostCount",
+                                "TargetGroup",
+                                res[n],
+                                "LoadBalancer",
+                                res[lb_name],
+                                {
+                                    "label": label,
+                                    "stat": istack.cfg.statistic,
+                                    "yAxis": "right",
+                                },
+                            ],
+                        }
+                    )
+                    if AWS_ELB == "AWS/NetworkELB":
+                        continue
+                    # Requests
+                    label = f"{title_role} {tg_name} - Requests"
+                    metrics["requests"].append(
+                        {
+                            "name": f"Requests {tg_name}",
+                            "label": label,
+                            "metric": [
+                                AWS_ELB,
+                                "RequestCount",
+                                "TargetGroup",
+                                res[n],
+                                "LoadBalancer",
+                                res[lb_name],
+                                {"label": label, "stat": "Sum"},
+                            ],
+                        }
+                    )
                     # Response Time
                     label = f"Response {tg_name}" f" - {istack.cfg.statisticresponse}"
                     metrics["response"].append(
@@ -516,7 +559,7 @@ def add_stack(istack):
                             "name": f"Response {tg_name}",
                             "label": label,
                             "metric": [
-                                "AWS/ApplicationELB",
+                                AWS_ELB,
                                 "TargetResponseTime",
                                 "TargetGroup",
                                 res[n],
@@ -531,44 +574,6 @@ def add_stack(istack):
                             ],
                         }
                     )
-                    # Healthy
-                    label = f"{title_role}{L_TYPE} - Healthy"
-                    metrics["healthy"].append(
-                        {
-                            "name": f"Healthy{L_TYPE} {tg_name}",
-                            "label": label,
-                            "metric": [
-                                "AWS/ApplicationELB",
-                                "HealthyHostCount",
-                                "TargetGroup",
-                                res[n],
-                                "LoadBalancer",
-                                res[lb_name],
-                                {
-                                    "label": label,
-                                    "stat": istack.cfg.statistic,
-                                    "yAxis": "right",
-                                },
-                            ],
-                        }
-                    )
-                    # Requests
-                    label = f"{title_role} {tg_name} - Requests"
-                    metrics["requests"].append(
-                        {
-                            "name": f"Requests {tg_name}",
-                            "label": label,
-                            "metric": [
-                                "AWS/ApplicationELB",
-                                "RequestCount",
-                                "TargetGroup",
-                                res[n],
-                                "LoadBalancer",
-                                res[lb_name],
-                                {"label": label, "stat": "Sum"},
-                            ],
-                        }
-                    )
                     # 5xx
                     label = f"{title_role} {tg_name} - 5xx"
                     metrics["5xx"].append(
@@ -576,7 +581,7 @@ def add_stack(istack):
                             "name": f"5xx {tg_name}",
                             "label": label,
                             "metric": [
-                                "AWS/ApplicationELB",
+                                AWS_ELB,
                                 "HTTPCode_Target_5XX_Count",
                                 "TargetGroup",
                                 res[n],
@@ -593,7 +598,7 @@ def add_stack(istack):
                             "name": f"4xx {tg_name}",
                             "label": label,
                             "metric": [
-                                "AWS/ApplicationELB",
+                                AWS_ELB,
                                 "HTTPCode_Target_4XX_Count",
                                 "TargetGroup",
                                 res[n],
@@ -829,7 +834,7 @@ def add_stack(istack):
                                 "name": f"500 {n} ELB",
                                 "label": label,
                                 "metric": [
-                                    "AWS/ApplicationELB",
+                                    AWS_ELB,
                                     "HTTPCode_ELB_500_Count",
                                     "LoadBalancer",
                                     res[res_name],
@@ -850,7 +855,7 @@ def add_stack(istack):
                                 "name": f"502 {n} ELB",
                                 "label": label,
                                 "metric": [
-                                    "AWS/ApplicationELB",
+                                    AWS_ELB,
                                     "HTTPCode_ELB_502_Count",
                                     "LoadBalancer",
                                     res[res_name],
@@ -871,7 +876,7 @@ def add_stack(istack):
                                 "name": f"503 {n} ELB",
                                 "label": label,
                                 "metric": [
-                                    "AWS/ApplicationELB",
+                                    AWS_ELB,
                                     "HTTPCode_ELB_503_Count",
                                     "LoadBalancer",
                                     res[res_name],
@@ -892,7 +897,7 @@ def add_stack(istack):
                                 "name": f"504 {n} ELB",
                                 "label": label,
                                 "metric": [
-                                    "AWS/ApplicationELB",
+                                    AWS_ELB,
                                     "HTTPCode_ELB_504_Count",
                                     "LoadBalancer",
                                     res[res_name],

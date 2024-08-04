@@ -51,6 +51,7 @@ RESOURCES_MAP = {
     },
     "AWS::ECS::Cluster": {},
     "AWS::ElasticLoadBalancingV2::TargetGroup": {
+        "Prefix": "TargetGroup",
         "PidEval": 'res_pid.split(":", 5)[5]',
     },
     "AWS::ApplicationAutoScaling::ScalableTarget": {
