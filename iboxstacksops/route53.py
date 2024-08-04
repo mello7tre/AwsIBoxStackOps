@@ -90,7 +90,7 @@ def create(istack):
     for r, v in res.items():
         r_out = {}
         zoneid = None
-        if r.startswith("RecordSetExternal"):
+        if "RecordSetExternal" in r:
             record = _get_rec_info(v, "external")
             record_region = "%s.%s.%s" % (
                 record["role"],
@@ -103,27 +103,27 @@ def create(istack):
                 record_region: v,
             }
 
-            if "RecordSetCloudFront" not in res and not istack.cfg.safe:
+            if all("RecordSetCloudFront" not in n for n in res) and not istack.cfg.safe: 
                 map_record[record_cf] = record_region
 
             if not istack.cfg.noorigin and not istack.cfg.safe:
                 map_record[record_origin] = record_region
 
-        if r.startswith("RecordSetInternal"):
+        if "RecordSetInternal" in r:
             record = _get_rec_info(v, "internal")
             record_internal = record["role"] + "." + record["domain"]
             map_record = {
                 record_internal: v,
             }
 
-        if r == "RecordSetCloudFront" and not istack.cfg.safe:
+        if "RecordSetCloudFront" in r and not istack.cfg.safe:
             record = _get_rec_info(v, "cf")
             record_cf = record["role"] + "." + record["domain"]
             map_record = {
                 record_cf: v,
             }
 
-        if r.startswith("ServiceDiscoveryService"):
+        if "ServiceDiscoveryService" in r:
             sd_record_name = _get_sd_info(v)
             record = _get_rec_info(sd_record_name, "sd")
             record_sd = record["role"] + "." + record["domain"]
