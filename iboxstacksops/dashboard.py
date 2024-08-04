@@ -63,12 +63,12 @@ def add_stack(istack):
     def get_policy_ecs(res):
         if "ScalingPolicyTrackingsApp" not in res:
             return {}
-        resname = "/".join(res["ScalingPolicyTrackingsApp"].split("/")[2:5]).split(":")[
-            0
-        ]
+        pol_arn_array = res["ScalingPolicyTrackingsApp"].split("/")
+        polname = pol_arn_array[5]
+        resname = "/".join(pol_arn_array[2:5]).split(":")[0]
         client = istack.boto3.client("application-autoscaling")
         response = client.describe_scaling_policies(
-            PolicyNames=list(istack.cfg.SCALING_POLICY_TRACKINGS_NAMES.keys()),
+            PolicyNames=[polname],
             ResourceId=resname,
             ServiceNamespace="ecs",
         )
@@ -129,7 +129,7 @@ def add_stack(istack):
             AlarmCPUHighThreshold, AlarmCPULowThreshold = get_alarm(res)
             widget_annotations_type = "step"
 
-        if any(k in res for k in istack.cfg.SCALING_POLICY_TRACKINGS_NAMES):
+        if any("ScalingPolicyTrackings" in r for r in res):
             widget_annotations_type = "tracking"
             tracking_list.append({"value": 100})
             for n in get_policy(res):
