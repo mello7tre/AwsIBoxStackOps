@@ -61,9 +61,11 @@ RESOURCES_MAP = {
     "AWS::Route53::RecordSet": {},
     "AWS::AutoScaling::ScalingPolicy": {
         "Name": "ScalingPolicyTrackings1",
+        "PidEval": 'res_pid.split("/")[2]',
     },
     "AWS::ApplicationAutoScaling::ScalingPolicy": {
         "Name": "ScalingPolicyTrackingsApp",
+        "PidEval": '"/".join(res_pid.split("/")[2:6])'
     },
     "AWS::ServiceDiscovery::Service": {},
     # LogicalResourceId

@@ -12,7 +12,7 @@ def set_changed(istack):
     istack.changed["resources"] = changed
 
 
-def get(istack, dash=None):
+def get(istack, dash=False, rtypes=None):
     # todo manage dash or not
     resources = {}
     res_list = list(istack.cfg.RESOURCES_MAP.keys())
@@ -25,6 +25,9 @@ def get(istack, dash=None):
             res_lid = res["LogicalResourceId"]
             res_type = res["ResourceType"]
             res_pid = res.get("PhysicalResourceId")
+
+            if rtypes and res_type not in rtypes:
+                continue
 
             if res_type in res_list:
                 # match on ResourceType
