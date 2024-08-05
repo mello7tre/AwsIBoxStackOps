@@ -946,7 +946,7 @@ def add_stack(istack):
         return metrics
 
     # get stack resources
-    res = resources.get(istack, dash=True)
+    res = resources.get(istack)
 
     # get widget annotations and widget_annotations_type for alarms threshold
     # or policy tracking target value

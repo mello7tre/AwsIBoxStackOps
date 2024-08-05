@@ -12,7 +12,7 @@ def set_changed(istack):
     istack.changed["resources"] = changed
 
 
-def get(istack, dash=False, rtypes=None):
+def get(istack, rtypes=None):
     # todo manage dash or not
     resources = {}
     res_list = list(istack.cfg.RESOURCES_MAP.keys())
@@ -26,34 +26,27 @@ def get(istack, dash=False, rtypes=None):
             res_type = res["ResourceType"]
             res_pid = res.get("PhysicalResourceId")
 
-            if rtypes and res_type not in rtypes:
-                continue
-
-            if res_type in res_list:
+            if res_type in res_list and (not rtypes or res_type in rtypes):
                 # match on ResourceType
                 conf = istack.cfg.RESOURCES_MAP[res_type]
                 name = conf.get("Name")
                 prefix = conf.get("Prefix")
                 pid_eval = conf.get("PidEval")
 
-                if dash:
-                    if prefix:
-                        for n in ["External", "Internal"]:
-                            if n in res_lid:
-                                name = f"{prefix}{n}"
-                    if pid_eval:
-                        res_pid = eval(pid_eval)
+                if prefix:
+                    for n in ["External", "Internal"]:
+                        if n in res_lid:
+                            name = f"{prefix}{n}"
+                if pid_eval:
+                    res_pid = eval(pid_eval)
 
-                    if res_lid in res_list:
-                        # match on LogicalResourceId too
-                        conf = istack.cfg.RESOURCES_MAP[res_lid]
-                        name = conf.get("Name", res_lid)
+                if res_lid in res_list:
+                    # match on LogicalResourceId too
+                    conf = istack.cfg.RESOURCES_MAP[res_lid]
+                    name = conf.get("Name", res_lid)
 
-                    if name:
-                        res_lid = name
-                    else:
-                        # default name for CW metric
-                        res_lid = res_type.split("::")[2] + "Name"
+                if name:
+                    res_lid = name
 
                 resources[res_lid] = res_pid
 

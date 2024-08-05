@@ -34,8 +34,11 @@ STACK_BASE_DATA = [
 ]
 
 RESOURCES_MAP = {
-    "AWS::AutoScaling::AutoScalingGroup": {},
+    "AWS::AutoScaling::AutoScalingGroup": {
+        "Name": "AutoScalingGroupName",
+    },
     "AWS::ECS::Service": {
+        "Name": "ServiceName",
         "PidEval": 'res_pid.split("/")[2]',
     },
     "AWS::ElasticLoadBalancing::LoadBalancer": {
@@ -49,7 +52,9 @@ RESOURCES_MAP = {
         "Prefix": "LoadBalancerListener",
         "PidEval": '"/".join(res_pid.split("/")[1:4])',
     },
-    "AWS::ECS::Cluster": {},
+    "AWS::ECS::Cluster": {
+        "Name": "ClusterName",
+    },
     "AWS::ElasticLoadBalancingV2::TargetGroup": {
         "Prefix": "TargetGroup",
         "PidEval": 'res_pid.split(":", 5)[5]',
