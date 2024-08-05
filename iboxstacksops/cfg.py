@@ -34,8 +34,24 @@ STACK_BASE_DATA = [
 ]
 
 RESOURCES_MAP = {
+    "AWS::ApplicationAutoScaling::ScalableTarget": {
+        "Name": "ClusterName",
+        "PidEval": 'res_pid.split("/")[1]',
+    },
+    "AWS::ApplicationAutoScaling::ScalingPolicy": {
+        "Name": "ScalingPolicyTrackingsApp",
+        "PidEval": '"/".join(res_pid.split("/")[2:6])',
+    },
     "AWS::AutoScaling::AutoScalingGroup": {
         "Name": "AutoScalingGroupName",
+    },
+    "AWS::AutoScaling::ScalingPolicy": {
+        "Name": "ScalingPolicyTrackings1",
+        "PidEval": 'res_pid.split("/")[2]',
+    },
+    "AWS::CloudWatch::Alarm": {},
+    "AWS::ECS::Cluster": {
+        "Name": "ClusterName",
     },
     "AWS::ECS::Service": {
         "Name": "ServiceName",
@@ -44,42 +60,26 @@ RESOURCES_MAP = {
     "AWS::ElasticLoadBalancing::LoadBalancer": {
         "Prefix": "LoadBalancerName",
     },
-    "AWS::ElasticLoadBalancingV2::LoadBalancer": {
-        "Prefix": "LoadBalancer",
-        "PidEval": '"/".join(res_pid.split("/")[1:4])',
-    },
     "AWS::ElasticLoadBalancingV2::Listener": {
         "Prefix": "LoadBalancerListener",
         "PidEval": '"/".join(res_pid.split("/")[1:4])',
     },
-    "AWS::ECS::Cluster": {
-        "Name": "ClusterName",
+    "AWS::ElasticLoadBalancingV2::LoadBalancer": {
+        "Prefix": "LoadBalancer",
+        "PidEval": '"/".join(res_pid.split("/")[1:4])',
     },
     "AWS::ElasticLoadBalancingV2::TargetGroup": {
         "Prefix": "TargetGroup",
         "PidEval": 'res_pid.split(":", 5)[5]',
     },
-    "AWS::ApplicationAutoScaling::ScalableTarget": {
-        "Name": "ClusterName",
-        "PidEval": 'res_pid.split("/")[1]',
-    },
-    "AWS::CloudWatch::Alarm": {},
     "AWS::Route53::RecordSet": {},
-    "AWS::AutoScaling::ScalingPolicy": {
-        "Name": "ScalingPolicyTrackings1",
-        "PidEval": 'res_pid.split("/")[2]',
-    },
-    "AWS::ApplicationAutoScaling::ScalingPolicy": {
-        "Name": "ScalingPolicyTrackingsApp",
-        "PidEval": '"/".join(res_pid.split("/")[2:6])'
-    },
     "AWS::ServiceDiscovery::Service": {},
     # LogicalResourceId
+    "AlarmCPUHigh": {},
+    "AlarmCPULow": {},
     "AutoScalingGroupSpot": {
         "Name": "AutoScalingGroupSpotName",
     },
-    "AlarmCPUHigh": {},
-    "AlarmCPULow": {},
     "ServiceSpot": {
         "Name": "ServiceSpotName",
     },
