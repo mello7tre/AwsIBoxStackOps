@@ -427,7 +427,7 @@ def add_stack(istack):
                 "LoadBalancerListenerInternal",
             ]
         ):
-            # Listener only
+            # Listener (Rule) only
             LoadBalancerName = "LoadBalancerListener"
             AWS_ELB = "AWS/ApplicationELB"
             Latency = "TargetResponseTime"
