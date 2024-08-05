@@ -27,7 +27,7 @@ def add_stack(istack):
     widget_map = {
         "role": ["cpu", "response"],
         "memory": ["memory"],
-        "req": ["requests", "elb_net_bytes", "healthy"],
+        "req": ["requests", "elb_net_active_flows", "elb_net_bytes", "healthy"],
         "5xx": ["5xx", "4xx"],
         "5xx_elb": ["5xx_elb", "4xx_elb"],
         "50x_elb": ["500_elb", "502_elb", "503_elb", "504_elb"],
@@ -751,8 +751,23 @@ def add_stack(istack):
             if res_name in res:
                 if res[lb_name].startswith("net/"):
                     # Network LoadBalancer
-                    # Packets
                     AWS_ELB = "AWS/NetworkELB"
+                    # Flows
+                    label = f"{title_role} {n} - Flows"
+                    metrics["elb_net_active_flows"].append(
+                        {
+                            "name": f"Flows {n}",
+                            "label": label,
+                            "metric": [
+                                AWS_ELB,
+                                "ActiveFlowCount",
+                                LoadBalancerName,
+                                res[res_name],
+                                {"label": label, "stat": "Average"},
+                            ],
+                        }
+                    )
+                    # Packets
                     label = f"{title_role} {n} - Bytes"
                     metrics["elb_net_bytes"].append(
                         {
