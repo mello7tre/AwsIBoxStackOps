@@ -39,14 +39,14 @@ RESOURCES_MAP = {
         "PidEval": 'res_pid.split("/")[1]',
     },
     "AWS::ApplicationAutoScaling::ScalingPolicy": {
-        "Name": "ScalingPolicyTrackingsAPP",
+        "Name": "ScalingPolicyTrackingsECS",
         "PidEval": '"/".join(res_pid.split("/")[2:6])',
     },
     "AWS::AutoScaling::AutoScalingGroup": {
         "Name": "AutoScalingGroupName",
     },
     "AWS::AutoScaling::ScalingPolicy": {
-        "Name": "ScalingPolicyTrackingsASG",
+        "Name": "ScalingPolicyTrackingsEC2",
         "PidEval": 'res_pid.split("/")[2]',
     },
     "AWS::CloudWatch::Alarm": {},

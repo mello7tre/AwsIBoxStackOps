@@ -46,7 +46,7 @@ def add_stack(istack):
         return alarms["AlarmCPUHigh"], alarms["AlarmCPULow"]
 
     def get_policy_ec2(res):
-        polname = res["ScalingPolicyTrackingsASG"]
+        polname = res["ScalingPolicyTrackingsEC2"]
         AutoScalingGroupName = (
             "AutoScalingGroupSpotName"
             if "AutoScalingGroupSpotName" in res
@@ -61,9 +61,9 @@ def add_stack(istack):
         return response["ScalingPolicies"][0]["TargetTrackingConfiguration"]
 
     def get_policy_ecs(res):
-        if "ScalingPolicyTrackingsAPP" not in res:
+        if "ScalingPolicyTrackingsECS" not in res:
             return {}
-        pol_arn_array = res["ScalingPolicyTrackingsAPP"].split("/")
+        pol_arn_array = res["ScalingPolicyTrackingsECS"].split("/")
         polname = pol_arn_array[3]
         resname = "/".join(pol_arn_array[0:3]).split(":")[0]
         client = istack.boto3.client("application-autoscaling")
