@@ -749,7 +749,7 @@ def add_stack(istack):
             res_name = locals()[f"LoadBalancerName{n}"]
 
             if res_name in res:
-                if res[lb_name].startswith("net/"):
+                if res.get("lb_name", "").startswith("net/"):
                     # Network LoadBalancer
                     AWS_ELB = "AWS/NetworkELB"
                     # Flows
