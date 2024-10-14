@@ -38,7 +38,10 @@ def get(istack, rtypes=None):
                         if n in res_lid:
                             name = f"{prefix}{n}"
                 if pid_eval:
-                    res_pid = eval(pid_eval)
+                    try:
+                        res_pid = eval(pid_eval)
+                    except Exception:
+                        pass
 
                 if res_lid in res_list:
                     # match on LogicalResourceId too
