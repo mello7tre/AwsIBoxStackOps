@@ -113,7 +113,7 @@ def create(istack):
             if not istack.cfg.noorigin and not istack.cfg.safe:
                 map_record[record_origin] = record_region
 
-        if "Internal" in r:
+        elif "Internal" in r:
             # Internal
             record = _get_rec_info(v, "internal")
             record_internal = record["role"] + "." + record["domain"]
@@ -121,7 +121,7 @@ def create(istack):
                 record_internal: v,
             }
 
-        if "CloudFront" in r and not istack.cfg.safe:
+        elif "CloudFront" in r and not istack.cfg.safe:
             # CloudFront
             record = _get_rec_info(v, "cf")
             record_cf = record["role"] + "." + record["domain"]
@@ -129,7 +129,7 @@ def create(istack):
                 record_cf: v,
             }
 
-        if "ServiceDiscoveryService" in r:
+        elif "ServiceDiscoveryService" in r:
             # process ServiceDiscovery Service
             sd_record_name = _get_sd_info(v)
             record = _get_rec_info(sd_record_name, "sd")
@@ -139,6 +139,8 @@ def create(istack):
             }
             base_domain = ".".join(record["domain"].split(".")[1:])
             zoneid = _get_zoneid(base_domain)
+        else:
+            continue
 
         target_zoneid = _get_zoneid(record["domain"])
 
