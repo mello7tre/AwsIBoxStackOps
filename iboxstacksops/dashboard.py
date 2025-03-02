@@ -274,7 +274,8 @@ def add_stack(istack):
     def update_dashboard(res, dashboard_name):
         cw = istack.boto3.client("cloudwatch")
 
-        if istack.cfg.dash_force:
+        if istack.cfg.dash_force and dashboard_name.split("_")[1] == istack.name:
+            # delete dash only before processing the first stack
             cw.delete_dashboards(DashboardNames=[dashboard_name])
 
         if not istack.cfg.silent:
