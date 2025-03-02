@@ -108,6 +108,11 @@ def set_dash_parser(subparser, parents=[]):
         const=True,
         default=False,
     )
+    parser.add_argument(
+        "--dash-force",
+        help="Overwrite existing dash (remove all previous data!)",
+        action="store_true",
+    )
 
 
 def get_show_parser(subparser, parents=[]):

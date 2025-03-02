@@ -274,6 +274,9 @@ def add_stack(istack):
     def update_dashboard(res, dashboard_name):
         cw = istack.boto3.client("cloudwatch")
 
+        if istack.cfg.dash_force:
+            cw.delete_dashboards(DashboardNames=[dashboard_name])
+
         if not istack.cfg.silent:
             print(dashboard_name)
 
