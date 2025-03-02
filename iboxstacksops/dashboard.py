@@ -58,7 +58,7 @@ def add_stack(istack):
             PolicyNames=[polname],
         )
 
-        return response["ScalingPolicies"][0]["TargetTrackingConfiguration"]
+        return response["ScalingPolicies"][0].get("TargetTrackingConfiguration", {})
 
     def get_policy_ecs(res):
         if "ScalingPolicyTrackingsECS" not in res:
@@ -73,9 +73,9 @@ def add_stack(istack):
             ServiceNamespace="ecs",
         )
 
-        return response["ScalingPolicies"][0][
-            "TargetTrackingScalingPolicyConfiguration"
-        ]
+        return response["ScalingPolicies"][0].get(
+            "TargetTrackingScalingPolicyConfiguration", {}
+        )
 
     def get_policy(res):
         ret = []
