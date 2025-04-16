@@ -1,8 +1,8 @@
-from prettytable import PrettyTable, ALL as ptALL
+from prettytable import PrettyTable
+
 from . import cfg, i_stack
 from .aws import myboto3
 from .tools import concurrent_exec
-from .common import *
 
 
 def _get_ssm_parameter(ssm, param):
@@ -44,7 +44,7 @@ def get_by_path(iregion, path):
 
 def put_parameters(iobj, params):
     for p in params:
-        resp = iobj.ssm.put_parameter(
+        iobj.ssm.put_parameter(
             Name=p["name"],
             Description=p["desc"],
             Value=p["value"],
@@ -80,7 +80,6 @@ def setup(iregion):
 def put(iregion):
     stacks_data = {}
     for s, v in iregion.bdata.items():
-        stack = s
         args = v[0]
         parameters = v[1]
         ssm_params = []

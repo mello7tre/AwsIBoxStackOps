@@ -1,6 +1,5 @@
-from . import cfg, parameters, outputs
+from . import logger, cfg, parameters, outputs
 from .aws import myboto3
-from .common import *
 
 
 def get_base_data(stack, stackset=None):

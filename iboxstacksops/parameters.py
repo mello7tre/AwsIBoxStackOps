@@ -1,5 +1,7 @@
 import argparse
-from .common import *
+from pprint import pformat
+
+from . import logger
 
 
 # set final parameters values to use for exectuing commands -
@@ -253,7 +255,7 @@ def process(istack, show=True):
 def get(stack):
     try:
         s_parameters = stack["Parameters"]
-    except Exception as e:
+    except Exception:
         pass
     else:
         parameters = {}

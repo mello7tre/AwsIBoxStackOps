@@ -1,13 +1,6 @@
-#!/usr/bin/env python3
-from prettytable import (
-    PrettyTable,
-    ALL as ptALL,
-    FRAME as ptFRAME,
-    HEADER as ptHEADER,
-    NONE as ptNONE,
-)
+from prettytable import PrettyTable
+
 from . import cfg
-from .common import *
 
 
 def get(data, fields=[]):

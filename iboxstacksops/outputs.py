@@ -1,6 +1,8 @@
+from pprint import pformat
+from datetime import datetime
+
 from . import cfg
 from .tools import stack_resource_to_dict
-from .common import *
 
 
 def show_changed(istack):

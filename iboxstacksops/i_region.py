@@ -1,7 +1,6 @@
 from . import cfg, ssm, replica
 from .aws import myboto3
 from .tools import smodule_to_class
-from .common import *
 
 
 class ibox_region(object):

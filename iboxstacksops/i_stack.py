@@ -1,10 +1,10 @@
 from . import (
+    logger,
     cfg,
     template,
     parameters,
     resolve,
     actions,
-    events,
     outputs,
     dashboard,
     ssm,
@@ -12,8 +12,7 @@ from . import (
 )
 from .aws import myboto3
 from .tools import smodule_to_class
-from .msg import init as msg_init
-from .common import *
+from .msg import msg_init
 
 
 class ibox_stack(object):
@@ -62,7 +61,7 @@ class ibox_stack(object):
 
     def delete(self):
         self.stack = self.cloudformation.Stack(self.name)
-        result = actions.delete(self)
+        actions.delete(self)
 
     def cancel_update(self):
         self.stack = self.cloudformation.Stack(self.name)
@@ -112,7 +111,7 @@ class ibox_stack(object):
 
     def show_resources(self):
         self.stack = self.cloudformation.Stack(self.name)
-        result = actions.show_resources(self)
+        actions.show_resources(self)
 
     def log(self):
         self.stack = self.cloudformation.Stack(self.name)
@@ -195,12 +194,12 @@ class ibox_stack(object):
         parser.print_help()
 
     def stackset_show(self):
-        result = actions.stackset_show(self)
+        actions.stackset_show(self)
 
     def stackset_instances(self):
         cfg.fields = cfg.STACKSET_INSTANCES_SHOW_TABLE_FIELDS
         cfg.output = "text"
-        result = actions.stackset_instances(self)
+        actions.stackset_instances(self)
 
 
 def exec_command(name, data, command, region=None, **kwargs):

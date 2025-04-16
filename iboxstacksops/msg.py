@@ -9,7 +9,7 @@ else:
     HAVE_MSG = True
 
 
-def init(stack=None):
+def msg_init(stack=None):
     obj = stack.cfg if stack else cfg
     try:
         return obj.MSG_CLIENT

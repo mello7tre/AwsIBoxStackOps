@@ -1,4 +1,4 @@
-from .common import *
+from pprint import pformat
 
 
 def get_action_tags(istack, stack_tags):

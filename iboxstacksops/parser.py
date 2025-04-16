@@ -1,4 +1,5 @@
 import argparse
+
 from . import cfg, __version__
 from .commands import (
     create,
@@ -177,7 +178,7 @@ def set_stackset_parser(subparser, parents=[]):
     )
 
     # update parser
-    parser_update = stackset_parser.add_parser(
+    stackset_parser.add_parser(
         "update",
         parents=parents
         + [
@@ -187,7 +188,7 @@ def set_stackset_parser(subparser, parents=[]):
     )
 
     # info parser
-    parser_info = stackset_parser.add_parser(
+    stackset_parser.add_parser(
         "info",
         parents=[
             get_stackset_single_parser(),
@@ -196,7 +197,7 @@ def set_stackset_parser(subparser, parents=[]):
     )
 
     # parameters parser
-    parser_parameters = stackset_parser.add_parser(
+    stackset_parser.add_parser(
         "parameters",
         parents=[
             get_stackset_single_parser(),
@@ -205,7 +206,7 @@ def set_stackset_parser(subparser, parents=[]):
     )
 
     # show parser
-    parser_show = get_show_parser(
+    get_show_parser(
         stackset_parser,
         [
             get_stackset_single_parser(),
@@ -213,7 +214,7 @@ def set_stackset_parser(subparser, parents=[]):
     )
 
     # instances parser
-    parser_instances = stackset_parser.add_parser(
+    stackset_parser.add_parser(
         "instances",
         parents=[
             get_stackset_single_parser(),
@@ -243,7 +244,7 @@ def set_replicate_parser(subparser, parents=[]):
     )
 
     # replicate create
-    parser_create = get_create_parser(
+    get_create_parser(
         replicate_parser,
         parents
         + [
@@ -255,7 +256,7 @@ def set_replicate_parser(subparser, parents=[]):
     )
 
     # replicate update
-    parser_update = get_update_parser(
+    get_update_parser(
         replicate_parser,
         parents
         + [
@@ -267,16 +268,14 @@ def set_replicate_parser(subparser, parents=[]):
     )
 
     # replicate delete
-    parser_delete = replicate_parser.add_parser(
+    replicate_parser.add_parser(
         "delete",
         parents=parents + [get_stack_single_parser(), regions_parser],
         help="Delete Stack (WARNING)",
     )
 
     # replicate show
-    parser_show = get_show_parser(
-        replicate_parser, [get_stack_selection_parser(), regions_parser]
-    )
+    get_show_parser(replicate_parser, [get_stack_selection_parser(), regions_parser])
 
 
 def set_r53_parser(subparser, parents=[]):
@@ -642,9 +641,7 @@ def get_parser():
     )
 
     # iboxstacksops version parser
-    parser_version = command_subparser.add_parser(
-        "version", help="Show version and exit"
-    )
+    command_subparser.add_parser("version", help="Show version and exit")
 
     return parser
 

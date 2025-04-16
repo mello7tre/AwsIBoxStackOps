@@ -1,6 +1,7 @@
-from prettytable import PrettyTable, ALL as ptALL
+import time
+from prettytable import PrettyTable
+
 from .tools import show_confirm
-from .common import *
 
 
 # create changeset
@@ -152,8 +153,8 @@ def process(istack, us_args):
     changeset_changes, not_replaced = _parse_changeset(changeset)
 
     # simplify changeset - replaced by IncludePropertyValues
-#    if not istack.cfg.changeset_original:
-#        changeset_changes = _simplify_changeset(changeset_changes, not_replaced)
+    #    if not istack.cfg.changeset_original:
+    #        changeset_changes = _simplify_changeset(changeset_changes, not_replaced)
 
     # -show changeset changes
     _show_changeset_changes(istack, changeset_changes)

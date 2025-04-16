@@ -1,7 +1,9 @@
-from . import resources
-from .common import *
-
+import json
+from pprint import pprint
+from datetime import datetime
 from copy import deepcopy
+
+from . import resources
 
 
 def add_stack(istack):
@@ -286,7 +288,7 @@ def add_stack(istack):
                 "DashboardBody"
             ]
             dash = json.loads(dashboard_body)
-        except Exception as e:
+        except Exception:
             print("DashBoard do not exist, creating one..\n")
             dash = {"widgets": []}
 

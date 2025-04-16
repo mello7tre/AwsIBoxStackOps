@@ -1,6 +1,7 @@
-from . import cfg, stacks, i_stack, i_region, events, table, ssm
+from pprint import pprint
+
+from . import cfg, stacks, i_stack, i_region, table, ssm
 from .tools import concurrent_exec, get_exports, show_confirm
-from .common import *
 
 
 def create():
@@ -73,7 +74,7 @@ def rollback():
 def parameters():
     w_stacks = stacks.get()
     cfg.exports = get_exports()
-    result = concurrent_exec("parameters", w_stacks, i_stack)
+    concurrent_exec("parameters", w_stacks, i_stack)
 
 
 def info():
@@ -87,7 +88,7 @@ def info():
 
 def show_resources():
     w_stacks = stacks.get()
-    result = concurrent_exec("show_resources", w_stacks, i_stack)
+    concurrent_exec("show_resources", w_stacks, i_stack)
 
 
 def log():
@@ -160,7 +161,7 @@ def replicate():
     if cfg.no_replicate_current:
         try:
             regions.remove(cfg.boto3.region_name)
-        except Exception as e:
+        except Exception:
             pass
 
     result = concurrent_exec("replicate", {k: {} for k in regions}, i_region)
