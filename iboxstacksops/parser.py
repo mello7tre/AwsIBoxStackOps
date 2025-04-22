@@ -440,7 +440,7 @@ def get_parser():
 
     action_parser.add_argument(
         "-y",
-        "--answer_yes",
+        "--answer-yes",
         help="Answer YES (No Confirm)",
         required=False,
         action="store_true",
@@ -454,10 +454,10 @@ def get_parser():
     )
     action_parser.add_argument(
         "-c",
-        "--slack_channel",
-        help=f"Slack Channel [{cfg.SLACK_CHANNEL}]",
+        "--msg-channel",
+        help=f"Message Channel [{cfg.MSG_CHANNEL}]",
         nargs="?",
-        const=cfg.SLACK_CHANNEL,
+        const=cfg.MSG_CHANNEL,
         default=False,
     )
 

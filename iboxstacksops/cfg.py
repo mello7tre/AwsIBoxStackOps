@@ -20,7 +20,7 @@ print_mylog = True
 
 OUT_WIDTH = 1000000
 
-SLACK_CHANNEL = "_cf_deploy"
+MSG_CHANNEL = "_cf_deploy"
 
 MAX_SINGLE_STACKS = 5
 

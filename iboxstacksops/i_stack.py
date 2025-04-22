@@ -151,7 +151,7 @@ class ibox_stack(object):
         if client and chat:
             try:
                 client.chat_postMessage(
-                    channel=f"#{cfg.slack_channel}",
+                    channel=f"#{cfg.msg_channel}",
                     text=message,
                     username=self.cfg.MSG_USER,
                     icon_emoji=":robot_face:",
