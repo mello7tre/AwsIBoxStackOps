@@ -12,7 +12,7 @@ from . import (
 )
 from .aws import myboto3
 from .tools import smodule_to_class
-from .msg import msg_init
+from .msg import msg
 
 
 class ibox_stack(object):
@@ -36,6 +36,13 @@ class ibox_stack(object):
         # inside method processed by istack (in a parallel way)
         # i need to set attr to self.cfg and not to the common cfg
         self.cfg = smodule_to_class(cfg)
+
+        try:
+            # try to get already inited msg client
+            self.cfg.MSG = cfg.MSG
+        except Exception:
+            # or init it
+            self.cfg.MSG = msg()
 
     def create(self):
         self.exports = self.cfg.exports
@@ -148,29 +155,13 @@ class ibox_stack(object):
             pass
         # logger.info(message)
 
-        if not chat:
-            return
-
-        client = msg_init(self)
-
-        if client.__class__.__name__ == "Request":
-            # use Teams
-            c_method = "urlopen"
-            kwargs = {"url": self.cfg.MSG_CLIENT_REQUEST}
-        elif client.__class__.__name__ == "WebClient":
-            # use Slack
-            c_method = "chat_postMessage"
-            kwargs = {
-                "channel": f"#{cfg.msg_channel}",
-                "text": message,
-                "username": self.cfg.MSG_USER,
-                "icon_emoji": ":robot_face:",
-            }
-
-        try:
-            getattr(client, c_method)(**kwargs)
-        except Exception as e:
-            logger.warning(f"Error sending message to channel: {e}")
+        if chat:
+            try:
+                self.cfg.MSG.send_smg(message)
+            except Exception as e:
+                logger.warning(
+                    f"Error sending message to channel {self.cfg.MSG.msg_channel}: {e}"
+                )
 
     def dash(self):
         dashboard.add_stack(self)
