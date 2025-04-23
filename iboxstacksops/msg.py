@@ -47,12 +47,10 @@ class msg(object):
     def init_http(self):
         teams_webhook_url = os.environ.get("IBOX_TEAMS_WEBHOOK_URL")
         url_parsed = urlparse(teams_webhook_url)
-        http_host = url_parsed.netloc
-        http_path = url_parsed.path
-        self.msg_client = HTTPSConnection(http_host, timeout=2)
+        self.msg_client = HTTPSConnection(url_parsed.netloc, timeout=2)
         self.msg_client_request = {
             "method": "POST",
-            "url": http_path,
+            "url": url_parsed.path,
             "headers": HTTP_HEADERS,
         }
 
