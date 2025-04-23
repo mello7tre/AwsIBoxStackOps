@@ -29,7 +29,7 @@ def msg_init(stack=None):
         if teams_auth:
             # For Teams use use request as msg_client
             # TODO add request url and parameters
-            return request.Request("http://")
+            return request, request.Request("http://")
         elif HAVE_SLACK and slack_auth and slack_user:
             # For Slack use slack WebClient as msg_client
             obj.MSG_USER = slack_user

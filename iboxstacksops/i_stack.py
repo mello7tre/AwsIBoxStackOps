@@ -147,17 +147,30 @@ class ibox_stack(object):
         except IOError:
             pass
         # logger.info(message)
-        client = msg_init(self)
-        if client and chat:
-            try:
-                client.chat_postMessage(
-                    channel=f"#{cfg.msg_channel}",
-                    text=message,
-                    username=self.cfg.MSG_USER,
-                    icon_emoji=":robot_face:",
-                )
-            except Exception as e:
-                logger.warning(f"Error sending message to channel: {e}")
+
+        if not chat:
+            return
+
+        client, request = msg_init(self)
+
+        if client.__class__.__name__ == "Request":
+            # use Teams
+            c_method = "urlopen"
+            kwargs = {"url": request}
+        elif client.__class__.__name__ == "WebClient":
+            # use Slack
+            c_method = "chat_postMessage"
+            kwargs = {
+                "channel": f"#{cfg.msg_channel}",
+                "text": message,
+                "username": self.cfg.MSG_USER,
+                "icon_emoji": ":robot_face:",
+            }
+
+        try:
+            getattr(client, c_method)(**kwargs)
+        except Exception as e:
+            logger.warning(f"Error sending message to channel: {e}")
 
     def dash(self):
         dashboard.add_stack(self)
