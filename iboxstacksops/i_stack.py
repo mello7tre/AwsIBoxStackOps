@@ -151,12 +151,12 @@ class ibox_stack(object):
         if not chat:
             return
 
-        client, request = msg_init(self)
+        client = msg_init(self)
 
         if client.__class__.__name__ == "Request":
             # use Teams
             c_method = "urlopen"
-            kwargs = {"url": request}
+            kwargs = {"url": self.cfg.MSG_CLIENT_REQUEST}
         elif client.__class__.__name__ == "WebClient":
             # use Slack
             c_method = "chat_postMessage"

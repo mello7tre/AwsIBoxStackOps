@@ -17,21 +17,22 @@ def msg_init(stack=None):
     try:
         return obj.MSG_CLIENT
     except Exception:
+        obj.MSG_CLIENT = None
         msg_channel = getattr(obj, "msg_channel", os.environ.get("IBOX_MSG_CHANNEL"))
 
-        if not msg_channel:
-            return
+        if msg_channel:
+            slack_auth = os.environ.get("IBOX_SLACK_TOKEN")
+            slack_user = os.environ.get("IBOX_SLACK_USER")
+            teams_auth = os.environ.get("IBOX_TEAMS_AUTH")
 
-        slack_auth = os.environ.get("IBOX_SLACK_TOKEN")
-        slack_user = os.environ.get("IBOX_SLACK_USER")
-        teams_auth = os.environ.get("IBOX_TEAMS_AUTH")
+            if teams_auth:
+                # For Teams use use request as msg_client
+                # TODO add request url and parameters
+                obj.MSG_CLIENT = request
+                obj.MSG_CLIENT_REQUEST = request.Request("http://")
+            elif HAVE_SLACK and slack_auth and slack_user:
+                # For Slack use slack WebClient as msg_client
+                obj.MSG_CLIENT = slack.WebClient(token=slack_auth)
+                obj.MSG_USER = slack_user
 
-        if teams_auth:
-            # For Teams use use request as msg_client
-            # TODO add request url and parameters
-            return request, request.Request("http://")
-        elif HAVE_SLACK and slack_auth and slack_user:
-            # For Slack use slack WebClient as msg_client
-            obj.MSG_USER = slack_user
-            obj.MSG_CLIENT = slack.WebClient(token=slack_auth)
-            return obj.MSG_CLIENT
+        return obj.MSG_CLIENT
