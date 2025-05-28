@@ -1,9 +1,9 @@
 import os
 import json
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 from http.client import HTTPSConnection
 
-from . import cfg
+from . import cfg, logger
 
 try:
     import slack
@@ -17,6 +17,27 @@ HTTP_HEADERS = {
     "Accept": "application/json",
     "Connection": "keep-alive",
     "Content-Type": "application/json",
+}
+
+ADAPTIVE_CARD = {
+    "type": "message",
+    "attachments": [
+        {
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "content": {
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "type": "AdaptiveCard",
+                "version": "1.4",
+                "body": [
+                    {
+                        "type": "TextBlock",
+                        "weight": "bolder",
+                        "size": "medium",
+                    }
+                ],
+            },
+        }
+    ],
 }
 
 
@@ -36,13 +57,60 @@ class msg(object):
         if teams_auth:
             # For Teams use use request as msg_client
             # TODO add request url and parameters
+            self.init_graph_client()
             self.msg_client_type = "teams"
-            self.init_http()
         elif HAVE_SLACK and slack_auth and slack_user:
             # For Slack use slack WebClient as msg_client
-            self.msg_client_type = "slack"
             self.msg_client = slack.WebClient(token=slack_auth)
             self.msg_user = slack_user
+            self.msg_client_type = "slack"
+
+    def init_graph_client(self):
+        tenant_id = os.environ.get("IBOX_TEAMS_TENANT_ID")
+        client_id = os.environ.get("IBOX_TEAMS_CLIENT_ID")
+        client_secret = os.environ.get("IBOX_TEAMS_CLIENT_SECRET")
+        team_id = os.environ.get("IBOX_TEAMS_TEAM_ID")
+        channel_id = self.msg_channel
+
+        if any(
+            not n
+            for n in [
+                tenant_id,
+                client_id,
+                client_secret,
+                team_id,
+                channel_id,
+            ]
+        ):
+            return
+
+        token_client = HTTPSConnection("login.microsoftonline.com", timeout=2)
+        token_client.request(
+            "POST",
+            f"/{tenant_id}/oauth2/v2.0/token",
+            body=urlencode(
+                {
+                    "grant_type": "client_credentials",
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "scope": "https://graph.microsoft.com/.default",
+                }
+            ),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        response = token_client.getresponse()
+        data = response.read().decode()
+        token_info = json.loads(data)
+        access_token = token_info.get("access_token")
+
+        if access_token:
+            self.headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Connection": "keep-alive",
+                "Content-Type": "application/json",
+            }
+            self.msg_client = HTTPSConnection("graph.microsoft.com", timeout=2)
+            self.msg_url = f"/v1.0/teams/{team_id}/channels/{channel_id}/messages"
 
     def init_http(self):
         teams_webhook_url = os.environ.get("IBOX_TEAMS_WEBHOOK_URL")
@@ -50,7 +118,7 @@ class msg(object):
         self.msg_client = HTTPSConnection(url_parsed.netloc, timeout=2)
         self.msg_client_request = {
             "method": "POST",
-            "url": url_parsed.path,
+            "url": f"{url_parsed.path}?{url_parsed.query}",
             "headers": HTTP_HEADERS,
         }
 
@@ -63,10 +131,20 @@ class msg(object):
         if self.msg_client_type == "teams":
             # Teams
             try:
-                self.msg_client_request["body"] = json.dumps({"text": message})
-                self.msg_client.request(**self.msg_client_request)
+                ADAPTIVE_CARD["attachments"][0]["content"]["body"][0]["text"] = message
+                # self.msg_client_request["body"] = json.dumps(ADAPTIVE_CARD)
+                # self.msg_client.request(**self.msg_client_request)
+                self.msg_client.request(
+                    "POST",
+                    self.msg_url,
+                    body=json.dumps(ADAPTIVE_CARD),
+                    headers=self.headers,
+                )
                 response = self.msg_client.getresponse()
                 response.read()
+                # status = response.status
+                # out = response.read().decode()
+                # logger.info(f"Teams Msg Status: {status} - Response: {out}")
             except Exception:
                 self.msg_client.close()
                 raise
