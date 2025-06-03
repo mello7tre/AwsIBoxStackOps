@@ -65,6 +65,7 @@ class msg(object):
             self.msg_user = slack_user
             self.msg_client_type = "slack"
 
+    # oauth2 ms graph Teams Auth
     def init_graph_client(self):
         tenant_id = os.environ.get("IBOX_TEAMS_TENANT_ID")
         client_id = os.environ.get("IBOX_TEAMS_CLIENT_ID")
@@ -112,6 +113,7 @@ class msg(object):
             self.msg_client = HTTPSConnection("graph.microsoft.com", timeout=2)
             self.msg_url = f"/v1.0/teams/{team_id}/channels/{channel_id}/messages"
 
+    # webhook Teams Auth (currently not used)
     def init_http(self):
         teams_webhook_url = os.environ.get("IBOX_TEAMS_WEBHOOK_URL")
         url_parsed = urlparse(teams_webhook_url)

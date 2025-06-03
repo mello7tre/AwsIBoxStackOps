@@ -111,6 +111,9 @@ def _process_template(istack):
             value = istack.boto3.region_name
         elif v in istack.r_parameters:
             value = istack.r_parameters[v]
+            if istack.parameters.get(v, {}).get("Type") == "CommaDelimitedList":
+                # fix for CommaDelimitedList to be parsed as a list
+                value = value.split(",")
         else:
             # value = {'Ref': v}
             value = f"!Ref {v}"
