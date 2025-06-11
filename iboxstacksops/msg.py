@@ -144,6 +144,9 @@ class msg(object):
                 "content": {
                     "description": message,
                 },
+                "metadata": {
+                    "enableCustomActions": False,
+                }
             }
             response = self.msg_client.publish(
                 TopicArn=self.msg_channel, Message=json.dumps(custom_notification)
