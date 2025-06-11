@@ -3,7 +3,8 @@ import json
 from urllib.parse import urlparse, urlencode
 from http.client import HTTPSConnection
 
-from . import cfg, logger
+from . import cfg
+from .aws import myboto3
 
 try:
     import slack
@@ -54,7 +55,11 @@ class msg(object):
         slack_user = os.environ.get("IBOX_SLACK_USER")
         teams_auth = os.environ.get("IBOX_TEAMS_AUTH")
 
-        if teams_auth:
+        if self.msg_channel.startswith("arn:aws"):
+            boto3 = myboto3()
+            self.msg_client = boto3.client("sns")
+            self.msg_client_type = "sns"
+        elif teams_auth:
             # For Teams use use request as msg_client
             # TODO add request url and parameters
             self.init_graph_client()
@@ -64,6 +69,8 @@ class msg(object):
             self.msg_client = slack.WebClient(token=slack_auth)
             self.msg_user = slack_user
             self.msg_client_type = "slack"
+        else:
+            self.msg_client = None
 
     # oauth2 ms graph Teams Auth
     def init_graph_client(self):
@@ -130,7 +137,18 @@ class msg(object):
         except Exception:
             return
 
-        if self.msg_client_type == "teams":
+        if self.msg_client_type == "sns":
+            custom_notification = {
+                "version": "1.0",
+                "source": "custom",
+                "content": {
+                    "description": message,
+                },
+            }
+            response = self.msg_client.publish(
+                TopicArn=self.msg_channel, Message=json.dumps(custom_notification)
+            )
+        elif self.msg_client_type == "teams":
             # Teams
             try:
                 ADAPTIVE_CARD["attachments"][0]["content"]["body"][0]["text"] = message

@@ -434,6 +434,11 @@ def get_parser():
         "0 for interactive - valid only for jobs=1",
         type=int,
     )
+    parser.add_argument(
+        "-m",
+        "--msg-channel",
+        help="Message Channel - AWS SNS Topic / Slack Channel / Teams Channel",
+    )
 
     # action parser
     action_parser = argparse.ArgumentParser(add_help=False)
@@ -452,14 +457,14 @@ def get_parser():
         required=False,
         action="store_true",
     )
-    action_parser.add_argument(
-        "-c",
-        "--msg-channel",
-        help=f"Message Channel [{cfg.MSG_CHANNEL}]",
-        nargs="?",
-        const=cfg.MSG_CHANNEL,
-        default=False,
-    )
+    #    action_parser.add_argument(
+    #        "-c",
+    #        "--msg-channel",
+    #        help=f"Message Channel [{cfg.MSG_CHANNEL}]",
+    #        nargs="?",
+    #        const=cfg.MSG_CHANNEL,
+    #        default=False,
+    #    )
 
     # template parser
     template_parser_create = get_template_parser()
