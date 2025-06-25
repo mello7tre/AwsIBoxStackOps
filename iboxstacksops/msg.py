@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import time
 
 from . import cfg
 from .aws import myboto3
@@ -42,3 +43,4 @@ class msg(object):
             self.msg_client.publish(
                 TopicArn=self.msg_channel, Message=json.dumps(custom_notification)
             )
+            time.sleep(1)
