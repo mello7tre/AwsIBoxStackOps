@@ -9,7 +9,7 @@ logger.setLevel(logging.INFO)
 
 
 name = "iboxstacksops"
-__version__ = "0.9.2"
+__version__ = "1.0.0"
 
 
 class IboxError(Exception):
