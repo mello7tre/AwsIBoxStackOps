@@ -1,5 +1,6 @@
 import os
 import json
+import uuid
 
 from . import cfg
 from .aws import myboto3
@@ -16,6 +17,7 @@ class msg(object):
             boto3 = myboto3()
             self.msg_client = boto3.client("sns")
             self.msg_client_type = "sns"
+            self.thread_id = str(uuid.uuid4())
         else:
             self.msg_client = None
 
@@ -33,6 +35,7 @@ class msg(object):
                     "description": message,
                 },
                 "metadata": {
+                    "threadId": self.thread_id,
                     "enableCustomActions": False,
                 },
             }
