@@ -10,9 +10,6 @@ setuptools.setup(
         "prettytable",
         "PyYAML>=5,==5.*",
     ],
-    extras_require={
-        "extra": ["slackclient"],
-    },
     python_requires=">=3.7",
     scripts=[
         "scripts/ibox_stacksops.py",

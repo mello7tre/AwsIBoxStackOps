@@ -436,8 +436,8 @@ def get_parser():
     )
     parser.add_argument(
         "-m",
-        "--msg-channel",
-        help="Message Channel - AWS SNS Topic / Slack Channel / Teams Channel",
+        "--msg-topic",
+        help="AWS SNS Topic used by Amazon Q to send messages to Slack/Teams configured channels",
     )
 
     # action parser
@@ -457,14 +457,6 @@ def get_parser():
         required=False,
         action="store_true",
     )
-    #    action_parser.add_argument(
-    #        "-c",
-    #        "--msg-channel",
-    #        help=f"Message Channel [{cfg.MSG_CHANNEL}]",
-    #        nargs="?",
-    #        const=cfg.MSG_CHANNEL,
-    #        default=False,
-    #    )
 
     # template parser
     template_parser_create = get_template_parser()
