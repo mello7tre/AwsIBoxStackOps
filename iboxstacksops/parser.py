@@ -401,7 +401,7 @@ def get_create_update_parser():
     parser.add_argument(
         "--tags",
         nargs="+",
-        help="Tags, space separated, to associate with this stack. Use syntax: Key=Value",
+        help="Tags, space separated, to associate with this stack. Use syntax: Key=Value (use REMOVE as Value to remove tag)",
         type=str,
         default=[],
     )
