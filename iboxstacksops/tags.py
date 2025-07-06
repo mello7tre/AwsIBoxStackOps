@@ -65,7 +65,7 @@ def get_action_tags(istack, stack_tags):
         # Command line tags
         (cmd_tags, tags_cmd),
         # Metadata tags found inside template Metadata Section
-        (istack.template.get("Metadata", {}).get("Tags", {}), tags_metadata),
+        (istack.metadata.get("Tags", {}), tags_metadata),
     ]
 
     # Add or Update Tags
