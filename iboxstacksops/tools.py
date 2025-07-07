@@ -71,7 +71,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
                 data[stack] = e.args[0]
                 n_failed += 1
             except Exception as e:
-                tqdm.write(f"{stack} generated an exception: {e}")
+                print(f"{stack} generated an exception: {e}")
                 print_exc()
                 raise IboxError(e)
 
@@ -81,7 +81,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
         raise IboxError(pformat(data))
 
     if do_exit:
-        tqdm.write(data)
+        print(data)
         exit(0)
     else:
         return data
