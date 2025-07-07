@@ -182,7 +182,7 @@ def show_override(istack):
 
 
 def process(istack, show=True):
-    logger.info("Processing Parameters")
+    logger.info("Processing Parameters\n")
 
     # get stack parameter parser
     parser = get_stack_parameter_parser(istack)
@@ -229,12 +229,6 @@ def process(istack, show=True):
         return
 
     # show changes to output
-    print("\n")
-    # disabled for now - it make no sense to display them
-    # if not istack.stack and params_default:
-    #     print('DEFAULT - STACK PARAMETERS\n%s\n' % pformat(
-    #         params_default, width=1000000))
-
     if params_changed:
         istack.mylog(
             "CHANGED - STACK PARAMETERS\n%s\n" % pformat(params_changed, width=1000000)

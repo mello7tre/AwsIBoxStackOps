@@ -1,15 +1,31 @@
 import yaml
 import logging
-
+import builtins
+import tqdm
+import pprint
+from io import StringIO
 
 logging.basicConfig()
 logging.getLogger("botocore").setLevel("CRITICAL")
 logger = logging.getLogger("stacksops")
 logger.setLevel(logging.INFO)
-
+logger.propagate = False
 
 name = "iboxstacksops"
 __version__ = "1.0.3"
+
+
+class TqdmLoggingHandler(logging.Handler):
+    def __init__(self, level=logging.NOTSET):
+        super().__init__(level)
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            tqdm.tqdm.write(msg)
+            self.flush()
+        except Exception:
+            self.handleError(record)
 
 
 class IboxError(Exception):
@@ -18,6 +34,20 @@ class IboxError(Exception):
 
 class IboxErrorECSService(Exception):
     pass
+
+
+def tqdm_print(*args, sep="", end="\n", flush=False, **kwargs):
+    s = sep.join(str(a) for a in args)
+    s += end
+    tqdm.tqdm.write(s)
+    if flush:
+        tqdm.tqdm._instances.clear()  # optional: force flush if needed
+
+
+def tqdm_pprint(*args, **kwargs):
+    buf = StringIO()
+    _original_pprint(*args, stream=buf, **kwargs)
+    tqdm.tqdm.write(buf.getvalue().rstrip())
 
 
 def yaml_exclamation_mark(dumper, data):
@@ -31,3 +61,17 @@ def yaml_exclamation_mark(dumper, data):
 
 
 yaml.add_representer(str, yaml_exclamation_mark)
+
+# Remove other handlers and add our tqdm handler
+logger.handlers = []
+formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
+tqdm_handler = TqdmLoggingHandler()
+tqdm_handler.setFormatter(formatter)
+logger.addHandler(tqdm_handler)
+
+# patch print
+builtins.print = tqdm_print
+
+# patch pprint
+_original_pprint = pprint.pprint
+pprint.pprint = tqdm_pprint

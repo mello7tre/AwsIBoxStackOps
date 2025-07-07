@@ -4,7 +4,7 @@ import concurrent.futures
 from pprint import pformat
 from traceback import print_exc
 
-from . import logger, cfg, IboxError
+from . import logger, tqdm, cfg, IboxError
 from .aws import myboto3
 
 
@@ -55,7 +55,15 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
                     do_exit = True
                     break
 
-        for future in concurrent.futures.as_completed(future_to_stack):
+        for future in (
+            tqdm.tqdm(
+                concurrent.futures.as_completed(future_to_stack),
+                total=len(future_to_stack),
+                desc="Processing Stacks",
+            )
+            if len(stacks) > 1
+            else concurrent.futures.as_completed(future_to_stack)
+        ):
             stack = future_to_stack[future]
             try:
                 data[stack] = future.result()
@@ -63,7 +71,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
                 data[stack] = e.args[0]
                 n_failed += 1
             except Exception as e:
-                print(f"{stack} generated an exception: {e}")
+                tqdm.tqdm.write(f"{stack} generated an exception: {e}")
                 print_exc()
                 raise IboxError(e)
 
@@ -73,7 +81,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
         raise IboxError(pformat(data))
 
     if do_exit:
-        print(data)
+        tqdm.tqdm.write(data)
         exit(0)
     else:
         return data

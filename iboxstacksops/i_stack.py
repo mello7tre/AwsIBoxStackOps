@@ -1,5 +1,6 @@
 from . import (
     logger,
+    tqdm,
     cfg,
     template,
     parameters,
@@ -150,7 +151,7 @@ class ibox_stack(object):
     def mylog(self, msg, chat=True):
         message = f"{self.name} # {msg}"
         try:
-            print(message)
+            tqdm.tqdm.write(message)
         except IOError:
             pass
         # logger.info(message)

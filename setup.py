@@ -9,6 +9,7 @@ setuptools.setup(
         "boto3",
         "prettytable",
         "PyYAML>=5,==5.*",
+        "tqdm",
     ],
     python_requires=">=3.7",
     scripts=[
