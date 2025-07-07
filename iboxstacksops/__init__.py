@@ -1,8 +1,8 @@
 import yaml
 import logging
 import builtins
-import tqdm
 import pprint
+from tqdm import tqdm
 from io import StringIO
 
 logging.basicConfig()
@@ -22,7 +22,7 @@ class TqdmLoggingHandler(logging.Handler):
     def emit(self, record):
         try:
             msg = self.format(record)
-            tqdm.tqdm.write(msg)
+            tqdm.write(msg)
             self.flush()
         except Exception:
             self.handleError(record)
@@ -39,15 +39,15 @@ class IboxErrorECSService(Exception):
 def tqdm_print(*args, sep="", end="\n", flush=False, **kwargs):
     s = sep.join(str(a) for a in args)
     s += end
-    tqdm.tqdm.write(s)
+    tqdm.write(s)
     if flush:
-        tqdm.tqdm._instances.clear()  # optional: force flush if needed
+        tqdm._instances.clear()  # optional: force flush if needed
 
 
 def tqdm_pprint(*args, **kwargs):
     buf = StringIO()
     _original_pprint(*args, stream=buf, **kwargs)
-    tqdm.tqdm.write(buf.getvalue().rstrip())
+    tqdm.write(buf.getvalue().rstrip())
 
 
 def yaml_exclamation_mark(dumper, data):

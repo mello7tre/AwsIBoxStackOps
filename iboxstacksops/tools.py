@@ -56,7 +56,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
                     break
 
         for future in (
-            tqdm.tqdm(
+            tqdm(
                 concurrent.futures.as_completed(future_to_stack),
                 total=len(future_to_stack),
                 desc="Processing Stacks",
@@ -71,7 +71,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
                 data[stack] = e.args[0]
                 n_failed += 1
             except Exception as e:
-                tqdm.tqdm.write(f"{stack} generated an exception: {e}")
+                tqdm.write(f"{stack} generated an exception: {e}")
                 print_exc()
                 raise IboxError(e)
 
@@ -81,7 +81,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
         raise IboxError(pformat(data))
 
     if do_exit:
-        tqdm.tqdm.write(data)
+        tqdm.write(data)
         exit(0)
     else:
         return data
