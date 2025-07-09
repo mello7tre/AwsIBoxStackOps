@@ -38,7 +38,6 @@ class IboxErrorECSService(Exception):
 
 def tqdm_print(*args, sep="", end="\n", flush=False, **kwargs):
     s = sep.join(str(a) for a in args)
-    s += end
     tqdm.write(s, end=end)
     if flush:
         tqdm._instances.clear()  # optional: force flush if needed
