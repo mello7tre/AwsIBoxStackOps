@@ -41,6 +41,7 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
         return
 
     cfg.parallel = False if not cfg.parallel and jobs == 1 else True
+    use_pbar = True if len(stacks) > 1 else False
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
         future_to_stack = {}
@@ -54,22 +55,22 @@ def concurrent_exec(command, stacks, smodule, region=None, **kwargs):
                 if _pause_or_stop():
                     do_exit = True
                     break
+        pbar = tqdm(
+            concurrent.futures.as_completed(future_to_stack),
+            total=len(future_to_stack),
+            desc="Processing Stacks",
+            disable=False if use_pbar else True,
+        )
 
-        for future in (
-            tqdm(
-                concurrent.futures.as_completed(future_to_stack),
-                total=len(future_to_stack),
-                desc="Processing Stacks",
-            )
-            if len(stacks) > 1
-            else concurrent.futures.as_completed(future_to_stack)
-        ):
+        for future in pbar:
             stack = future_to_stack[future]
             try:
                 data[stack] = future.result()
             except IboxError as e:
                 data[stack] = e.args[0]
                 n_failed += 1
+                if use_pbar:
+                    pbar.set_postfix(failed=n_failed)
             except Exception as e:
                 print(f"{stack} generated an exception: {e}")
                 print_exc()
