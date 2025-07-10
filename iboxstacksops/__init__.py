@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 logger.propagate = False
 
 name = "iboxstacksops"
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
 
 class TqdmLoggingHandler(logging.Handler):
