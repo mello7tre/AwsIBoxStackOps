@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 from pprint import pformat
 from calendar import timegm
+from copy import deepcopy
 
 from . import IboxErrorECSService
 
@@ -57,6 +58,14 @@ def _show_service_update(istack, event, timedelta):
         deps_len = len(deployments)
         last_updatedAt = None
 
+        # find out if service have Deployment Circuit Breaker RollBack enabled
+        try:
+            circuit_breaker_rollback = service["deploymentConfiguration"][
+                "deploymentCircuitBreaker"
+            ]["rollback"]
+        except Exception:
+            circuit_breaker_rollback = False
+
         for dep in deployments:
             status = dep["status"]
             dep_updatedAt = dep.get("updatedAt")
@@ -76,21 +85,37 @@ def _show_service_update(istack, event, timedelta):
         failedTasks = deps["PRIMARY"]["failedTasks"]
         rolloutState = deps["PRIMARY"]["rolloutState"]
 
-        if str(deps) != deps_before:
+        if deps != deps_before:
+            # deployment have changed process it
+
+            # check for Deployment Circuit Breaker
+            if deps_before and pri_task_def != deps_before["PRIMARY"]["taskDefinition"]:
+                # PRIMARY taskDefinition have changed means that:ECS Deployment Circuit Breaker was triggered
+                # put PRIAMRY taskDefinition, the previous one, in stack_tasks_defs to avoid loop
+                istack.mylog(
+                    "Deployment failed! ECS Deployment Circuit Breaker was triggered\n"
+                )
+                stack_tasks_defs.append(pri_task_def)
+
             if last_updatedAt:
                 istack.mylog(last_updatedAt.strftime("%Y-%m-%d %X"))
-            deps_before = str(deps)
+
+            deps_before = deepcopy(deps)
+
+            # log short version of taskDefinitions
             for d in ["PRIMARY", "ACTIVE", "DRAINING"]:
                 if "taskDefinition" in deps[d]:
                     deps[d]["taskDefinition"] = deps[d]["taskDefinition"].split("/")[-1]
+
             istack.mylog("PRIMARY: %s" % pformat(deps["PRIMARY"], width=1000000))
             istack.mylog("ACTIVE: %s" % pformat(deps["ACTIVE"], width=1000000))
             istack.mylog("DRAINING: %s\n" % pformat(deps["DRAINING"], width=1000000))
 
-            # is update stuck ?
+            # is update stuck ? Do AutoRollback, but skip if ECS Deployment Circuit Breaker is enabled
             if (
-                pri_task_def in stack_tasks_defs
+                not circuit_breaker_rollback
                 and max_retry > 0
+                and pri_task_def in stack_tasks_defs
                 and failedTasks >= max_retry
             ):
                 istack.last_event_timestamp = event.timestamp
