@@ -1,5 +1,6 @@
 import botocore
 import yaml
+import os
 from pprint import pprint
 from collections import OrderedDict
 
@@ -313,14 +314,24 @@ def _do_check(istack):
 def show(istack):
     _process_template(istack)
     logger.info(f"Resolved: {istack.name}")
-    print(
-        yaml.dump(
-            {
-                "AWSTemplateFormatVersion": "2010-09-09",
-                "Resources": istack.r_resources,
-            }
-        )
-    )
+
+    stack_template = {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Resources": istack.r_resources,
+    }
+
+    if istack.cfg.write_dir:
+        out_dir = os.path.abspath(istack.cfg.write_dir)
+        if os.path.isdir(out_dir):
+            out_file = os.path.join(out_dir, f"{istack.name}.yaml")
+            with open(out_file, "w") as f:
+                yaml.dump(stack_template, f, Dumper=yaml.CDumper)
+                logger.info(f"Writed yaml: {out_file}")
+        else:
+            logger.error(f"Error dir: {istack.cfg.write_dir} do not exists!")
+            exit(1)
+    else:
+        print(yaml.dump(stack_template))
 
 
 def process(istack):

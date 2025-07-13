@@ -574,6 +574,11 @@ def get_parser():
         help="Resolve Stack template - output in yaml short format",
     )
     parser_resolve.set_defaults(func=resolve)
+    parser_resolve.add_argument(
+        "-W",
+        "--write-dir",
+        help="Write resolve yaml file to write-dir directory with name as {StackName}.yaml",
+    )
 
     # log parser
     parser_log = command_subparser.add_parser(
