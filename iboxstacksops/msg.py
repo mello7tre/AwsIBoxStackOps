@@ -22,6 +22,9 @@ class msg(object):
         else:
             self.msg_client = None
 
+    def generate_thread_id(self):
+        self.thread_id = str(uuid.uuid4())
+
     def send_smg(self, message):
         try:
             self.msg_client
