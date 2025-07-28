@@ -3,6 +3,7 @@ import yaml
 import os
 from pprint import pprint
 from collections import OrderedDict
+from pathlib import Path
 
 from . import logger, IboxError
 
@@ -320,16 +321,30 @@ def show(istack):
         "Resources": istack.r_resources,
     }
 
-    if istack.cfg.write_dir:
-        out_dir = os.path.abspath(istack.cfg.write_dir)
-        if os.path.isdir(out_dir):
-            out_file = os.path.join(out_dir, f"{istack.name}.yaml")
-            with open(out_file, "w") as f:
-                yaml.dump(stack_template, f, Dumper=yaml.CDumper)
-                logger.info(f"Writed yaml: {out_file}")
+    write_path = istack.cfg.write_path
+
+    if write_path:
+        write_path = os.path.abspath(write_path)
+
+        if os.path.splitext(write_path)[1]:
+            # path is a full file path
+            dirname = os.path.dirname(write_path)
+            out_file = write_path
         else:
-            logger.error(f"Error dir: {istack.cfg.write_dir} do not exists!")
+            # path is a dir
+            dirname = write_path
+            out_file = os.path.join(dirname, f"{istack.name}.yaml")
+
+        # always create missing dir path
+        try:
+            Path(dirname).mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.error(f"Error creating dir {dirname}: {e}")
             exit(1)
+
+        with open(out_file, "w") as f:
+            yaml.dump(stack_template, f, Dumper=yaml.CDumper)
+            logger.info(f"Writed yaml: {out_file}")
     else:
         print(yaml.dump(stack_template))
 

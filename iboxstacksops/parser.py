@@ -576,8 +576,9 @@ def get_parser():
     parser_resolve.set_defaults(func=resolve)
     parser_resolve.add_argument(
         "-W",
-        "--write-dir",
-        help="Write resolve yaml file to write-dir directory with name as {StackName}.yaml",
+        "--write-path",
+        help="Write resolve yaml to write-path, "
+        "for directory filename is: {StackName}.yaml",
     )
 
     # log parser
