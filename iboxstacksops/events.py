@@ -89,7 +89,11 @@ def _show_service_update(istack, event, timedelta):
             # deployment have changed process it
 
             # check for Deployment Circuit Breaker
-            if deps_before and pri_task_def != deps_before["PRIMARY"]["taskDefinition"]:
+            if (
+                deps_before
+                and pri_task_def != deps_before["PRIMARY"]["taskDefinition"]
+                and deps_before["PRIMARY"]["failedTasks"] > 0
+            ):
                 # PRIMARY taskDefinition have changed means that:ECS Deployment Circuit Breaker was triggered
                 # put PRIAMRY taskDefinition, the previous one, in stack_tasks_defs to avoid loop
                 istack.mylog(
