@@ -13,7 +13,8 @@ def _show_service_update(istack, event, timedelta):
     if timedelta != "0":
         return
 
-    pri_task_def = deps_before = rolloutState = None
+    pri_task_def = rolloutState = None
+    deps_before = {}
     deps_len = 0
     max_retry = istack.cfg.max_retry_ecs_service_running_count
     client = istack.boto3.client("ecs")
@@ -90,10 +91,9 @@ def _show_service_update(istack, event, timedelta):
 
             # check for Deployment Circuit Breaker
             if (
-                deps_before
-                and pri_task_def != deps_before["PRIMARY"]["taskDefinition"]
-                and deps_before["PRIMARY"]["failedTasks"] > 0
-                and deps_before.get("ACTIVE")
+                all("ACTIVE" in dp for dp in [deps, deps_before])
+                and deps["ACTIVE"].get("rolloutState") == "FAILED"
+                and deps_before["ACTIVE"].get("taskDefinition") == pri_task_def
             ):
                 # PRIMARY taskDefinition have changed means that:ECS Deployment Circuit Breaker was triggered
                 # put PRIAMRY taskDefinition, the previous one, in stack_tasks_defs to avoid loop
