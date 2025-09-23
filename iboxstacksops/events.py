@@ -93,6 +93,7 @@ def _show_service_update(istack, event, timedelta):
                 deps_before
                 and pri_task_def != deps_before["PRIMARY"]["taskDefinition"]
                 and deps_before["PRIMARY"]["failedTasks"] > 0
+                and deps_before.get("ACTIVE")
             ):
                 # PRIMARY taskDefinition have changed means that:ECS Deployment Circuit Breaker was triggered
                 # put PRIAMRY taskDefinition, the previous one, in stack_tasks_defs to avoid loop
