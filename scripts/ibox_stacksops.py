@@ -16,11 +16,11 @@ def main():
         cfg.func()
     except IboxError as e:
         logger.error(f"{e.args[0]}\n")
-        return e
+        return 1
+
+    return 0
 
 
+# Optional: allow running directly for debugging
 if __name__ == "__main__":
-    result = main()
-
-    if isinstance(result, IboxError):
-        exit(1)
+    sys.exit(main())
