@@ -23,6 +23,9 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.urls]
+Homepage = "https://github.com/mello7tre/AwsIBoxStackOps"
+
 [project.scripts]
 ibox_stacksops = "iboxstacksops.__main__:main"
 
