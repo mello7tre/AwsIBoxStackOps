@@ -231,18 +231,21 @@ def process(istack, show=True):
     # show changes to output
     if params_changed:
         istack.mylog(
-            "CHANGED - STACK PARAMETERS\n%s\n" % pformat(params_changed, width=1000000)
+            "CHANGED - STACK PARAMETERS\n%s\n" % pformat(params_changed, width=1000000),
+            silenceable=True,
         )
 
     if istack.stack and params_added:
         istack.mylog(
-            "ADDED - STACK PARAMETERS\n%s\n" % pformat(params_added, width=1000000)
+            "ADDED - STACK PARAMETERS\n%s\n" % pformat(params_added, width=1000000),
+            silenceable=True,
         )
 
     if params_forced_default:
         istack.mylog(
             "FORCED TO DEFAULT - STACK PARAMETERS\n%s\n"
-            % pformat(params_forced_default, width=1000000)
+            % pformat(params_forced_default, width=1000000),
+            silenceable=True,
         )
 
 

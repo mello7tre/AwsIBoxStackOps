@@ -101,21 +101,28 @@ def get_action_tags(istack, stack_tags):
 
     if tags_default:
         istack.mylog(
-            "CURRENT - STACK TAGS\n%s\n" % pformat(tags_default, width=1000000)
+            "CURRENT - STACK TAGS\n%s\n" % pformat(tags_default, width=1000000),
+            silenceable=True,
         )
     if tags_changed:
         istack.mylog(
-            "CHANGED - STACK TAGS\n%s\n" % pformat(tags_changed, width=1000000)
+            "CHANGED - STACK TAGS\n%s\n" % pformat(tags_changed, width=1000000),
+            silenceable=True,
         )
     if tags_cmd:
         istack.mylog(
-            "COMMAND LINE - STACK TAGS\n%s\n" % pformat(tags_cmd, width=1000000)
+            "COMMAND LINE - STACK TAGS\n%s\n" % pformat(tags_cmd, width=1000000),
+            silenceable=True,
         )
     if tags_metadata:
         istack.mylog(
-            "METADATA - STACK TAGS\n%s\n" % pformat(tags_metadata, width=1000000)
+            "METADATA - STACK TAGS\n%s\n" % pformat(tags_metadata, width=1000000),
+            silenceable=True,
         )
     if tags_remove:
-        istack.mylog("REMOVE - STACK TAGS\n%s\n" % pformat(tags_remove, width=1000000))
+        istack.mylog(
+            "REMOVE - STACK TAGS\n%s\n" % pformat(tags_remove, width=1000000),
+            silenceable=True,
+        )
 
     return final_tags

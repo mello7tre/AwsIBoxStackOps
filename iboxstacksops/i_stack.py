@@ -147,7 +147,11 @@ class ibox_stack(object):
 
         return result
 
-    def mylog(self, msg, chat=True):
+    def mylog(self, msg, chat=True, silenceable=False):
+        # Suppress log if update is silent and msg is silenceable
+        if self.cfg.silent_update and silenceable:
+            return
+
         message = f"{self.name} # {msg}"
         try:
             print(message)

@@ -9,6 +9,7 @@ dashboard = "OnChange"
 statistic = "Average"
 statisticresponse = "p95"
 silent = True
+silent_update = False
 vertical = False
 profile = False
 output = "text"

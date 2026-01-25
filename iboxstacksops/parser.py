@@ -62,6 +62,9 @@ def get_update_parser(subparser, parents=[]):
     #    )
     parser.add_argument("--dryrun", help="Show changeset and exit", action="store_true")
     parser.add_argument(
+        "--silent-update", help="Show only final result", action="store_true"
+    )
+    parser.add_argument(
         "-T", "--showtags", help="Show tags changes in changeset", action="store_true"
     )
     parser.add_argument(
