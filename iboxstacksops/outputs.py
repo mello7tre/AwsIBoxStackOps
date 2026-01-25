@@ -28,7 +28,10 @@ def show(istack, when):
     out = pformat(outputs, width=istack.cfg.OUT_WIDTH)
 
     if istack.cfg.print_mylog:
-        istack.mylog(f"{when.upper()} - STACK OUTPUTS\n{out}\n")
+        istack.mylog(
+            f"{when.upper()} - STACK OUTPUTS\n{out}\n",
+            silenceable=False if when == "CHANGED" else True,
+        )
 
     return outputs
 
