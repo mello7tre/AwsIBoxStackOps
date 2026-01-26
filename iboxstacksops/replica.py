@@ -22,7 +22,7 @@ def update(iregion):
         w_stacks,
         i_stack,
         region=iregion.name,
-        **{"ssm_map": iregion.ssm_map, "iregion": iregion}
+        **{"ssm_map": iregion.ssm_map, "iregion": iregion},
     )
     print(result)
 
@@ -37,7 +37,7 @@ def delete(iregion):
         w_stacks,
         i_stack,
         region=iregion.name,
-        **{"ssm_map": iregion.ssm_map, "iregion": iregion}
+        **{"ssm_map": iregion.ssm_map, "iregion": iregion},
     )
     print(result)
 

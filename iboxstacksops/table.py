@@ -28,11 +28,11 @@ def get(data, fields=[]):
         parameter_not_empty = n.get("parameter_not_empty", [])
         table.add_row(
             [
-                "Null"
-                if (i not in n or not n[i])
-                else f"{n[i]} *"
-                if i in parameter_not_empty
-                else n[i]
+                (
+                    "Null"
+                    if (i not in n or not n[i])
+                    else f"{n[i]} *" if i in parameter_not_empty else n[i]
+                )
                 for i in table_data
             ]
         )
