@@ -98,6 +98,14 @@ def _force_envshort(istack):
     istack.cfg.EnvShort = env_envshort_dict[env]
 
 
+# force capacity based on parser arg capacity
+def _force_capacity(istack):
+    capacity_names = ["Desired", "Min", "Max"]
+    if all([hasattr(istack.cfg, f"Capacity{c}") for c in capacity_names]):
+        for c in capacity_names:
+            setattr(istack.cfg, f"Capacity{c}", istack.cfg.capacity)
+
+
 # for template in s3, try to get version from url/key otherway use fixed value "1"
 # Ex for version=master-2ed25d5:
 # https://eu-west-1-ibox-app-repository.s3.amazonaws.com/ibox/master-2ed25d5/templates/cache-portal.json
@@ -193,6 +201,10 @@ def process(istack, show=True):
     # if template include EnvShort params force its value based on the Env one
     if "EnvShort" in istack.parameters:
         _force_envshort(istack)
+
+    # if using parser option capacity set all Capacities
+    if istack.cfg.capacity is not None:
+        _force_capacity(istack)
 
     # if using template option set/force EnvStackVersion
     if istack.cfg.template:

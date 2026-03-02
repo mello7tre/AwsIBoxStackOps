@@ -408,6 +408,11 @@ def get_create_update_parser():
         type=str,
         default=[],
     )
+    parser.add_argument(
+        "--capacity",
+        help="Set CapacityDesired CapacityMin CapacityMax to the same value",
+        type=str,
+    )
 
     return parser
 
