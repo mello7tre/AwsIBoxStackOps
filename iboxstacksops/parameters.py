@@ -103,7 +103,9 @@ def _force_capacity(istack):
     capacity_names = ["Desired", "Min", "Max"]
     if all([hasattr(istack.cfg, f"Capacity{c}") for c in capacity_names]):
         for c in capacity_names:
-            setattr(istack.cfg, f"Capacity{c}", istack.cfg.capacity)
+            # force only if not already passed as parameter
+            if getattr(istack.cfg, f"Capacity{c}") is None:
+                setattr(istack.cfg, f"Capacity{c}", istack.cfg.capacity)
 
 
 # for template in s3, try to get version from url/key otherway use fixed value "1"
