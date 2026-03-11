@@ -205,7 +205,7 @@ def process(istack, show=True):
         _force_envshort(istack)
 
     # if using parser option capacity set all Capacities
-    if istack.cfg.capacity is not None:
+    if getattr(istack.cfg, "capacity", None) is not None:
         _force_capacity(istack)
 
     # if using template option set/force EnvStackVersion
