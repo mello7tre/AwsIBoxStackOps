@@ -16,7 +16,11 @@ def create():
 
 
 def update():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     cfg.stacks = list(w_stacks.keys())
     cfg.exports = get_exports()
     if len(w_stacks) > 1 and (cfg.role or cfg.type) and not cfg.dryrun:
