@@ -36,7 +36,11 @@ def update():
 
 
 def delete():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     cfg.stacks = list(w_stacks.keys())
     print("You are going to DELETE the following stacks:")
     print(cfg.stacks)
@@ -49,7 +53,11 @@ def delete():
 
 
 def cancel_update():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     cfg.exports = get_exports()
     result = concurrent_exec("cancel_update", w_stacks, i_stack)
     pprint(result)
@@ -58,7 +66,11 @@ def cancel_update():
 
 
 def continue_update():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     cfg.exports = get_exports()
     result = concurrent_exec("continue_update", w_stacks, i_stack)
     pprint(result)
@@ -67,7 +79,11 @@ def continue_update():
 
 
 def rollback():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     cfg.exports = get_exports()
     result = concurrent_exec("rollback", w_stacks, i_stack)
     pprint(result)
@@ -76,7 +92,11 @@ def rollback():
 
 
 def parameters():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     cfg.exports = get_exports()
     concurrent_exec("parameters", w_stacks, i_stack)
 
@@ -84,14 +104,22 @@ def parameters():
 def info():
     if not cfg.compact:
         cfg.OUT_WIDTH = 80
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     result = concurrent_exec("info", w_stacks, i_stack)
 
     return result
 
 
 def show_resources():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     concurrent_exec("show_resources", w_stacks, i_stack)
 
 
@@ -102,7 +130,11 @@ def log():
 
 
 def resolve():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     cfg.exports = get_exports()
     result = concurrent_exec("resolve", w_stacks, i_stack)
 
@@ -110,7 +142,11 @@ def resolve():
 
 
 def dash():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     cfg.dash_name = "_" + "_".join(cfg.stack)
     cfg.jobs = 1
     result = concurrent_exec("dash", w_stacks, i_stack)
@@ -119,7 +155,11 @@ def dash():
 
 
 def show_table():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     s_table = table.get(list(w_stacks.values()))
     print(s_table)
 
@@ -153,7 +193,11 @@ def ssm_show():
 
 
 def r53():
-    w_stacks = stacks.get()
+    try:
+        w_stacks = stacks.get()
+    except Exception as e:
+        print(e)
+        return
     cfg.exports = get_exports()
     result = concurrent_exec("r53", w_stacks, i_stack)
     pprint(result)
