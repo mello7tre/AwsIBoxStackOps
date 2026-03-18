@@ -601,6 +601,28 @@ def add_stack(istack):
                             ],
                         }
                     )
+                    # Always add Response Time Max
+                    label = f"Response {tg_name}" f" - Maximum"
+                    metrics["response"].append(
+                        {
+                            "name": f"Response {tg_name}",
+                            "label": label,
+                            "metric": [
+                                AWS_ELB,
+                                "TargetResponseTime",
+                                "TargetGroup",
+                                res[n],
+                                "LoadBalancer",
+                                res[lb_name],
+                                {
+                                    "period": 300,
+                                    "stat": "Maximum",
+                                    "yAxis": "right",
+                                    "label": label,
+                                },
+                            ],
+                        }
+                    )
                     # 5xx
                     label = f"{title_role} {tg_name} - 5xx"
                     metrics["5xx"].append(
