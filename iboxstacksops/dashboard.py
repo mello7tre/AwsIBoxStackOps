@@ -605,7 +605,7 @@ def add_stack(istack):
                     label = f"Response {tg_name}" f" - Maximum"
                     metrics["response"].append(
                         {
-                            "name": f"Response {tg_name}",
+                            "name": f"Response {tg_name} Maximum",
                             "label": label,
                             "metric": [
                                 AWS_ELB,
@@ -825,6 +825,26 @@ def add_stack(istack):
                             {
                                 "period": 300,
                                 "stat": istack.cfg.statisticresponse,
+                                "yAxis": "right",
+                                "label": label,
+                            },
+                        ],
+                    }
+                )
+                # Always add Response Time Max
+                label = f"Response {n} - Maximum"
+                metrics["response"].append(
+                    {
+                        "name": f"Response {n} Maximum",
+                        "label": label,
+                        "metric": [
+                            AWS_ELB,
+                            Latency,
+                            LoadBalancerName,
+                            res[res_name],
+                            {
+                                "period": 300,
+                                "stat": "Maximum",
                                 "yAxis": "right",
                                 "label": label,
                             },
