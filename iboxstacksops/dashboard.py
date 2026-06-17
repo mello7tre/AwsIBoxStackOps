@@ -601,11 +601,11 @@ def add_stack(istack):
                             ],
                         }
                     )
-                    # Always add Response Time Max
-                    label = f"Response {tg_name}" f" - Maximum"
+                    # Always add Response Time Max/p99
+                    label = f"Response {tg_name}" f" - p99"
                     metrics["response"].append(
                         {
-                            "name": f"Response {tg_name} Maximum",
+                            "name": f"Response {tg_name} p99",
                             "label": label,
                             "metric": [
                                 AWS_ELB,
@@ -616,7 +616,7 @@ def add_stack(istack):
                                 res[lb_name],
                                 {
                                     "period": 300,
-                                    "stat": "Maximum",
+                                    "stat": "p99",
                                     "yAxis": "right",
                                     "label": label,
                                 },
@@ -831,11 +831,11 @@ def add_stack(istack):
                         ],
                     }
                 )
-                # Always add Response Time Max
-                label = f"Response {n} - Maximum"
+                # Always add Response Time Max/p99
+                label = f"Response {n} - p99"
                 metrics["response"].append(
                     {
-                        "name": f"Response {n} Maximum",
+                        "name": f"Response {n} p99",
                         "label": label,
                         "metric": [
                             AWS_ELB,
@@ -844,7 +844,7 @@ def add_stack(istack):
                             res[res_name],
                             {
                                 "period": 300,
-                                "stat": "Maximum",
+                                "stat": "p99",
                                 "yAxis": "right",
                                 "label": label,
                             },
