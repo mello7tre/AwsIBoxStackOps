@@ -17,7 +17,6 @@ disable_rollback = False
 dash_force = False
 # changeset_original = False
 print_mylog = True
-deployment_mode = "STANDARD"
 #
 
 OUT_WIDTH = 1000000

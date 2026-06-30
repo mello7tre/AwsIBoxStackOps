@@ -415,10 +415,9 @@ def get_create_update_parser():
     )
     parser.add_argument(
         "-x",
-        "--deployment-mode",
-        help="DeploymentConfig Mode: EXPRESS, Complete the stack operation when resource configuration is applied,",
-        choices=["STANDARD", "EXPRESS"],
-        default="STANDARD",
+        "--express",
+        help="Complete the stack operation when resource configuration is applied,",
+        action="store_true",
     )
 
     return parser
