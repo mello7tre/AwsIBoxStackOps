@@ -413,6 +413,13 @@ def get_create_update_parser():
         help="Set CapacityDesired CapacityMin CapacityMax to the same value",
         type=str,
     )
+    parser.add_argument(
+        "-x",
+        "--deployment-mode",
+        help="DeploymentConfig Mode: EXPRESS, Complete the stack operation when resource configuration is applied,",
+        choices=["STANDARD", "EXPRESS"],
+        default="STANDARD",
+    )
 
     return parser
 
