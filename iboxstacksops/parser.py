@@ -414,7 +414,7 @@ def get_create_update_parser():
         type=str,
     )
     parser.add_argument(
-        "-x",
+        "-X",
         "--express",
         help="Complete the stack operation when resource configuration is applied,",
         action="store_true",
