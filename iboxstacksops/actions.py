@@ -52,7 +52,7 @@ def _get_action_args(istack):
     if istack.cfg.disable_rollback:
         us_args["DisableRollback"] = True
 
-    if getattr(istack.cfg, "express", None) is not None:
+    if getattr(istack.cfg, "express", False):
         us_args["DeploymentConfig"] = {"Mode": "EXPRESS"}
 
     return us_args
@@ -167,7 +167,7 @@ def update(istack):
         if not changeset_ok:
             return
         # i have used changeset so no need to do pre-update validation
-        #us_args["DisableValidation"] = True
+        us_args["DisableValidation"] = True
 
     istack.before["resources"] = resources.get(istack)
     istack.last_event_timestamp = events.get_last_timestamp(istack)
