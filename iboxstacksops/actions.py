@@ -167,7 +167,7 @@ def update(istack):
         if not changeset_ok:
             return
         # i have used changeset so no need to do pre-update validation
-        us_args["DisableValidation"] = True
+        #us_args["DisableValidation"] = True
 
     istack.before["resources"] = resources.get(istack)
     istack.last_event_timestamp = events.get_last_timestamp(istack)
