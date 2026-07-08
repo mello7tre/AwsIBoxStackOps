@@ -174,8 +174,7 @@ def show_override(istack):
     params = {}
     for name, value in istack.c_parameters.items():
         if (
-            not name.startswith("Env")
-            and any(name not in n for n in ["UpdateMode"])
+            any(name not in n for n in ["UpdateMode"])
             and any(
                 name == t_name and (value != t_value.get("Default"))
                 for t_name, t_value in istack.parameters.items()
