@@ -173,7 +173,7 @@ def add_stack_params_as_args(istack, parser):
 def show_override(istack):
     params = {}
     for name, value in istack.c_parameters.items():
-        if any(name not in n for n in ["UpdateMode"]) and any(
+        if any(
             name == t_name and (value != t_value.get("Default"))
             for t_name, t_value in istack.parameters.items()
         ):
