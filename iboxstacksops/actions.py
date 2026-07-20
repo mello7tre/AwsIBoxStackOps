@@ -53,7 +53,7 @@ def _get_action_args(istack):
         us_args["DisableRollback"] = True
 
     if getattr(istack.cfg, "express", False):
-        us_args["DeploymentConfig"] = {"Mode": "EXPRESS"}
+        us_args["DeploymentConfig"] = {"Mode": "EXPRESS", "DisableRollback": True}
 
     return us_args
 
