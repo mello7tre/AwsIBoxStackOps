@@ -416,7 +416,7 @@ def get_create_update_parser():
     parser.add_argument(
         "-X",
         "--express",
-        help="Complete the stack operation when resource configuration is applied (RollBack is disabled)",
+        help="Complete the stack operation when resource configuration is applied",
         action="store_true",
     )
 
