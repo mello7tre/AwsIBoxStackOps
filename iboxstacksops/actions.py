@@ -214,9 +214,12 @@ def cancel_update(istack):
 
 def continue_update(istack):
     istack.last_event_timestamp = events.get_last_timestamp(istack)
-    response = istack.client.continue_update_rollback(
-        StackName=istack.name, ResourcesToSkip=istack.cfg.resources_to_skip
-    )
+    kwargs = {"StackName": istack.name}
+    if istack.cfg.resources_to_skip:
+        kwargs["ResourcesToSkip"] = istack.cfg.resources_to_skip
+    if istack.cfg.force_rollback:
+        kwargs["ForceRollback"] = istack.cfg.force_rollback
+    response = istack.client.continue_update_rollback(**kwargs)
     istack.mylog(f"{json.dumps(response)}\n")
     # -show update status until complete
     _update_waiter(istack)

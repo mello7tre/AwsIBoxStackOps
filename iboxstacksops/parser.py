@@ -537,8 +537,15 @@ def get_parser():
         help="Continue Update RollBack",
     )
     parser_continue.set_defaults(func=continue_update)
-    parser_continue.add_argument(
-        "--resources_to_skip", help="Resource to Skip", default=[], nargs="+"
+
+    parser_continue_group = parser_continue.add_mutually_exclusive_group(required=False)
+    parser_continue_group.add_argument(
+        "--resources-to-skip", help="Failed resources to skip", default=[], nargs="+"
+    )
+    parser_continue_group.add_argument(
+        "--force-rollback",
+        help="Automatically skip failed resources",
+        action="store_true",
     )
 
     # roll back parser
